@@ -1,0 +1,129 @@
+from calendar import isleap
+from io import StringIO
+from pathlib import Path
+from urllib.request import urlopen
+
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+
+DATA_URL = 'https://raw.githubusercontent.com/greatsong/modudata/main/data/seoul.csv'
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_data():
+    """같은 폴더의 CSV를 우선 사용하고, 없으면 지정된 URL에서 읽는다."""
+    local = Path(__file__).with_name('seoul.csv')
+    if local.exists():
+        raw = local.read_bytes()
+    else:
+        with urlopen(DATA_URL, timeout=30) as response:
+            raw = response.read()
+    for encoding in ('utf-8-sig', 'cp949'):
+        try:
+            text = raw.decode(encoding)
+            break
+        except UnicodeDecodeError:
+            continue
+    else:
+        raise ValueError('CSV의 문자 인코딩을 확인해 주세요.')
+    df = pd.read_csv(StringIO(text))
+    df.columns = df.columns.str.strip().str.replace(r'\(.*?\)', '', regex=True)
+    required = {'날짜', '지점', '평균기온', '최저기온', '최고기온'}
+    if not required.issubset(df.columns):
+        raise ValueError('날짜·지점·평균기온·최저기온·최고기온 열이 필요합니다.')
+    df['날짜'] = pd.to_datetime(df['날짜'].astype(str).str.strip(), errors='coerce')
+    for column in ['지점', '평균기온', '최저기온', '최고기온']:
+        df[column] = pd.to_numeric(df[column], errors='coerce')
+    df = df.loc[df['지점'].eq(108)].dropna(subset=['날짜'])
+    df = df.sort_values('날짜').drop_duplicates('날짜')
+    if df.empty:
+        raise ValueError('서울(지점 108)의 유효한 날짜가 없습니다.')
+    return df
+
+
+def annual_summary(df):
+    annual = df.groupby(df['날짜'].dt.year)['평균기온'].agg(
+        연평균기온='mean', 관측일수='count'
+    )
+    years = range(int(annual.index.min()), int(annual.index.max()) + 1)
+    annual = annual.reindex(years).rename_axis('연도')
+    annual['관측일수'] = annual['관측일수'].fillna(0).astype(int)
+    annual['연간일수'] = [366 if isleap(year) else 365 for year in annual.index]
+    annual['완전한연도'] = annual['관측일수'].eq(annual['연간일수'])
+    # 일부 계절만 관측된 해가 연평균 비교를 왜곡하지 않도록 제외한다.
+    annual.loc[~annual['완전한연도'], '연평균기온'] = float('nan')
+    return annual
+
+
+def main():
+    st.set_page_config(page_title='서울의 100년 기온 변화', page_icon='🌡️', layout='wide')
+    st.title('서울의 100년, 얼마나 따뜻해졌을까?')
+    st.write('해마다 달라지는 연평균 기온과 10년 이동평균으로 긴 흐름을 살펴보세요.')
+    try:
+        with st.spinner('서울 기온 데이터를 읽고 있어요…'):
+            df = load_data()
+            annual = annual_summary(df)
+    except Exception:
+        st.error('데이터를 읽지 못했습니다. 데이터 URL과 CSV의 열 이름을 확인해 주세요. '
+                 'main.py와 같은 폴더에 seoul.csv를 넣어도 됩니다.')
+        st.stop()
+    complete = annual.index[annual['완전한연도']]
+    if complete.empty:
+        st.warning('한 해 전체의 평균기온이 있는 연도가 없습니다.')
+        st.stop()
+    end = int(complete.max())
+    start = max(int(annual.index.min()), end - 99)
+    view = annual.loc[start:end].copy()
+    # 결측 연도를 건너뛰지 않고 연속된 10개 연도의 평균만 계산한다.
+    view['10년 이동평균'] = view['연평균기온'].rolling(10, min_periods=10).mean()
+    st.caption(f'표시 기간: {start}–{end}년 ({end - start + 1}개 연도) · '
+               f'원자료: {df["날짜"].min():%Y-%m-%d}–{df["날짜"].max():%Y-%m-%d}')
+    first = view['연평균기온'].iloc[:10].dropna()
+    last = view['연평균기온'].iloc[-10:].dropna()
+    left, center, right = st.columns(3)
+    left.metric(f'처음 10년 평균 ({start}–{start + 9})',
+                f'{first.mean():.2f} °C' if len(first) == 10 else '자료 부족')
+    center.metric(f'마지막 10년 평균 ({end - 9}–{end})',
+                  f'{last.mean():.2f} °C' if len(last) == 10 else '자료 부족')
+    right.metric('두 10년 평균의 차이',
+                 f'{last.mean() - first.mean():+.2f} °C'
+                 if len(first) == len(last) == 10 else '비교 불가')
+    fig = go.Figure()
+    for column, color, width in [('연평균기온', '#4496cf', 2), ('10년 이동평균', '#e66b35', 4)]:
+        fig.add_trace(go.Scatter(
+            x=view.index, y=view[column], name=column,
+            mode='lines+markers' if column == '연평균기온' else 'lines',
+            line=dict(color=color, width=width), marker=dict(size=4),
+            connectgaps=False,
+            hovertemplate='%{x}년<br>%{y:.2f} °C<extra>' + column + '</extra>',
+        ))
+    fig.update_layout(
+        height=500, xaxis_title='연도', yaxis_title='기온 (°C)',
+        hovermode='x unified', template='plotly_white',
+        font=dict(family='sans-serif'),
+        legend=dict(orientation='h', y=1.12, x=0),
+        margin=dict(l=30, r=25, t=65, b=30),
+    )
+    fig.update_xaxes(tickformat='d', range=[start, end])
+    st.plotly_chart(fig, width='stretch', config={'displayModeBar': False})
+    st.caption('파란색: 일평균 기온의 연평균 · 주황색: 해당 연도를 포함한 직전 10년의 연평균 기온 평균')
+    missing = view.index[~view['완전한연도']].tolist()
+    if missing:
+        st.info('관측일이 부족한 해는 값을 채우지 않고 그래프를 끊어 표시했습니다: '
+                + ', '.join(map(str, missing)) + '년')
+    with st.expander('계산 방법과 연도별 데이터'):
+        st.write('365일(윤년 366일)의 일평균 기온이 모두 있는 해만 비교합니다. '
+                 '표시 기간은 데이터에서 마지막으로 완전하게 관측된 해까지 최대 100개 연도입니다. '
+                 '10년 이동평균은 연속된 10개 연도에 결측이 없을 때만 표시합니다. '
+                 '위 차이는 처음과 마지막 10년의 비교이며, 직선 추세의 기울기는 아닙니다.')
+        table = view.reset_index().rename(columns={'완전한연도': '연평균 사용 여부'})
+        st.dataframe(table, hide_index=True)
+        st.download_button('연도별 데이터 내려받기',
+                           table.to_csv(index=False).encode('utf-8-sig'),
+                           file_name='서울_연평균_기온.csv', mime='text/csv')
+    st.markdown(f'[원본 데이터 보기]({DATA_URL})')
+
+
+if __name__ == '__main__':
+    main()
