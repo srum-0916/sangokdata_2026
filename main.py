@@ -1,4 +1,6 @@
 import html
+import re
+import textwrap
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -344,110 +346,332 @@ st.markdown(
         box-shadow: var(--shadow);
     }
 
-    /* ---------- Table ---------- */
-    .table-wrap {
+    /* ---------- Ranking table ---------- */
+    .ranking-panel {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        border: 1px solid #E3EAF3;
+        background: rgba(255,255,255,.98);
+        box-shadow: 0 16px 45px rgba(15,23,42,.07);
+    }
+
+    .ranking-panel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #3182F6 0%, #6EA8FF 42%, #8B5CF6 100%);
+        z-index: 4;
+    }
+
+    .ranking-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.15rem .9rem;
+        background: linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);
+        border-bottom: 1px solid #EDF1F6;
+    }
+
+    .ranking-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        min-width: 0;
+    }
+
+    .ranking-live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #3182F6;
+        box-shadow: 0 0 0 5px rgba(49,130,246,.10);
+        flex: 0 0 auto;
+    }
+
+    .ranking-toolbar-title {
+        color: #152033;
+        font-size: .88rem;
+        font-weight: 900;
+        letter-spacing: -.02em;
+    }
+
+    .ranking-toolbar-meta {
+        color: #8B98AA;
+        font-size: .73rem;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .ranking-table-scroll {
         width: 100%;
         overflow-x: auto;
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow);
-        background: white;
+        scrollbar-width: thin;
+        scrollbar-color: #CBD5E1 transparent;
+    }
+
+    .ranking-table-scroll::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .ranking-table-scroll::-webkit-scrollbar-thumb {
+        background: #CBD5E1;
+        border-radius: 999px;
     }
 
     .custom-table {
         width: 100%;
-        border-collapse: collapse;
+        min-width: 940px;
+        border-collapse: separate;
+        border-spacing: 0;
         background: #FFFFFF;
-        min-width: 880px;
+        font-variant-numeric: tabular-nums;
     }
 
-    .custom-table th {
-        background: #F8FAFC;
-        color: #64748B;
-        padding: 15px 14px;
+    .custom-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: rgba(248,250,252,.97);
+        backdrop-filter: blur(10px);
+        color: #7A8799;
+        padding: 13px 14px;
         text-align: center;
-        font-size: .76rem;
-        font-weight: 850;
-        letter-spacing: .015em;
-        border-bottom: 1px solid var(--line);
+        font-size: .70rem;
+        font-weight: 900;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        border-bottom: 1px solid #E7EDF4;
         white-space: nowrap;
     }
 
-    .custom-table td {
+    .custom-table thead th.movie-head {
+        text-align: left;
+    }
+
+    .custom-table tbody td {
         padding: 15px 14px;
         text-align: center;
-        border-bottom: 1px solid #EFF3F8;
-        color: #1E293B;
-        font-size: .87rem;
+        border-bottom: 1px solid #EEF2F7;
+        color: #334155;
+        font-size: .84rem;
         white-space: nowrap;
+        background: #FFFFFF;
+        transition: background .14s ease, transform .14s ease;
     }
 
     .custom-table tbody tr:last-child td {
         border-bottom: none;
     }
 
-    .custom-table tbody tr {
-        transition: background .14s ease;
-    }
-
     .custom-table tbody tr:hover td {
         background: #F8FBFF;
     }
 
+    .custom-table tbody tr.rank-row-1 td {
+        background: linear-gradient(90deg, rgba(49,130,246,.050), rgba(255,255,255,1) 45%);
+    }
+
+    .custom-table tbody tr.rank-row-1:hover td {
+        background: linear-gradient(90deg, rgba(49,130,246,.085), #F8FBFF 48%);
+    }
+
+    .custom-table tbody tr.rank-row-1 td:first-child {
+        box-shadow: inset 4px 0 0 #3182F6;
+    }
+
     .movie-cell {
         text-align: left !important;
-        min-width: 230px;
+        min-width: 285px;
+        max-width: 390px;
+    }
+
+    .movie-line {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        min-width: 0;
     }
 
     .movie-name {
-        font-weight: 800;
         color: #172033;
+        font-weight: 900;
+        letter-spacing: -.022em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .rank-row-1 .movie-name {
+        color: #185FCA;
     }
 
     .million-badge {
-        display: inline-block;
-        margin-left: .38rem;
-        padding: .15rem .4rem;
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        padding: .18rem .42rem;
         border-radius: 999px;
-        background: #FFF4CC;
-        color: #8B6500;
-        font-size: .66rem;
-        font-weight: 850;
-        vertical-align: 1px;
+        background: linear-gradient(135deg, #FFF7D6, #FFF1B8);
+        color: #8A6300;
+        border: 1px solid #F5DF8F;
+        font-size: .62rem;
+        font-weight: 900;
+        line-height: 1.25;
     }
 
     .rank-number {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 31px;
-        height: 31px;
-        border-radius: 10px;
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
         background: #F1F5F9;
-        color: #475569;
-        font-weight: 900;
+        color: #64748B;
+        font-weight: 950;
+        box-shadow: inset 0 0 0 1px rgba(148,163,184,.08);
     }
 
-    .rank-number.top {
-        background: #EAF2FF;
-        color: #1F6FEB;
+    .rank-number.first {
+        background: linear-gradient(135deg, #E7F0FF, #DCEAFF);
+        color: #1D67D8;
+        box-shadow: inset 0 0 0 1px #C8DDFF;
+    }
+
+    .rank-number.second {
+        background: linear-gradient(135deg, #F3F5F8, #E9EDF2);
+        color: #586577;
+        box-shadow: inset 0 0 0 1px #DCE2E9;
+    }
+
+    .rank-number.third {
+        background: linear-gradient(135deg, #FFF0E6, #FFE3D1);
+        color: #B7652C;
+        box-shadow: inset 0 0 0 1px #FFD2B4;
     }
 
     .trend-up, .trend-down, .trend-new, .trend-flat {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 46px;
-        padding: .28rem .47rem;
+        min-width: 48px;
+        padding: .30rem .48rem;
         border-radius: 999px;
-        font-size: .7rem;
+        font-size: .67rem;
+        font-weight: 900;
+        line-height: 1;
+        border: 1px solid transparent;
+    }
+
+    .trend-up {
+        color: #D93E47;
+        background: #FFF1F2;
+        border-color: #FFE0E3;
+    }
+
+    .trend-down {
+        color: #246CC7;
+        background: #EDF5FF;
+        border-color: #DBEAFE;
+    }
+
+    .trend-new {
+        color: #7443C9;
+        background: #F5F0FF;
+        border-color: #E9DDFF;
+    }
+
+    .trend-flat {
+        color: #8D99AA;
+        background: #F4F6F8;
+        border-color: #E8ECF1;
+    }
+
+    .num-cell {
+        text-align: right !important;
+        font-weight: 760;
+    }
+
+    .audience-cell {
+        text-align: right !important;
+        min-width: 150px;
+    }
+
+    .audience-value {
+        display: flex;
+        align-items: baseline;
+        justify-content: flex-end;
+        gap: .22rem;
+        color: #1E293B;
+        font-weight: 900;
+    }
+
+    .audience-unit {
+        color: #94A3B8;
+        font-size: .67rem;
+        font-weight: 750;
+    }
+
+    .share-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .45rem;
+        margin-top: .42rem;
+    }
+
+    .share-track {
+        width: 72px;
+        height: 5px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #EDF2F7;
+    }
+
+    .share-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #77ACFF, #3182F6);
+    }
+
+    .share-label {
+        color: #9AA6B5;
+        font-size: .62rem;
+        font-weight: 800;
+        min-width: 34px;
+        text-align: right;
+    }
+
+    .screen-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 58px;
+        padding: .27rem .45rem;
+        border-radius: 9px;
+        color: #566579;
+        background: #F5F7FA;
+        border: 1px solid #E8EDF3;
         font-weight: 850;
     }
 
-    .trend-up   { color: #E5484D; background: #FFF0F0; }
-    .trend-down { color: #2574D9; background: #EDF5FF; }
-    .trend-new  { color: #7C3AED; background: #F4EEFF; }
-    .trend-flat { color: #94A3B8; background: #F1F5F9; }
+    .ranking-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .78rem 1.15rem;
+        background: #FBFCFE;
+        border-top: 1px solid #EEF2F6;
+        color: #93A0B1;
+        font-size: .68rem;
+        font-weight: 650;
+    }
 
     /* ---------- Footer note ---------- */
     .soft-note {
@@ -495,6 +719,24 @@ st.markdown(
 
         .kpi-grid {
             grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .ranking-toolbar {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: .4rem;
+        }
+
+        .ranking-footer {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: .25rem;
+        }
+
+        .custom-table {
+            min-width: 860px;
         }
     }
     </style>
@@ -603,8 +845,22 @@ def trend_badge(rank_inten, old_new) -> str:
 
 
 def rank_badge(rank: int) -> str:
-    cls = "rank-number top" if int(rank) <= 3 else "rank-number"
-    return f"<span class='{cls}'>{int(rank)}</span>"
+    rank = int(rank)
+    cls = "rank-number"
+    if rank == 1:
+        cls += " first"
+    elif rank == 2:
+        cls += " second"
+    elif rank == 3:
+        cls += " third"
+    return f"<span class='{cls}'>{rank}</span>"
+
+
+def compact_html(markup: str) -> str:
+    """Markdown가 들여쓴 HTML을 코드블록으로 오해하지 않도록 안전하게 압축."""
+    markup = textwrap.dedent(markup).strip()
+    markup = re.sub(r">\s+<", "><", markup)
+    return markup
 
 
 def section_header(eyebrow: str, title: str, caption: str = ""):
@@ -773,11 +1029,19 @@ def make_share_chart(df: pd.DataFrame):
 # =========================================================
 # 6. TABLE
 # =========================================================
-def make_rank_table(df: pd.DataFrame) -> str:
+def make_rank_table(df: pd.DataFrame, selected_date) -> str:
     rows = []
+    total_audience = max(int(df["audiCnt"].sum()), 1)
 
     for _, row in df.iterrows():
+        rank = int(row["rank"])
         movie_name = html.escape(str(row["movieNmDisplay"]))
+        audience = int(row["audiCnt"])
+        accumulated = int(row["audiAcc"])
+        screens = int(row["scrnCnt"])
+        share = audience / total_audience * 100
+        share_width = min(max(share, 2.5), 100)
+
         million = (
             "<span class='million-badge'>🏆 100만+</span>"
             if bool(row["isMillion"])
@@ -785,41 +1049,52 @@ def make_rank_table(df: pd.DataFrame) -> str:
         )
 
         rows.append(
-            f"""
-            <tr>
-                <td>{rank_badge(row["rank"])}</td>
-                <td>{trend_badge(row.get("rankInten", 0), row.get("rankOldAndNew", ""))}</td>
-                <td class="movie-cell">
-                    <span class="movie-name">{movie_name}</span>{million}
-                </td>
-                <td>{html.escape(str(row.get("openDt", "-")))}</td>
-                <td><b>{int(row["audiCnt"]):,}</b></td>
-                <td>{int(row["audiAcc"]):,}</td>
-                <td>{int(row["scrnCnt"]):,}</td>
-            </tr>
-            """
+            f"<tr class='rank-row-{rank}'>"
+            f"<td>{rank_badge(rank)}</td>"
+            f"<td>{trend_badge(row.get('rankInten', 0), row.get('rankOldAndNew', ''))}</td>"
+            f"<td class='movie-cell'><div class='movie-line'>"
+            f"<span class='movie-name'>{movie_name}</span>{million}</div></td>"
+            f"<td>{html.escape(str(row.get('openDt', '-')))}</td>"
+            f"<td class='audience-cell'>"
+            f"<div class='audience-value'>{audience:,}<span class='audience-unit'>명</span></div>"
+            f"<div class='share-row'><div class='share-track'><div class='share-fill' style='width:{share_width:.1f}%'></div></div>"
+            f"<span class='share-label'>{share:.1f}%</span></div></td>"
+            f"<td class='num-cell'>{accumulated:,}</td>"
+            f"<td><span class='screen-pill'>{screens:,}</span></td>"
+            f"</tr>"
         )
 
-    return f"""
-    <div class="table-wrap">
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th>순위</th>
-                    <th>변동</th>
-                    <th style="text-align:left;">영화명</th>
-                    <th>개봉일</th>
-                    <th>일일 관객</th>
-                    <th>누적 관객</th>
-                    <th>스크린</th>
-                </tr>
-            </thead>
-            <tbody>
-                {''.join(rows)}
-            </tbody>
-        </table>
-    </div>
-    """
+    date_label = selected_date.strftime("%Y.%m.%d")
+    table_html = (
+        "<div class='ranking-panel'>"
+        "<div class='ranking-toolbar'>"
+        "<div class='ranking-toolbar-left'>"
+        "<span class='ranking-live-dot'></span>"
+        "<span class='ranking-toolbar-title'>Daily Box Office · Top 10</span>"
+        "</div>"
+        f"<div class='ranking-toolbar-meta'>{date_label} 기준 · {len(df)}편</div>"
+        "</div>"
+        "<div class='ranking-table-scroll'>"
+        "<table class='custom-table'>"
+        "<thead><tr>"
+        "<th>Rank</th>"
+        "<th>Trend</th>"
+        "<th class='movie-head'>Movie</th>"
+        "<th>Release</th>"
+        "<th style='text-align:right;'>Daily audience</th>"
+        "<th style='text-align:right;'>Total audience</th>"
+        "<th>Screens</th>"
+        "</tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody>"
+        "</table>"
+        "</div>"
+        "<div class='ranking-footer'>"
+        "<span>순위 변동은 전일 대비 · 관객 비중은 TOP 10 내부 비중</span>"
+        "<span>Source · KOBIS</span>"
+        "</div>"
+        "</div>"
+    )
+    return compact_html(table_html)
 
 
 # =========================================================
@@ -1050,7 +1325,7 @@ def main():
         "순위 변동, 개봉일, 일일·누적 관객, 스크린 수를 함께 볼 수 있습니다.",
     )
 
-    st.markdown(make_rank_table(df), unsafe_allow_html=True)
+    st.markdown(make_rank_table(df, selected_date), unsafe_allow_html=True)
 
     st.markdown(
         """
