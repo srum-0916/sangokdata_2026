@@ -1,3 +1,4 @@
+import colorsys
 import html
 import random
 import re
@@ -3290,6 +3291,150 @@ st.markdown(
         }
     }
 
+
+    /* =====================================================
+       THEME STUDIO
+       ===================================================== */
+    .theme-studio-head {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: .7rem;
+        padding: .85rem .88rem;
+        border-radius: 16px;
+        color: white;
+        background:
+            radial-gradient(circle at 95% 0%, rgba(255,255,255,.17), transparent 35%),
+            linear-gradient(135deg, var(--theme-primary, #3182F6), var(--theme-secondary, #8B5CF6));
+        box-shadow: 0 12px 28px rgba(15,23,42,.10);
+    }
+
+    .theme-studio-head::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        bottom: -40%;
+        left: -90px;
+        width: 60px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent);
+        animation: glowSweep 6s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .theme-studio-kicker {
+        color: rgba(255,255,255,.72);
+        font-size: .58rem;
+        font-weight: 950;
+        letter-spacing: .10em;
+    }
+
+    .theme-studio-title {
+        margin-top: .22rem;
+        color: white;
+        font-size: .98rem;
+        font-weight: 950;
+        letter-spacing: -.035em;
+    }
+
+    .theme-studio-sub {
+        margin-top: .18rem;
+        color: rgba(255,255,255,.72);
+        font-size: .61rem;
+        line-height: 1.5;
+    }
+
+    .palette-preview {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: .38rem;
+        margin: .72rem 0 .45rem;
+        padding: .48rem;
+        border-radius: 15px;
+        background: rgba(127,127,127,.06);
+        border: 1px solid rgba(127,127,127,.12);
+    }
+
+    .palette-swatch {
+        position: relative;
+        height: 44px;
+        overflow: hidden;
+        border-radius: 11px;
+        border: 1px solid rgba(255,255,255,.34);
+        box-shadow: 0 7px 16px rgba(15,23,42,.10);
+        animation: microFloat 5s ease-in-out infinite;
+    }
+
+    .palette-swatch:nth-child(2) { animation-delay: -.7s; }
+    .palette-swatch:nth-child(3) { animation-delay: -1.4s; }
+    .palette-swatch:nth-child(4) { animation-delay: -2.1s; }
+    .palette-swatch:nth-child(5) { animation-delay: -2.8s; }
+
+    .palette-code {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .35rem;
+        margin-top: .45rem;
+    }
+
+    .palette-code-item {
+        padding: .48rem .55rem;
+        border-radius: 11px;
+        background: rgba(127,127,127,.055);
+        border: 1px solid rgba(127,127,127,.11);
+        font-size: .58rem;
+        font-weight: 800;
+        line-height: 1.45;
+    }
+
+    .palette-code-item b {
+        display: block;
+        margin-bottom: .08rem;
+        font-size: .52rem;
+        letter-spacing: .06em;
+        opacity: .62;
+    }
+
+    .theme-status {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-top: .65rem;
+        padding: .62rem .68rem;
+        border-radius: 13px;
+        background: rgba(127,127,127,.055);
+        border: 1px solid rgba(127,127,127,.11);
+        font-size: .61rem;
+        line-height: 1.55;
+        font-weight: 750;
+    }
+
+    .theme-status-dot {
+        width: 8px;
+        height: 8px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--theme-primary, #3182F6);
+        box-shadow: 0 0 14px var(--theme-primary, #3182F6);
+        animation: livePulse 1.8s ease-in-out infinite;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stColorPicker"] {
+        animation: microFloat 5.2s ease-in-out infinite;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stColorPicker"] button {
+        border-radius: 12px !important;
+        box-shadow: 0 6px 15px rgba(15,23,42,.08);
+    }
+
+
+    [data-testid="stSidebar"] [data-baseweb="tab"] {
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+        padding-left: .20rem !important;
+        padding-right: .20rem !important;
+        font-size: .60rem !important;
+    }
+
 </style>
     """,
     unsafe_allow_html=True,
@@ -3405,6 +3550,700 @@ def compact_html(markup: str) -> str:
     markup = textwrap.dedent(markup).strip()
     markup = re.sub(r">\s+<", "><", markup)
     return markup
+
+
+
+def hex_to_rgb(hex_color: str):
+    value = hex_color.strip().lstrip("#")
+    if len(value) == 3:
+        value = "".join(ch * 2 for ch in value)
+    if len(value) != 6:
+        return (49, 130, 246)
+    try:
+        return tuple(int(value[i:i + 2], 16) for i in (0, 2, 4))
+    except ValueError:
+        return (49, 130, 246)
+
+
+def rgb_to_hex(rgb):
+    r, g, b = [max(0, min(255, int(round(v)))) for v in rgb]
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+def mix_hex(color_a: str, color_b: str, amount: float) -> str:
+    amount = max(0.0, min(1.0, float(amount)))
+    a = hex_to_rgb(color_a)
+    b = hex_to_rgb(color_b)
+    mixed = tuple(a[i] * (1 - amount) + b[i] * amount for i in range(3))
+    return rgb_to_hex(mixed)
+
+
+def rgba_hex(hex_color: str, alpha: float) -> str:
+    r, g, b = hex_to_rgb(hex_color)
+    return f"rgba({r},{g},{b},{max(0, min(1, alpha)):.3f})"
+
+
+def color_luminance(hex_color: str) -> float:
+    rgb = [c / 255.0 for c in hex_to_rgb(hex_color)]
+
+    def linearize(v):
+        return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+
+    r, g, b = [linearize(v) for v in rgb]
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def auto_text_color(background: str) -> str:
+    return "#F8FAFC" if color_luminance(background) < 0.38 else "#0F172A"
+
+
+def hls_hex(h: float, l: float, s: float) -> str:
+    r, g, b = colorsys.hls_to_rgb(h % 1.0, l, s)
+    return rgb_to_hex((r * 255, g * 255, b * 255))
+
+
+def make_random_palette():
+    hue = random.random()
+    dark = random.random() < 0.42
+
+    primary = hls_hex(hue, 0.56, 0.88)
+    secondary = hls_hex(hue + 0.13, 0.59, 0.83)
+    accent = hls_hex(hue + 0.51, 0.58, 0.90)
+
+    if dark:
+        background = hls_hex(hue, 0.075, 0.30)
+        surface = hls_hex(hue, 0.115, 0.25)
+    else:
+        background = hls_hex(hue, 0.965, 0.25)
+        surface = "#FFFFFF"
+
+    return {
+        "theme_primary": primary,
+        "theme_secondary": secondary,
+        "theme_accent": accent,
+        "theme_bg": background,
+        "theme_surface": surface,
+    }
+
+
+def chart_theme_colors():
+    if not st.session_state.get("theme_sync_charts", True):
+        return {
+            "primary": "#3182F6",
+            "secondary": "#8B5CF6",
+            "accent": "#16A3A3",
+            "surface": "#FFFFFF",
+            "background": "#F4F7FB",
+            "text": "#334155",
+            "muted": "#7A8799",
+            "grid": "#EEF2F7",
+        }
+
+    primary = st.session_state.get("theme_primary", "#3182F6")
+    secondary = st.session_state.get("theme_secondary", "#8B5CF6")
+    accent = st.session_state.get("theme_accent", "#16A3A3")
+    surface = st.session_state.get("theme_surface", "#FFFFFF")
+    background = st.session_state.get("theme_bg", "#F4F7FB")
+    text = auto_text_color(surface)
+    muted = mix_hex(text, surface, 0.52)
+    grid = mix_hex(surface, text, 0.11)
+
+    return {
+        "primary": primary,
+        "secondary": secondary,
+        "accent": accent,
+        "surface": surface,
+        "background": background,
+        "text": text,
+        "muted": muted,
+        "grid": grid,
+    }
+
+
+def build_theme_css(
+    primary: str,
+    secondary: str,
+    accent: str,
+    background: str,
+    surface: str,
+    glow_strength: int,
+) -> str:
+    bg_text = auto_text_color(background)
+    surface_text = auto_text_color(surface)
+
+    muted = mix_hex(surface_text, surface, 0.52)
+    muted_2 = mix_hex(surface_text, surface, 0.67)
+    line = mix_hex(surface, surface_text, 0.12)
+    soft = mix_hex(surface, primary, 0.075)
+    soft_2 = mix_hex(surface, secondary, 0.075)
+
+    hero_a = mix_hex(primary, "#030711", 0.80)
+    hero_b = mix_hex(secondary, "#050813", 0.76)
+    hero_c = mix_hex(primary, "#061225", 0.63)
+    hero_surface = mix_hex(primary, "#07111F", 0.78)
+
+    primary_soft = mix_hex(surface, primary, 0.16)
+    secondary_soft = mix_hex(surface, secondary, 0.15)
+    accent_soft = mix_hex(surface, accent, 0.15)
+
+    glow = max(0, min(100, int(glow_strength)))
+    glow_alpha = 0.035 + (glow / 100) * 0.25
+    glow_alpha_soft = 0.02 + (glow / 100) * 0.13
+    glow_px = 12 + int(glow * 0.32)
+
+    bg_rgb = hex_to_rgb(background)
+    surface_rgb = hex_to_rgb(surface)
+
+    return f"""
+    :root {{
+        --theme-primary: {primary};
+        --theme-secondary: {secondary};
+        --theme-accent: {accent};
+        --theme-bg: {background};
+        --theme-surface: {surface};
+        --theme-text: {surface_text};
+        --theme-muted: {muted};
+        --theme-line: {line};
+
+        --blue: {primary} !important;
+        --blue-2: {mix_hex(primary, secondary, .35)} !important;
+        --purple: {secondary} !important;
+        --green: {accent} !important;
+        --bg: {background} !important;
+        --surface: {surface} !important;
+        --surface-soft: {soft} !important;
+        --text: {surface_text} !important;
+        --text-sub: {muted} !important;
+        --line: {line} !important;
+    }}
+
+    .stApp {{
+        color: {bg_text} !important;
+        background:
+            radial-gradient(circle at 7% -8%, {rgba_hex(primary, .16)}, transparent 30%),
+            radial-gradient(circle at 97% 0%, {rgba_hex(secondary, .13)}, transparent 26%),
+            radial-gradient(circle at 54% 105%, {rgba_hex(accent, .06)}, transparent 30%),
+            {background} !important;
+    }}
+
+    [data-testid="stHeader"] {{
+        background: rgba({bg_rgb[0]},{bg_rgb[1]},{bg_rgb[2]},.72) !important;
+    }}
+
+    [data-testid="stSidebar"] {{
+        color: {surface_text} !important;
+        background: rgba({surface_rgb[0]},{surface_rgb[1]},{surface_rgb[2]},.95) !important;
+        border-right-color: {line} !important;
+    }}
+
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] span:not(.sidebar-command-dot):not(.theme-status-dot) {{
+        color: inherit;
+    }}
+
+    .sidebar-command {{
+        background:
+            radial-gradient(circle at 95% 0%, {rgba_hex(primary, .38)}, transparent 37%),
+            radial-gradient(circle at 0% 120%, {rgba_hex(secondary, .30)}, transparent 42%),
+            linear-gradient(145deg, {hero_a}, {hero_c}) !important;
+        box-shadow:
+            0 16px 38px {rgba_hex(primary, glow_alpha_soft)},
+            inset 0 1px 0 rgba(255,255,255,.08) !important;
+    }}
+
+    .sidebar-command-dot,
+    .ranking-live,
+    .theme-status-dot {{
+        background: {primary} !important;
+        box-shadow: 0 0 {glow_px}px {rgba_hex(primary, glow_alpha)} !important;
+    }}
+
+    [data-testid="stSidebar"] [data-baseweb="tab-list"] {{
+        background: {soft} !important;
+        border-color: {line} !important;
+    }}
+
+    [data-testid="stSidebar"] [data-baseweb="tab"] {{
+        color: {muted} !important;
+    }}
+
+    [data-testid="stSidebar"] [aria-selected="true"] {{
+        color: {primary} !important;
+        background: {surface} !important;
+        box-shadow: 0 7px 18px {rgba_hex(primary, .10)} !important;
+    }}
+
+    .side-mini-card,
+    .side-stat,
+    .side-feature,
+    .sidebar-tip,
+    .duel-result {{
+        color: {surface_text} !important;
+        background:
+            linear-gradient(145deg, {surface}, {soft}) !important;
+        border-color: {line} !important;
+    }}
+
+    .side-mini-label,
+    .side-mini-note,
+    .side-stat-label,
+    .side-rank-caption,
+    .section-caption,
+    .panel-sub {{
+        color: {muted_2} !important;
+    }}
+
+    .side-mini-value,
+    .side-stat-value {{
+        color: {surface_text} !important;
+    }}
+
+    .side-feature-icon {{
+        color: {primary} !important;
+        background: {primary_soft} !important;
+    }}
+
+    .side-rank-card {{
+        background:
+            radial-gradient(circle at 92% 0%, {rgba_hex(primary, .38)}, transparent 40%),
+            linear-gradient(145deg, {hero_a}, {hero_c}) !important;
+        box-shadow: 0 14px 32px {rgba_hex(primary, glow_alpha_soft)} !important;
+    }}
+
+    .theme-studio-head {{
+        background:
+            radial-gradient(circle at 95% 0%, rgba(255,255,255,.18), transparent 35%),
+            linear-gradient(135deg, {primary}, {secondary}) !important;
+        box-shadow: 0 14px 34px {rgba_hex(primary, glow_alpha_soft)} !important;
+    }}
+
+    .palette-code-item,
+    .theme-status {{
+        color: {surface_text} !important;
+        background: {soft} !important;
+        border-color: {line} !important;
+    }}
+
+    .section-eyebrow {{
+        color: {primary} !important;
+    }}
+
+    .section-title {{
+        background:
+            linear-gradient(
+                110deg,
+                {surface_text} 0%,
+                {surface_text} 35%,
+                {primary} 47%,
+                {secondary} 53%,
+                {surface_text} 66%,
+                {surface_text} 100%
+            ) !important;
+        background-size: 250% auto !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        color: transparent !important;
+    }}
+
+    .section-head::after {{
+        background:
+            linear-gradient(90deg, transparent, {primary}, {secondary}, transparent) !important;
+        box-shadow: 0 0 {glow_px}px {rgba_hex(primary, glow_alpha)} !important;
+    }}
+
+    .kpi-card,
+    .podium-card,
+    .ranking-panel,
+    [data-testid="stMetric"] {{
+        color: {surface_text} !important;
+        background:
+            radial-gradient(circle at 100% 0%, {rgba_hex(primary, .055)}, transparent 34%),
+            {surface} !important;
+        border-color: {line} !important;
+        box-shadow:
+            0 16px 42px rgba(0,0,0,.055),
+            0 0 {glow_px}px {rgba_hex(primary, glow_alpha_soft)} !important;
+    }}
+
+    .kpi-card:hover,
+    .podium-card:hover,
+    [data-testid="stMetric"]:hover {{
+        border-color: {mix_hex(primary, surface, .30)} !important;
+        box-shadow:
+            0 24px 58px rgba(0,0,0,.09),
+            0 0 {glow_px + 12}px {rgba_hex(primary, glow_alpha)} !important;
+    }}
+
+    .kpi-label,
+    .kpi-note,
+    .podium-meta,
+    .podium-label {{
+        color: {muted} !important;
+    }}
+
+    .kpi-value,
+    .podium-number {{
+        background:
+            linear-gradient(
+                110deg,
+                {surface_text} 0%,
+                {surface_text} 34%,
+                {primary} 47%,
+                {secondary} 53%,
+                {surface_text} 66%,
+                {surface_text} 100%
+            ) !important;
+        background-size: 260% auto !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        color: transparent !important;
+    }}
+
+    .podium-name,
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricLabel"] {{
+        color: {surface_text} !important;
+    }}
+
+    .rank-chip {{
+        color: {primary} !important;
+        background: {primary_soft} !important;
+    }}
+
+    .rank-chip.gold {{
+        color: {accent} !important;
+        background: {accent_soft} !important;
+    }}
+
+    .interactive-shell {{
+        background:
+            linear-gradient(115deg, {primary}, {secondary}, {accent}, {primary}) !important;
+        background-size: 300% 300% !important;
+        box-shadow: 0 20px 55px {rgba_hex(primary, glow_alpha_soft)} !important;
+    }}
+
+    .interactive-inner {{
+        color: {surface_text} !important;
+        background:
+            radial-gradient(circle at 93% 0%, {rgba_hex(primary, .09)}, transparent 30%),
+            {surface} !important;
+    }}
+
+    .panel-kicker {{
+        color: {primary} !important;
+    }}
+
+    .panel-kicker::before {{
+        background: {primary} !important;
+        box-shadow: 0 0 0 5px {rgba_hex(primary, .10)} !important;
+    }}
+
+    .panel-title {{
+        color: {surface_text} !important;
+    }}
+
+    .focus-card {{
+        background:
+            radial-gradient(circle at 88% 5%, {rgba_hex(primary, .36)}, transparent 30%),
+            radial-gradient(circle at 0% 112%, {rgba_hex(secondary, .32)}, transparent 40%),
+            linear-gradient(145deg, {hero_a}, {hero_b}, {hero_c}) !important;
+        box-shadow:
+            0 25px 62px rgba(0,0,0,.20),
+            0 0 {glow_px}px {rgba_hex(primary, glow_alpha_soft)} !important;
+    }}
+
+    .focus-fill,
+    .share-fill {{
+        background: linear-gradient(90deg, {primary}, {secondary}) !important;
+        box-shadow: 0 0 {glow_px}px {rgba_hex(primary, glow_alpha)} !important;
+    }}
+
+    .duel-vs {{
+        background: linear-gradient(135deg, {primary}, {secondary}) !important;
+        box-shadow: 0 14px 32px {rgba_hex(primary, glow_alpha)} !important;
+    }}
+
+    .ranking-panel::before {{
+        background: linear-gradient(90deg, {primary}, {secondary}, {accent}) !important;
+    }}
+
+    .ranking-toolbar,
+    .ranking-footer,
+    .custom-table,
+    .custom-table tbody td {{
+        color: {surface_text} !important;
+        background: {surface} !important;
+        border-color: {line} !important;
+    }}
+
+    .custom-table thead th {{
+        color: {muted} !important;
+        background:
+            linear-gradient(
+                100deg,
+                {soft} 0%,
+                {soft} 40%,
+                {soft_2} 50%,
+                {soft} 60%,
+                {soft} 100%
+            ) !important;
+        background-size: 240% auto !important;
+        border-color: {line} !important;
+    }}
+
+    .custom-table tbody tr:hover td {{
+        background: {soft} !important;
+    }}
+
+    .custom-table tbody tr.rank-row-1 td {{
+        background:
+            linear-gradient(90deg, {rgba_hex(primary, .09)}, {surface} 52%) !important;
+    }}
+
+    .custom-table tbody tr.rank-row-1 td:first-child {{
+        box-shadow: inset 4px 0 0 {primary} !important;
+    }}
+
+    .movie-name,
+    .audience-value,
+    .num-cell,
+    .ranking-toolbar-title {{
+        color: {surface_text} !important;
+    }}
+
+    .rank-number.first {{
+        color: {primary} !important;
+        background: {primary_soft} !important;
+        box-shadow: inset 0 0 0 1px {mix_hex(primary, surface, .45)} !important;
+    }}
+
+    .rank-number.second {{
+        color: {secondary} !important;
+        background: {secondary_soft} !important;
+    }}
+
+    .rank-number.third {{
+        color: {accent} !important;
+        background: {accent_soft} !important;
+    }}
+
+    .million-badge {{
+        color: {accent} !important;
+        background: {accent_soft} !important;
+        border-color: {mix_hex(accent, surface, .48)} !important;
+    }}
+
+    .screen-pill {{
+        color: {surface_text} !important;
+        background: {soft} !important;
+        border-color: {line} !important;
+    }}
+
+    .soft-note {{
+        color: {surface_text} !important;
+        background:
+            linear-gradient(120deg, {soft}, {soft_2}, {soft}) !important;
+        background-size: 240% 240% !important;
+        border-color: {line} !important;
+    }}
+
+    div[data-baseweb="select"] > div,
+    [data-testid="stTextInput"] input,
+    [data-testid="stDateInput"] input {{
+        color: {surface_text} !important;
+        background: {surface} !important;
+        border-color: {line} !important;
+    }}
+
+    /* ---------- PREMIUM HERO THEME ---------- */
+    .hero.hero-cinema {{
+        background:
+            radial-gradient(circle at 81% 28%, {rgba_hex(primary, .31)}, transparent 27%),
+            radial-gradient(circle at 68% 112%, {rgba_hex(secondary, .29)}, transparent 40%),
+            radial-gradient(circle at 7% 0%, {rgba_hex(accent, .11)}, transparent 31%),
+            linear-gradient(135deg, {hero_a} 0%, {hero_b} 36%, {hero_c} 72%, {hero_surface} 100%) !important;
+        border-color: {rgba_hex(primary, .24)} !important;
+        box-shadow:
+            0 38px 90px rgba(0,0,0,.34),
+            0 0 {glow_px + 18}px {rgba_hex(primary, glow_alpha_soft)},
+            inset 0 1px 0 rgba(255,255,255,.10) !important;
+    }}
+
+    .hero-cinema-scan {{
+        background:
+            linear-gradient(
+                180deg,
+                transparent,
+                {rgba_hex(primary, .04)} 35%,
+                {rgba_hex(primary, .17)} 50%,
+                {rgba_hex(primary, .04)} 65%,
+                transparent
+            ) !important;
+    }}
+
+    .hero-corner-tl {{
+        border-left-color: {rgba_hex(primary, .60)} !important;
+        border-top-color: {rgba_hex(primary, .60)} !important;
+    }}
+
+    .hero-corner-br {{
+        border-right-color: {rgba_hex(secondary, .58)} !important;
+        border-bottom-color: {rgba_hex(secondary, .58)} !important;
+    }}
+
+    .hero-live-badge {{
+        color: {mix_hex("#FFFFFF", primary, .20)} !important;
+        border-color: {rgba_hex(primary, .22)} !important;
+    }}
+
+    .hero-live-badge::before,
+    .hero-rank-live::before {{
+        background: {primary} !important;
+        box-shadow: 0 0 {glow_px}px {rgba_hex(primary, glow_alpha)} !important;
+    }}
+
+    .hero-verified {{
+        color: {mix_hex("#FFFFFF", secondary, .22)} !important;
+        background: {rgba_hex(secondary, .10)} !important;
+        border-color: {rgba_hex(secondary, .22)} !important;
+    }}
+
+    .hero-overline,
+    .hero-rank-live,
+    .hero-rail-rank {{
+        color: {primary} !important;
+    }}
+
+    .hero-overline::after {{
+        background: linear-gradient(90deg, {rgba_hex(primary, .78)}, transparent) !important;
+    }}
+
+    .hero-overline::before {{
+        background: {primary} !important;
+        box-shadow: 0 0 {glow_px}px {rgba_hex(primary, glow_alpha)} !important;
+    }}
+
+    .hero-title-movie {{
+        background:
+            linear-gradient(
+                105deg,
+                #FFFFFF 0%,
+                #FFFFFF 29%,
+                {mix_hex("#FFFFFF", primary, .36)} 42%,
+                {mix_hex("#FFFFFF", secondary, .40)} 50%,
+                #FFFFFF 62%,
+                #FFFFFF 100%
+            ) !important;
+        background-size: 260% auto !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        color: transparent !important;
+    }}
+
+    .hero-stat-card {{
+        border-color: {rgba_hex(primary, .18)} !important;
+        background:
+            linear-gradient(145deg, {rgba_hex(primary, .10)}, rgba(255,255,255,.035)) !important;
+    }}
+
+    .hero-stat-card:hover {{
+        border-color: {rgba_hex(primary, .34)} !important;
+        background:
+            linear-gradient(145deg, {rgba_hex(primary, .16)}, {rgba_hex(secondary, .07)}) !important;
+    }}
+
+    .hero-radar-ring.one {{
+        border-color: {rgba_hex(primary, .20)} !important;
+        border-left-color: {rgba_hex(primary, .76)} !important;
+        border-top-color: {rgba_hex(primary, .46)} !important;
+    }}
+
+    .hero-radar-ring.two {{
+        border-color: {rgba_hex(secondary, .22)} !important;
+        border-right-color: {rgba_hex(secondary, .80)} !important;
+    }}
+
+    .hero-radar-ring.three {{
+        border-color: {rgba_hex(primary, .16)} !important;
+        box-shadow:
+            0 0 {glow_px + 20}px {rgba_hex(primary, glow_alpha_soft)},
+            inset 0 0 40px {rgba_hex(primary, .05)} !important;
+    }}
+
+    .hero-radar-cross {{
+        background:
+            linear-gradient(90deg, transparent 49.8%, {primary} 50%, transparent 50.2%),
+            linear-gradient(transparent 49.8%, {primary} 50%, transparent 50.2%) !important;
+    }}
+
+    .hero-rank-core {{
+        background:
+            radial-gradient(circle at 80% 3%, {rgba_hex(primary, .22)}, transparent 32%),
+            linear-gradient(155deg, {mix_hex(hero_surface, primary, .12)}, {hero_a}) !important;
+        border-color: {rgba_hex(primary, .28)} !important;
+        box-shadow:
+            0 28px 64px rgba(0,0,0,.30),
+            0 0 {glow_px + 18}px {rgba_hex(primary, glow_alpha_soft)},
+            inset 0 1px 0 rgba(255,255,255,.08) !important;
+    }}
+
+    .hero-rank-core::before {{
+        border-left-color: {rgba_hex(primary, .68)} !important;
+        border-top-color: {rgba_hex(primary, .68)} !important;
+    }}
+
+    .hero-rank-core::after {{
+        border-right-color: {rgba_hex(secondary, .62)} !important;
+        border-bottom-color: {rgba_hex(secondary, .62)} !important;
+    }}
+
+    .hero-rank-number {{
+        background:
+            linear-gradient(180deg, #FFFFFF 0%, {mix_hex("#FFFFFF", primary, .33)} 52%, {primary} 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        color: transparent !important;
+    }}
+
+    .hero-rank-divider {{
+        background:
+            linear-gradient(90deg, transparent, {rgba_hex(primary, .52)}, transparent) !important;
+    }}
+
+    .hero-eq span {{
+        background: linear-gradient(180deg, {mix_hex("#FFFFFF", primary, .38)}, {primary}) !important;
+        box-shadow: 0 0 {glow_px}px {rgba_hex(primary, glow_alpha)} !important;
+    }}
+
+    .hero-rank-trend span {{
+        color: {mix_hex("#FFFFFF", primary, .24)} !important;
+        background: {rgba_hex(primary, .11)} !important;
+        border-color: {rgba_hex(primary, .20)} !important;
+    }}
+
+    .hero-bottom-rail {{
+        background:
+            linear-gradient(90deg, {hero_a}, {hero_b}, {hero_a}) !important;
+        border-top-color: {rgba_hex(primary, .16)} !important;
+    }}
+
+    .hero-bottom-rail::before {{
+        background: linear-gradient(90deg, {hero_a}, transparent) !important;
+    }}
+
+    .hero-bottom-rail::after {{
+        background: linear-gradient(-90deg, {hero_a}, transparent) !important;
+    }}
+
+    .hero-rail-name {{
+        color: {mix_hex("#FFFFFF", primary, .12)} !important;
+    }}
+
+    .hero-rail-sep {{
+        background: {mix_hex(primary, hero_a, .45)} !important;
+    }}
+    """
 
 
 def person_short(value: float) -> str:
@@ -3599,11 +4438,13 @@ def make_dynamic_rank_chart(
     metric_label: str,
     top_n: int,
 ):
+    theme = chart_theme_colors()
+
     metric_map = {
-        "관객수": ("audiCnt", "명", "#3182F6"),
-        "누적 관객": ("audiAcc", "명", "#7559E8"),
-        "스크린": ("scrnCnt", "개", "#16A3A3"),
-        "매출": ("salesAmt", "원", "#F59E0B"),
+        "관객수": ("audiCnt", "명", theme["primary"]),
+        "누적 관객": ("audiAcc", "명", theme["secondary"]),
+        "스크린": ("scrnCnt", "개", theme["accent"]),
+        "매출": ("salesAmt", "원", mix_hex(theme["accent"], "#F59E0B", .46)),
     }
 
     col, unit, accent = metric_map[metric_label]
@@ -3618,7 +4459,7 @@ def make_dynamic_rank_chart(
     labels = chart_df["movieNmDisplay"].str.slice(0, 20)
 
     colors = [
-        accent if i == len(chart_df) - 1 else "#C9D9F1"
+        accent if i == len(chart_df) - 1 else mix_hex(theme["surface"], accent, .22)
         for i in range(len(chart_df))
     ]
 
@@ -3669,20 +4510,20 @@ def make_dynamic_rank_chart(
         ),
         xaxis=dict(
             showgrid=True,
-            gridcolor="#EEF2F7",
+            gridcolor=theme["grid"],
             zeroline=False,
             showticklabels=False,
             fixedrange=True,
         ),
         yaxis=dict(
             title=None,
-            tickfont=dict(size=12, color="#334155"),
+            tickfont=dict(size=12, color=theme["text"]),
             automargin=True,
             fixedrange=True,
         ),
         font=dict(
             family='Pretendard, "Noto Sans KR", sans-serif',
-            color="#334155",
+            color=theme["text"],
         ),
         bargap=.36,
         transition=dict(duration=420, easing="cubic-in-out"),
@@ -3696,6 +4537,8 @@ def make_weekly_movie_chart(
     movie_name: str,
     end_date,
 ):
+    theme = chart_theme_colors()
+
     all_days = pd.DataFrame(
         {"date": pd.date_range(end=end_date, periods=7, freq="D")}
     )
@@ -3720,7 +4563,7 @@ def make_weekly_movie_chart(
             mode="lines+markers",
             name="일일 관객",
             line=dict(
-                color="#3182F6",
+                color=theme["primary"],
                 width=3,
                 shape="spline",
             ),
@@ -3728,12 +4571,12 @@ def make_weekly_movie_chart(
                 size=8,
                 color="#FFFFFF",
                 line=dict(
-                    color="#3182F6",
+                    color=theme["primary"],
                     width=3,
                 ),
             ),
             fill="tozeroy",
-            fillcolor="rgba(49,130,246,.09)",
+            fillcolor=rgba_hex(theme["primary"], .09),
             hovertemplate="<b>%{x|%m/%d}</b><br>%{y:,.0f}명<extra></extra>",
         )
     )
@@ -3749,14 +4592,14 @@ def make_weekly_movie_chart(
                 name="순위",
                 yaxis="y2",
                 line=dict(
-                    color="#8B5CF6",
+                    color=theme["secondary"],
                     width=2,
                     dash="dot",
                 ),
                 marker=dict(
                     size=8,
                     symbol="diamond",
-                    color="#8B5CF6",
+                    color=theme["secondary"],
                 ),
                 hovertemplate=(
                     "<b>%{x|%m/%d}</b><br>"
@@ -3786,15 +4629,15 @@ def make_weekly_movie_chart(
             showgrid=False,
             tickformat="%m/%d",
             fixedrange=True,
-            tickfont=dict(color="#7A8799"),
+            tickfont=dict(color=theme["muted"]),
         ),
         yaxis=dict(
             showgrid=True,
-            gridcolor="#EEF2F7",
+            gridcolor=theme["grid"],
             zeroline=False,
             rangemode="tozero",
             fixedrange=True,
-            tickfont=dict(color="#7A8799"),
+            tickfont=dict(color=theme["muted"]),
         ),
         yaxis2=dict(
             overlaying="y",
@@ -3806,13 +4649,13 @@ def make_weekly_movie_chart(
             showgrid=False,
             fixedrange=True,
             tickfont=dict(
-                color="#8B5CF6",
+                color=theme["secondary"],
                 size=10,
             ),
         ),
         font=dict(
             family='Pretendard, "Noto Sans KR", sans-serif',
-            color="#334155",
+            color=theme["text"],
         ),
     )
 
@@ -3824,6 +4667,8 @@ def make_duel_radar(
     movie_a: str,
     movie_b: str,
 ):
+    theme = chart_theme_colors()
+
     a = df[df["movieNmDisplay"] == movie_a].iloc[0]
     b = df[df["movieNmDisplay"] == movie_b].iloc[0]
 
@@ -3862,10 +4707,10 @@ def make_duel_radar(
             fill="toself",
             name=movie_a,
             line=dict(
-                color="#3182F6",
+                color=theme["primary"],
                 width=3,
             ),
-            fillcolor="rgba(49,130,246,.15)",
+            fillcolor=rgba_hex(theme["primary"], .15),
             marker=dict(size=6),
         )
     )
@@ -3877,10 +4722,10 @@ def make_duel_radar(
             fill="toself",
             name=movie_b,
             line=dict(
-                color="#8B5CF6",
+                color=theme["secondary"],
                 width=3,
             ),
-            fillcolor="rgba(139,92,246,.12)",
+            fillcolor=rgba_hex(theme["secondary"], .12),
             marker=dict(size=6),
         )
     )
@@ -3904,21 +4749,21 @@ def make_duel_radar(
                 visible=True,
                 range=[0, 100],
                 showticklabels=False,
-                gridcolor="#E8EDF4",
-                linecolor="#E8EDF4",
+                gridcolor=theme["grid"],
+                linecolor=theme["grid"],
             ),
             angularaxis=dict(
-                gridcolor="#E8EDF4",
-                linecolor="#E8EDF4",
+                gridcolor=theme["grid"],
+                linecolor=theme["grid"],
                 tickfont=dict(
                     size=11,
-                    color="#52627A",
+                    color=theme["muted"],
                 ),
             ),
         ),
         font=dict(
             family='Pretendard, "Noto Sans KR", sans-serif',
-            color="#334155",
+            color=theme["text"],
         ),
     )
 
@@ -4049,6 +4894,72 @@ def main():
     yesterday = (now_kst - timedelta(days=1)).date()
 
     # ---------- Sidebar Control Center ----------
+    theme_presets = {
+        "Cinema Blue": {
+            "theme_primary": "#3182F6",
+            "theme_secondary": "#8B5CF6",
+            "theme_accent": "#16A3A3",
+            "theme_bg": "#F4F7FB",
+            "theme_surface": "#FFFFFF",
+        },
+        "Neon Violet": {
+            "theme_primary": "#7C3AED",
+            "theme_secondary": "#EC4899",
+            "theme_accent": "#22D3EE",
+            "theme_bg": "#080A13",
+            "theme_surface": "#111827",
+        },
+        "Cyber Lime": {
+            "theme_primary": "#84CC16",
+            "theme_secondary": "#22C55E",
+            "theme_accent": "#06B6D4",
+            "theme_bg": "#07110A",
+            "theme_surface": "#0E1B11",
+        },
+        "Crimson Rush": {
+            "theme_primary": "#EF4444",
+            "theme_secondary": "#F97316",
+            "theme_accent": "#FACC15",
+            "theme_bg": "#12090A",
+            "theme_surface": "#1F1113",
+        },
+        "Aurora": {
+            "theme_primary": "#06B6D4",
+            "theme_secondary": "#8B5CF6",
+            "theme_accent": "#EC4899",
+            "theme_bg": "#07111A",
+            "theme_surface": "#0D1A27",
+        },
+        "Bubblegum": {
+            "theme_primary": "#FF4D8D",
+            "theme_secondary": "#8B5CF6",
+            "theme_accent": "#22D3EE",
+            "theme_bg": "#FFF4FA",
+            "theme_surface": "#FFFFFF",
+        },
+    }
+
+    for key, value in theme_presets["Cinema Blue"].items():
+        st.session_state.setdefault(key, value)
+
+    st.session_state.setdefault("theme_glow", 72)
+    st.session_state.setdefault("theme_sync_charts", True)
+
+    def apply_theme_preset(name: str):
+        palette = theme_presets[name]
+        for key, value in palette.items():
+            st.session_state[key] = value
+
+    def randomize_theme():
+        palette = make_random_palette()
+        for key, value in palette.items():
+            st.session_state[key] = value
+
+    def reset_theme():
+        apply_theme_preset("Cinema Blue")
+        st.session_state["theme_glow"] = 72
+        st.session_state["theme_sync_charts"] = True
+
     def set_quick_date(days_back: int):
         st.session_state["selected_date"] = yesterday - timedelta(days=days_back)
 
@@ -4072,7 +4983,7 @@ def main():
             unsafe_allow_html=True,
         )
 
-        side_tabs = st.tabs(["🗓️ 조회", "🎛️ 화면", "📊 분석", "⚡ 요약"])
+        side_tabs = st.tabs(["🗓️ 조회", "🎛️ 화면", "🎨 색상", "📊 분석", "⚡ 요약"])
 
         with side_tabs[0]:
             st.markdown(
@@ -4196,7 +5107,176 @@ def main():
                 unsafe_allow_html=True,
             )
 
+
         with side_tabs[2]:
+            st.markdown(
+                compact_html(
+                    f"""
+                    <div class="theme-studio-head">
+                        <div class="theme-studio-kicker">LIVE THEME ENGINE</div>
+                        <div class="theme-studio-title">🎨 Color Studio</div>
+                        <div class="theme-studio-sub">
+                            원하는 색을 찍으면 사이트 전체가 즉시 그 팔레트로 재도색됩니다.
+                        </div>
+                    </div>
+                    """
+                ),
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                '<div class="side-section-label">Preset palette</div>',
+                unsafe_allow_html=True,
+            )
+
+            pr1, pr2 = st.columns(2, gap="small")
+            with pr1:
+                st.button(
+                    "🌊 Cinema",
+                    width="stretch",
+                    on_click=apply_theme_preset,
+                    args=("Cinema Blue",),
+                    key="preset_cinema",
+                )
+                st.button(
+                    "💚 Cyber",
+                    width="stretch",
+                    on_click=apply_theme_preset,
+                    args=("Cyber Lime",),
+                    key="preset_cyber",
+                )
+                st.button(
+                    "🌌 Aurora",
+                    width="stretch",
+                    on_click=apply_theme_preset,
+                    args=("Aurora",),
+                    key="preset_aurora",
+                )
+
+            with pr2:
+                st.button(
+                    "🟣 Violet",
+                    width="stretch",
+                    on_click=apply_theme_preset,
+                    args=("Neon Violet",),
+                    key="preset_violet",
+                )
+                st.button(
+                    "🔥 Crimson",
+                    width="stretch",
+                    on_click=apply_theme_preset,
+                    args=("Crimson Rush",),
+                    key="preset_crimson",
+                )
+                st.button(
+                    "🍬 Bubble",
+                    width="stretch",
+                    on_click=apply_theme_preset,
+                    args=("Bubblegum",),
+                    key="preset_bubble",
+                )
+
+            rr1, rr2 = st.columns(2, gap="small")
+            with rr1:
+                st.button(
+                    "🎲 조화 랜덤",
+                    width="stretch",
+                    on_click=randomize_theme,
+                    key="random_theme",
+                )
+            with rr2:
+                st.button(
+                    "↺ 기본값",
+                    width="stretch",
+                    on_click=reset_theme,
+                    key="reset_theme",
+                )
+
+            st.markdown(
+                '<div class="side-section-label" style="margin-top:.8rem;">Custom colors</div>',
+                unsafe_allow_html=True,
+            )
+
+            theme_primary = st.color_picker(
+                "메인 컬러",
+                key="theme_primary",
+                help="버튼, 랭크, 핵심 글로우, 차트의 중심색입니다.",
+            )
+
+            theme_secondary = st.color_picker(
+                "서브 컬러",
+                key="theme_secondary",
+                help="그라데이션, 홀로그램, 보조 차트 색상입니다.",
+            )
+
+            theme_accent = st.color_picker(
+                "강조 컬러",
+                key="theme_accent",
+                help="배지, 3순위 계열, 보조 포인트에 사용됩니다.",
+            )
+
+            theme_bg = st.color_picker(
+                "전체 배경",
+                key="theme_bg",
+            )
+
+            theme_surface = st.color_picker(
+                "카드 / 패널",
+                key="theme_surface",
+            )
+
+            st.markdown(
+                compact_html(
+                    f"""
+                    <div class="palette-preview">
+                        <div class="palette-swatch" style="background:{theme_primary};"></div>
+                        <div class="palette-swatch" style="background:{theme_secondary};"></div>
+                        <div class="palette-swatch" style="background:{theme_accent};"></div>
+                        <div class="palette-swatch" style="background:{theme_bg};"></div>
+                        <div class="palette-swatch" style="background:{theme_surface};"></div>
+                    </div>
+
+                    <div class="palette-code">
+                        <div class="palette-code-item"><b>PRIMARY</b>{theme_primary}</div>
+                        <div class="palette-code-item"><b>SECONDARY</b>{theme_secondary}</div>
+                        <div class="palette-code-item"><b>ACCENT</b>{theme_accent}</div>
+                        <div class="palette-code-item"><b>BACKGROUND</b>{theme_bg}</div>
+                    </div>
+                    """
+                ),
+                unsafe_allow_html=True,
+            )
+
+            theme_glow = st.slider(
+                "네온 글로우",
+                min_value=0,
+                max_value=100,
+                key="theme_glow",
+                help="0은 깔끔한 플랫, 100은 네온 폭발입니다.",
+            )
+
+            theme_sync_charts = st.toggle(
+                "차트 색상도 팔레트와 동기화",
+                key="theme_sync_charts",
+            )
+
+            surface_mode = "DARK" if color_luminance(theme_surface) < .38 else "LIGHT"
+            st.markdown(
+                compact_html(
+                    f"""
+                    <div class="theme-status">
+                        <span class="theme-status-dot"></span>
+                        <span>
+                            <b>{surface_mode} SURFACE</b><br>
+                            텍스트 대비는 선택한 카드색에 맞춰 자동 계산됩니다.
+                        </span>
+                    </div>
+                    """
+                ),
+                unsafe_allow_html=True,
+            )
+
+        with side_tabs[3]:
             st.markdown(
                 '<div class="side-section-label">Analysis defaults</div>',
                 unsafe_allow_html=True,
@@ -4860,6 +5940,28 @@ def main():
             unsafe_allow_html=True,
         )
 
+    # ---------- Live Theme Engine ----------
+    theme_primary = st.session_state["theme_primary"]
+    theme_secondary = st.session_state["theme_secondary"]
+    theme_accent = st.session_state["theme_accent"]
+    theme_bg = st.session_state["theme_bg"]
+    theme_surface = st.session_state["theme_surface"]
+    theme_glow = st.session_state["theme_glow"]
+
+    st.markdown(
+        "<style>"
+        + build_theme_css(
+            theme_primary,
+            theme_secondary,
+            theme_accent,
+            theme_bg,
+            theme_surface,
+            theme_glow,
+        )
+        + "</style>",
+        unsafe_allow_html=True,
+    )
+
     # ---------- API key ----------
     if "KOBIS_KEY" not in st.secrets:
         st.error(
@@ -4937,7 +6039,7 @@ def main():
     million_count = int(df["isMillion"].sum())
     rising_count = int((df["rankInten"] > 0).sum())
 
-    with side_tabs[3]:
+    with side_tabs[4]:
         st.markdown(
             '<div class="side-section-label">Today at a glance</div>',
             unsafe_allow_html=True,
