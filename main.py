@@ -1228,7 +1228,432 @@ st.markdown(
             transition-duration: .001ms !important;
         }
     }
-    </style>
+    
+    /* =====================================================
+       ALWAYS-ON CINEMA MOTION
+       ===================================================== */
+    @keyframes ambientGradientDrift {
+        0%   { background-position: 0% 0%, 100% 0%, 0 0; }
+        50%  { background-position: 12% 8%, 88% 10%, 0 0; }
+        100% { background-position: 0% 0%, 100% 0%, 0 0; }
+    }
+
+    @keyframes heroPulseDepth {
+        0%, 100% {
+            filter: saturate(1) brightness(1);
+            box-shadow: 0 30px 70px rgba(22,50,92,.24);
+        }
+        50% {
+            filter: saturate(1.08) brightness(1.025);
+            box-shadow:
+                0 36px 86px rgba(22,50,92,.30),
+                0 0 55px rgba(49,130,246,.10);
+        }
+    }
+
+    @keyframes starDrift {
+        0% {
+            transform: translate3d(0,0,0);
+            opacity: .25;
+        }
+        50% {
+            transform: translate3d(-18px,10px,0);
+            opacity: .55;
+        }
+        100% {
+            transform: translate3d(-36px,20px,0);
+            opacity: .25;
+        }
+    }
+
+    @keyframes laserFly1 {
+        0% {
+            transform: translateX(-140%) rotate(-7deg);
+            opacity: 0;
+        }
+        8% { opacity: .75; }
+        28% { opacity: .12; }
+        40%, 100% {
+            transform: translateX(260%) rotate(-7deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes laserFly2 {
+        0%, 38% {
+            transform: translateX(230%) rotate(8deg);
+            opacity: 0;
+        }
+        46% { opacity: .55; }
+        68% { opacity: .10; }
+        80%, 100% {
+            transform: translateX(-170%) rotate(8deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes cardFloatA {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-4px); }
+    }
+
+    @keyframes cardFloatB {
+        0%, 100% { transform: translateY(-2px); }
+        50% { transform: translateY(3px); }
+    }
+
+    @keyframes cardFloatC {
+        0%, 100% { transform: translateY(2px); }
+        50% { transform: translateY(-3px); }
+    }
+
+    @keyframes shineText {
+        0% {
+            background-position: 200% center;
+        }
+        100% {
+            background-position: -200% center;
+        }
+    }
+
+    @keyframes sectionScan {
+        0% {
+            transform: translateX(-140%);
+            opacity: 0;
+        }
+        15% {
+            opacity: .8;
+        }
+        45%, 100% {
+            transform: translateX(320%);
+            opacity: 0;
+        }
+    }
+
+    @keyframes rankScan {
+        0% {
+            transform: translateY(-120%);
+            opacity: 0;
+        }
+        10% { opacity: .25; }
+        45% { opacity: .10; }
+        55%, 100% {
+            transform: translateY(850%);
+            opacity: 0;
+        }
+    }
+
+    @keyframes pulseRing {
+        0% {
+            box-shadow: 0 0 0 0 rgba(49,130,246,.28);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(49,130,246,0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(49,130,246,0);
+        }
+    }
+
+    @keyframes tableTopGlow {
+        0%, 100% { opacity: .55; }
+        50% { opacity: 1; }
+    }
+
+    /* 전체 배경이 아주 천천히 흐름 */
+    .stApp {
+        background-size: 120% 120%, 120% 120%, auto;
+        animation: ambientGradientDrift 13s ease-in-out infinite;
+    }
+
+    /* 히어로는 마우스 없어도 호흡 */
+    .hero {
+        animation:
+            heroPulseDepth 5.5s ease-in-out infinite,
+            fadeRise .7s ease both;
+    }
+
+    /* 히어로 별가루 레이어 */
+    .hero::before {
+        content: "";
+        position: absolute;
+        inset: -10%;
+        z-index: 2;
+        pointer-events: none;
+        opacity: .36;
+        background-image:
+            radial-gradient(circle at 10% 20%, rgba(255,255,255,.80) 0 1px, transparent 1.7px),
+            radial-gradient(circle at 27% 72%, rgba(255,255,255,.55) 0 1px, transparent 1.8px),
+            radial-gradient(circle at 45% 34%, rgba(159,205,255,.85) 0 1px, transparent 1.7px),
+            radial-gradient(circle at 63% 62%, rgba(255,255,255,.65) 0 1px, transparent 1.6px),
+            radial-gradient(circle at 78% 26%, rgba(186,213,255,.90) 0 1px, transparent 1.9px),
+            radial-gradient(circle at 91% 76%, rgba(255,255,255,.60) 0 1px, transparent 1.8px);
+        background-size:
+            180px 180px,
+            230px 230px,
+            260px 260px,
+            210px 210px,
+            320px 320px,
+            280px 280px;
+        animation: starDrift 10s linear infinite;
+    }
+
+    /* 삐슝 레이저 1 */
+    .hero::after {
+        content: "";
+        position: absolute;
+        z-index: 5;
+        top: 18%;
+        left: 0;
+        width: 45%;
+        height: 2px;
+        pointer-events: none;
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                rgba(101,171,255,.20),
+                rgba(180,220,255,.95),
+                rgba(101,171,255,.35),
+                transparent
+            );
+        box-shadow:
+            0 0 10px rgba(85,160,255,.65),
+            0 0 24px rgba(85,160,255,.25);
+        animation: laserFly1 7.5s ease-in-out infinite;
+    }
+
+    /* 추가 레이저는 hero-grid의 pseudo */
+    .hero-grid::after {
+        content: "";
+        position: absolute;
+        z-index: 5;
+        top: 68%;
+        right: 0;
+        width: 38%;
+        height: 1px;
+        pointer-events: none;
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                rgba(176,116,255,.18),
+                rgba(211,180,255,.82),
+                rgba(176,116,255,.30),
+                transparent
+            );
+        box-shadow:
+            0 0 9px rgba(167,112,255,.55),
+            0 0 20px rgba(167,112,255,.22);
+        animation: laserFly2 9s ease-in-out infinite;
+    }
+
+    /* KPI도 손 안 대도 살짝 부유 */
+    .kpi-card:nth-child(1) {
+        animation: cardFloatA 4.8s ease-in-out infinite;
+    }
+
+    .kpi-card:nth-child(2) {
+        animation: cardFloatB 5.4s ease-in-out infinite;
+        animation-delay: -.8s;
+    }
+
+    .kpi-card:nth-child(3) {
+        animation: cardFloatC 5.0s ease-in-out infinite;
+        animation-delay: -1.5s;
+    }
+
+    .kpi-card:nth-child(4) {
+        animation: cardFloatA 5.8s ease-in-out infinite;
+        animation-delay: -2.2s;
+    }
+
+    /* KPI 숫자에 계속 은은한 하이라이트 */
+    .kpi-value {
+        background:
+            linear-gradient(
+                110deg,
+                #0F172A 0%,
+                #0F172A 35%,
+                #4E93F9 47%,
+                #8B5CF6 52%,
+                #0F172A 65%,
+                #0F172A 100%
+            );
+        background-size: 260% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shineText 6.5s linear infinite;
+    }
+
+    /* TOP 3 서로 다른 박자로 부유 */
+    div[data-testid="stHorizontalBlock"] > div:nth-child(1) .podium-card {
+        animation:
+            softGlow 4.8s ease-in-out infinite,
+            cardFloatA 5.6s ease-in-out infinite;
+    }
+
+    div[data-testid="stHorizontalBlock"] > div:nth-child(2) .podium-card {
+        animation: cardFloatB 6.2s ease-in-out infinite;
+        animation-delay: -.9s;
+    }
+
+    div[data-testid="stHorizontalBlock"] > div:nth-child(3) .podium-card {
+        animation: cardFloatC 5.8s ease-in-out infinite;
+        animation-delay: -1.7s;
+    }
+
+    /* 섹션 타이틀 밑으로 스캔 빛 */
+    .section-head {
+        position: relative;
+        overflow: hidden;
+        padding-bottom: .15rem;
+    }
+
+    .section-head::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 26%;
+        height: 2px;
+        border-radius: 999px;
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                #3182F6,
+                #8B5CF6,
+                transparent
+            );
+        box-shadow: 0 0 12px rgba(49,130,246,.35);
+        animation: sectionScan 6.8s ease-in-out infinite;
+    }
+
+    /* 인터랙티브 박스 안쪽도 숨 쉬기 */
+    .interactive-inner {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .interactive-inner::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 8% 120%, rgba(49,130,246,.07), transparent 28%),
+            radial-gradient(circle at 96% -20%, rgba(139,92,246,.08), transparent 26%);
+        animation: heroFloatB 9s ease-in-out infinite;
+    }
+
+    /* focus card도 미세 호흡 */
+    .focus-card {
+        animation: cardFloatA 6.3s ease-in-out infinite;
+    }
+
+    /* VS 배지 자동 펄스 */
+    .duel-vs {
+        animation:
+            pulseRing 2.7s ease-out infinite,
+            cardFloatA 4.4s ease-in-out infinite;
+    }
+
+    /* 랭킹 패널 상단 광선 */
+    .ranking-panel::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 34px;
+        z-index: 3;
+        pointer-events: none;
+        background:
+            linear-gradient(
+                180deg,
+                rgba(49,130,246,.10),
+                rgba(49,130,246,0)
+            );
+        animation: tableTopGlow 3s ease-in-out infinite;
+    }
+
+    /* 랭킹 표를 가로지르는 레이더 스캔 */
+    .ranking-scroll {
+        position: relative;
+    }
+
+    .ranking-scroll::after {
+        content: "";
+        position: absolute;
+        z-index: 8;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        pointer-events: none;
+        background:
+            linear-gradient(
+                180deg,
+                transparent 0%,
+                rgba(49,130,246,.035) 25%,
+                rgba(49,130,246,.11) 50%,
+                rgba(49,130,246,.035) 75%,
+                transparent 100%
+            );
+        filter: blur(.2px);
+        animation: rankScan 9.5s ease-in-out infinite;
+    }
+
+    /* LIVE 도트 추가 펄스 */
+    .ranking-live {
+        animation:
+            livePulse 1.8s ease-in-out infinite,
+            pulseRing 2.4s ease-out infinite;
+    }
+
+    /* top 3 랭크 숫자도 리듬 */
+    .rank-number.first {
+        animation: pulseRing 3.2s ease-out infinite;
+    }
+
+    .rank-number.second {
+        animation: cardFloatB 4.8s ease-in-out infinite;
+    }
+
+    .rank-number.third {
+        animation: cardFloatC 5.2s ease-in-out infinite;
+    }
+
+    /* 티커 속도와 움직임을 조금 더 영화관 전광판처럼 */
+    .ticker-track {
+        animation: tickerMove 20s linear infinite;
+        will-change: transform;
+    }
+
+    /* hover가 들어오면 기존 상호작용은 애니메이션 위에 추가 */
+    .kpi-card:hover {
+        animation-play-state: paused;
+        transform: translateY(-9px) scale(1.015);
+    }
+
+    .podium-card:hover,
+    .focus-card:hover {
+        animation-play-state: paused;
+    }
+
+    /* 그래프 영역에 아주 약한 pulse */
+    [data-testid="stPlotlyChart"] {
+        box-shadow: 0 0 0 rgba(49,130,246,0);
+        transition: box-shadow .25s ease;
+    }
+
+    [data-testid="stPlotlyChart"]:hover {
+        box-shadow: 0 18px 42px rgba(49,130,246,.08);
+    }
+
+</style>
     """,
     unsafe_allow_html=True,
 )
