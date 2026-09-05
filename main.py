@@ -1884,6 +1884,601 @@ st.markdown(
         font-size: .76rem !important;
     }
 
+
+    /* =====================================================
+       EVERYTHING MOVES — ULTRA MOTION LAYER
+       ===================================================== */
+
+    @keyframes breatheScale {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.012); }
+    }
+
+    @keyframes gentleTilt {
+        0%, 100% { transform: rotate(0deg) translateY(0); }
+        50% { transform: rotate(.25deg) translateY(-2px); }
+    }
+
+    @keyframes glowSweep {
+        0% {
+            transform: translateX(-160%) skewX(-14deg);
+            opacity: 0;
+        }
+        12% { opacity: .42; }
+        52% { opacity: .10; }
+        100% {
+            transform: translateX(220%) skewX(-14deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes borderBreath {
+        0%, 100% {
+            border-color: rgba(49,130,246,.15);
+            box-shadow: 0 0 0 rgba(49,130,246,0);
+        }
+        50% {
+            border-color: rgba(49,130,246,.38);
+            box-shadow: 0 0 24px rgba(49,130,246,.08);
+        }
+    }
+
+    @keyframes inputGlow {
+        0%, 100% {
+            box-shadow: 0 0 0 rgba(49,130,246,0);
+        }
+        50% {
+            box-shadow: 0 0 0 3px rgba(49,130,246,.055);
+        }
+    }
+
+    @keyframes microFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-2px); }
+    }
+
+    @keyframes microFloatReverse {
+        0%, 100% { transform: translateY(-1px); }
+        50% { transform: translateY(2px); }
+    }
+
+    @keyframes badgePulse {
+        0%, 100% {
+            transform: scale(1);
+            filter: brightness(1);
+        }
+        50% {
+            transform: scale(1.04);
+            filter: brightness(1.06);
+        }
+    }
+
+    @keyframes progressGlow {
+        0%, 100% {
+            filter: brightness(1);
+            box-shadow: 0 0 8px rgba(49,130,246,.12);
+        }
+        50% {
+            filter: brightness(1.12);
+            box-shadow: 0 0 18px rgba(49,130,246,.28);
+        }
+    }
+
+    @keyframes rowWave {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(2px); }
+    }
+
+    @keyframes softBlink {
+        0%, 100% { opacity: .72; }
+        50% { opacity: 1; }
+    }
+
+    @keyframes sidebarGlow {
+        0%, 100% {
+            box-shadow: inset -1px 0 0 rgba(49,130,246,.04);
+        }
+        50% {
+            box-shadow: inset -1px 0 0 rgba(49,130,246,.14);
+        }
+    }
+
+    @keyframes iconNudge {
+        0%, 100% { transform: translateY(0) rotate(0); }
+        50% { transform: translateY(-2px) rotate(2deg); }
+    }
+
+    @keyframes tabPulse {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-1px); }
+    }
+
+    @keyframes chartBreath {
+        0%, 100% {
+            box-shadow: 0 0 0 rgba(49,130,246,0);
+            transform: translateY(0);
+        }
+        50% {
+            box-shadow: 0 18px 44px rgba(49,130,246,.055);
+            transform: translateY(-1px);
+        }
+    }
+
+    @keyframes noteGlow {
+        0%, 100% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+    }
+
+    @keyframes tableShimmer {
+        0% {
+            background-position: -200% center;
+        }
+        100% {
+            background-position: 200% center;
+        }
+    }
+
+    /* ---------- SIDEBAR WHOLE BODY ---------- */
+    [data-testid="stSidebar"] {
+        animation: sidebarGlow 4.8s ease-in-out infinite;
+    }
+
+    .sidebar-command {
+        animation:
+            breatheScale 5.2s ease-in-out infinite,
+            borderBreath 6.5s ease-in-out infinite;
+    }
+
+    .sidebar-command-title {
+        background:
+            linear-gradient(
+                110deg,
+                #FFFFFF 0%,
+                #FFFFFF 34%,
+                #9FCCFF 47%,
+                #C5B1FF 53%,
+                #FFFFFF 66%,
+                #FFFFFF 100%
+            );
+        background-size: 240% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shineText 7s linear infinite;
+    }
+
+    .sidebar-command-sub {
+        animation: softBlink 4.5s ease-in-out infinite;
+    }
+
+    /* ---------- SIDEBAR TABS ---------- */
+    [data-testid="stSidebar"] [data-baseweb="tab"] {
+        animation: tabPulse 4s ease-in-out infinite;
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="tab"]:nth-child(2) {
+        animation-delay: -.8s;
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="tab"]:nth-child(3) {
+        animation-delay: -1.6s;
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="tab"]:nth-child(4) {
+        animation-delay: -2.4s;
+    }
+
+    [data-testid="stSidebar"] [aria-selected="true"] {
+        animation:
+            tabPulse 3.2s ease-in-out infinite,
+            borderBreath 4.5s ease-in-out infinite;
+    }
+
+    /* ---------- SIDEBAR MINI CARDS ---------- */
+    .side-mini-card,
+    .side-stat,
+    .side-feature,
+    .sidebar-tip {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .side-mini-card {
+        animation: microFloat 5.2s ease-in-out infinite;
+    }
+
+    .side-stat:nth-child(1) {
+        animation: microFloat 4.8s ease-in-out infinite;
+    }
+
+    .side-stat:nth-child(2) {
+        animation: microFloatReverse 5.1s ease-in-out infinite;
+    }
+
+    .side-stat:nth-child(3) {
+        animation: microFloat 5.5s ease-in-out infinite;
+    }
+
+    .side-stat:nth-child(4) {
+        animation: microFloatReverse 4.9s ease-in-out infinite;
+    }
+
+    .side-feature:nth-child(1) {
+        animation: microFloat 5.4s ease-in-out infinite;
+    }
+
+    .side-feature:nth-child(2) {
+        animation: microFloatReverse 5.7s ease-in-out infinite;
+    }
+
+    .side-feature:nth-child(3) {
+        animation: microFloat 6s ease-in-out infinite;
+    }
+
+    .side-feature-icon {
+        animation: iconNudge 3.8s ease-in-out infinite;
+    }
+
+    .side-rank-card {
+        animation:
+            breatheScale 5.8s ease-in-out infinite,
+            borderBreath 7s ease-in-out infinite;
+    }
+
+    .side-rank-chip {
+        animation: badgePulse 3.8s ease-in-out infinite;
+    }
+
+    .side-rank-value {
+        animation: shineText 7.5s linear infinite;
+        background:
+            linear-gradient(
+                110deg,
+                #FFFFFF 0%,
+                #FFFFFF 36%,
+                #9DC8FF 48%,
+                #D3C0FF 52%,
+                #FFFFFF 64%,
+                #FFFFFF 100%
+            );
+        background-size: 250% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .sidebar-tip {
+        background:
+            linear-gradient(
+                120deg,
+                #EEF5FF,
+                #F5F1FF,
+                #EEF5FF
+            );
+        background-size: 220% 220%;
+        animation: noteGlow 8s ease-in-out infinite;
+    }
+
+    /* ---------- NATIVE BUTTONS / INPUTS ---------- */
+    .stButton > button {
+        animation:
+            microFloat 4.8s ease-in-out infinite,
+            borderBreath 6s ease-in-out infinite;
+    }
+
+    [data-testid="stSidebar"] .stButton > button:nth-child(even) {
+        animation-delay: -1s;
+    }
+
+    div[data-baseweb="select"] > div {
+        animation: inputGlow 4.6s ease-in-out infinite;
+    }
+
+    [data-testid="stTextInput"] input,
+    [data-testid="stDateInput"] input {
+        animation: inputGlow 4.2s ease-in-out infinite;
+    }
+
+    [data-testid="stSlider"] {
+        animation: microFloat 5.3s ease-in-out infinite;
+    }
+
+    [data-testid="stRadio"] {
+        animation: microFloatReverse 5.6s ease-in-out infinite;
+    }
+
+    /* ---------- ALL LABELS / CAPTIONS ---------- */
+    [data-testid="stWidgetLabel"],
+    [data-testid="stCaptionContainer"] {
+        animation: softBlink 5.5s ease-in-out infinite;
+    }
+
+    /* ---------- SECTION HEADERS ---------- */
+    .section-title {
+        background:
+            linear-gradient(
+                110deg,
+                #0F172A 0%,
+                #0F172A 38%,
+                #3182F6 49%,
+                #8B5CF6 53%,
+                #0F172A 64%,
+                #0F172A 100%
+            );
+        background-size: 250% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shineText 9s linear infinite;
+    }
+
+    .section-eyebrow {
+        animation: badgePulse 4.4s ease-in-out infinite;
+    }
+
+    .section-caption {
+        animation: softBlink 5.8s ease-in-out infinite;
+    }
+
+    /* ---------- HERO TEXT ---------- */
+    .hero-title {
+        animation:
+            breatheScale 6s ease-in-out infinite,
+            softBlink 4.8s ease-in-out infinite;
+        transform-origin: left center;
+    }
+
+    .hero-sub {
+        animation: softBlink 5.5s ease-in-out infinite;
+    }
+
+    .hero-date {
+        animation: badgePulse 4.7s ease-in-out infinite;
+    }
+
+    .hero-chip:nth-child(1) {
+        animation: microFloat 4.6s ease-in-out infinite;
+    }
+
+    .hero-chip:nth-child(2) {
+        animation: microFloatReverse 5s ease-in-out infinite;
+    }
+
+    .hero-chip:nth-child(3) {
+        animation: microFloat 5.4s ease-in-out infinite;
+    }
+
+    .hero-chip:nth-child(4) {
+        animation: microFloatReverse 5.8s ease-in-out infinite;
+    }
+
+    /* ---------- KPI CONTENT ---------- */
+    .kpi-label {
+        animation: softBlink 5s ease-in-out infinite;
+    }
+
+    .kpi-note {
+        animation: softBlink 6s ease-in-out infinite;
+    }
+
+    /* ---------- PODIUM INTERNAL ELEMENTS ---------- */
+    .rank-chip {
+        animation:
+            badgePulse 3.8s ease-in-out infinite,
+            pulseRing 5.2s ease-out infinite;
+    }
+
+    .podium-name {
+        animation: softBlink 5.3s ease-in-out infinite;
+    }
+
+    .podium-number {
+        background:
+            linear-gradient(
+                110deg,
+                #172033 0%,
+                #172033 36%,
+                #3182F6 49%,
+                #8B5CF6 53%,
+                #172033 66%,
+                #172033 100%
+            );
+        background-size: 260% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shineText 8s linear infinite;
+    }
+
+    /* ---------- INTERACTIVE PANEL ---------- */
+    .panel-kicker {
+        animation: badgePulse 4.2s ease-in-out infinite;
+    }
+
+    .panel-title {
+        animation: softBlink 5.2s ease-in-out infinite;
+    }
+
+    .panel-sub {
+        animation: softBlink 6.2s ease-in-out infinite;
+    }
+
+    /* ---------- PLOTLY CHARTS ---------- */
+    [data-testid="stPlotlyChart"] {
+        animation: chartBreath 6.5s ease-in-out infinite;
+    }
+
+    /* ---------- FOCUS CARD INTERNAL ---------- */
+    .focus-rank {
+        animation:
+            badgePulse 4s ease-in-out infinite,
+            pulseRing 5.4s ease-out infinite;
+    }
+
+    .focus-title {
+        animation: softBlink 5.2s ease-in-out infinite;
+    }
+
+    .focus-number {
+        background:
+            linear-gradient(
+                110deg,
+                #FFFFFF 0%,
+                #FFFFFF 36%,
+                #A5D0FF 48%,
+                #D6C1FF 52%,
+                #FFFFFF 64%,
+                #FFFFFF 100%
+            );
+        background-size: 250% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shineText 7.2s linear infinite;
+    }
+
+    .focus-fill {
+        animation: progressGlow 3.8s ease-in-out infinite;
+    }
+
+    .focus-meta,
+    .focus-caption,
+    .focus-track-label {
+        animation: softBlink 5.7s ease-in-out infinite;
+    }
+
+    /* ---------- DUEL ---------- */
+    .duel-result {
+        animation: microFloat 5.2s ease-in-out infinite;
+    }
+
+    .duel-result:nth-child(even) {
+        animation: microFloatReverse 5.6s ease-in-out infinite;
+    }
+
+    /* ---------- METRICS ---------- */
+    [data-testid="stMetric"] {
+        position: relative;
+        overflow: hidden;
+        animation:
+            microFloat 5.6s ease-in-out infinite,
+            borderBreath 6.8s ease-in-out infinite;
+    }
+
+    [data-testid="stMetric"]::after {
+        content: "";
+        position: absolute;
+        top: -30%;
+        bottom: -30%;
+        width: 80px;
+        left: -120px;
+        pointer-events: none;
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                rgba(255,255,255,.45),
+                transparent
+            );
+        animation: glowSweep 7.8s ease-in-out infinite;
+    }
+
+    [data-testid="stMetricValue"] {
+        animation: badgePulse 4.6s ease-in-out infinite;
+    }
+
+    [data-testid="stMetricLabel"] {
+        animation: softBlink 5.5s ease-in-out infinite;
+    }
+
+    /* ---------- RANKING TABLE ---------- */
+    .ranking-toolbar-title {
+        animation: softBlink 4.6s ease-in-out infinite;
+    }
+
+    .ranking-toolbar-meta {
+        animation: softBlink 5.8s ease-in-out infinite;
+    }
+
+    .custom-table thead th {
+        background:
+            linear-gradient(
+                100deg,
+                #F8FAFC 0%,
+                #F8FAFC 40%,
+                #EEF5FF 50%,
+                #F8FAFC 60%,
+                #F8FAFC 100%
+            );
+        background-size: 240% auto;
+        animation: tableShimmer 12s linear infinite;
+    }
+
+    .custom-table tbody tr:nth-child(odd) {
+        animation: rowWave 6s ease-in-out infinite;
+    }
+
+    .custom-table tbody tr:nth-child(even) {
+        animation: rowWave 6.6s ease-in-out infinite reverse;
+    }
+
+    .movie-name {
+        animation: softBlink 6s ease-in-out infinite;
+    }
+
+    .trend-up,
+    .trend-down,
+    .trend-new,
+    .trend-flat,
+    .million-badge,
+    .screen-pill {
+        animation: badgePulse 4.8s ease-in-out infinite;
+    }
+
+    .audience-value,
+    .num-cell {
+        animation: softBlink 5.8s ease-in-out infinite;
+    }
+
+    .share-fill {
+        animation: progressGlow 4.2s ease-in-out infinite;
+    }
+
+    .ranking-footer span {
+        animation: softBlink 6.2s ease-in-out infinite;
+    }
+
+    /* ---------- ALERT / INFO / NOTE ---------- */
+    div[data-testid="stAlert"] {
+        animation:
+            microFloat 5.5s ease-in-out infinite,
+            borderBreath 7s ease-in-out infinite;
+    }
+
+    .soft-note {
+        background:
+            linear-gradient(
+                120deg,
+                #EEF5FF,
+                #F7F1FF,
+                #EEF5FF
+            );
+        background-size: 240% 240%;
+        animation:
+            noteGlow 9s ease-in-out infinite,
+            microFloat 6.2s ease-in-out infinite;
+    }
+
+    /* ---------- SCROLLBAR ---------- */
+    [data-testid="stSidebar"] ::-webkit-scrollbar-thumb,
+    .ranking-scroll::-webkit-scrollbar-thumb {
+        animation: softBlink 4s ease-in-out infinite;
+    }
+
 </style>
     """,
     unsafe_allow_html=True,
@@ -2994,6 +3589,46 @@ def main():
             .rank-number {
                 transition-duration: .22s !important;
             }
+
+            /* EVERYTHING MOVES — SOFT 감속 */
+            [data-testid="stSidebar"],
+            .sidebar-command,
+            [data-testid="stSidebar"] [data-baseweb="tab"],
+            .side-mini-card,
+            .side-stat,
+            .side-feature,
+            .sidebar-tip,
+            .stButton > button,
+            div[data-baseweb="select"] > div,
+            [data-testid="stTextInput"] input,
+            [data-testid="stDateInput"] input,
+            [data-testid="stSlider"],
+            [data-testid="stRadio"],
+            [data-testid="stPlotlyChart"],
+            [data-testid="stMetric"],
+            .soft-note,
+            div[data-testid="stAlert"] {
+                animation-duration: 12s !important;
+            }
+
+            .section-title,
+            .kpi-value,
+            .podium-number,
+            .focus-number,
+            .side-rank-value {
+                animation-duration: 14s !important;
+            }
+
+            .custom-table tbody tr,
+            .trend-up,
+            .trend-down,
+            .trend-new,
+            .trend-flat,
+            .million-badge,
+            .screen-pill {
+                animation-duration: 10s !important;
+            }
+
             """
         )
 
@@ -3001,6 +3636,185 @@ def main():
         # MAX는 사용자의 명시적 선택이므로 시스템 reduced-motion보다 강하게 우선합니다.
         override_rules.append(
             """
+
+            /* EVERYTHING MOVES — MAX 강제 복구 */
+            [data-testid="stSidebar"] {
+                animation: sidebarGlow 4.8s ease-in-out infinite !important;
+            }
+
+            .sidebar-command {
+                animation:
+                    breatheScale 5.2s ease-in-out infinite,
+                    borderBreath 6.5s ease-in-out infinite !important;
+            }
+
+            .sidebar-command-title {
+                animation: shineText 7s linear infinite !important;
+            }
+
+            .sidebar-command-sub,
+            .section-caption,
+            .panel-sub,
+            .focus-meta,
+            .focus-caption,
+            .ranking-toolbar-meta {
+                animation: softBlink 5.5s ease-in-out infinite !important;
+            }
+
+            [data-testid="stSidebar"] [data-baseweb="tab"] {
+                animation: tabPulse 4s ease-in-out infinite !important;
+            }
+
+            .side-mini-card,
+            .side-feature,
+            .sidebar-tip,
+            .duel-result {
+                animation: microFloat 5.2s ease-in-out infinite !important;
+            }
+
+            .side-stat:nth-child(odd) {
+                animation: microFloat 4.9s ease-in-out infinite !important;
+            }
+
+            .side-stat:nth-child(even) {
+                animation: microFloatReverse 5.1s ease-in-out infinite !important;
+            }
+
+            .side-feature-icon {
+                animation: iconNudge 3.8s ease-in-out infinite !important;
+            }
+
+            .side-rank-card {
+                animation:
+                    breatheScale 5.8s ease-in-out infinite,
+                    borderBreath 7s ease-in-out infinite !important;
+            }
+
+            .side-rank-chip,
+            .rank-chip,
+            .focus-rank,
+            .million-badge,
+            .screen-pill,
+            .trend-up,
+            .trend-down,
+            .trend-new,
+            .trend-flat {
+                animation: badgePulse 4.2s ease-in-out infinite !important;
+            }
+
+            .side-rank-value,
+            .section-title,
+            .podium-number,
+            .focus-number,
+            .kpi-value {
+                animation: shineText 7.5s linear infinite !important;
+            }
+
+            .stButton > button {
+                animation:
+                    microFloat 4.8s ease-in-out infinite,
+                    borderBreath 6s ease-in-out infinite !important;
+            }
+
+            div[data-baseweb="select"] > div,
+            [data-testid="stTextInput"] input,
+            [data-testid="stDateInput"] input {
+                animation: inputGlow 4.4s ease-in-out infinite !important;
+            }
+
+            [data-testid="stSlider"] {
+                animation: microFloat 5.3s ease-in-out infinite !important;
+            }
+
+            [data-testid="stRadio"] {
+                animation: microFloatReverse 5.6s ease-in-out infinite !important;
+            }
+
+            [data-testid="stWidgetLabel"],
+            [data-testid="stCaptionContainer"],
+            .kpi-label,
+            .kpi-note,
+            .podium-name,
+            .panel-title,
+            .movie-name,
+            .audience-value,
+            .num-cell,
+            .ranking-footer span {
+                animation: softBlink 5.7s ease-in-out infinite !important;
+            }
+
+            .hero-title {
+                animation:
+                    breatheScale 6s ease-in-out infinite,
+                    softBlink 4.8s ease-in-out infinite !important;
+            }
+
+            .hero-sub {
+                animation: softBlink 5.5s ease-in-out infinite !important;
+            }
+
+            .hero-date {
+                animation: badgePulse 4.7s ease-in-out infinite !important;
+            }
+
+            .hero-chip:nth-child(odd) {
+                animation: microFloat 4.8s ease-in-out infinite !important;
+            }
+
+            .hero-chip:nth-child(even) {
+                animation: microFloatReverse 5.2s ease-in-out infinite !important;
+            }
+
+            .section-eyebrow {
+                animation: badgePulse 4.4s ease-in-out infinite !important;
+            }
+
+            [data-testid="stPlotlyChart"] {
+                animation: chartBreath 6.5s ease-in-out infinite !important;
+            }
+
+            .focus-fill,
+            .share-fill {
+                animation: progressGlow 4s ease-in-out infinite !important;
+            }
+
+            [data-testid="stMetric"] {
+                animation:
+                    microFloat 5.6s ease-in-out infinite,
+                    borderBreath 6.8s ease-in-out infinite !important;
+            }
+
+            [data-testid="stMetric"]::after {
+                animation: glowSweep 7.8s ease-in-out infinite !important;
+            }
+
+            [data-testid="stMetricValue"] {
+                animation: badgePulse 4.6s ease-in-out infinite !important;
+            }
+
+            .custom-table thead th {
+                animation: tableShimmer 12s linear infinite !important;
+            }
+
+            .custom-table tbody tr:nth-child(odd) {
+                animation: rowWave 6s ease-in-out infinite !important;
+            }
+
+            .custom-table tbody tr:nth-child(even) {
+                animation: rowWave 6.6s ease-in-out infinite reverse !important;
+            }
+
+            div[data-testid="stAlert"] {
+                animation:
+                    microFloat 5.5s ease-in-out infinite,
+                    borderBreath 7s ease-in-out infinite !important;
+            }
+
+            .soft-note {
+                animation:
+                    noteGlow 9s ease-in-out infinite,
+                    microFloat 6.2s ease-in-out infinite !important;
+            }
             .hero::after,
             .hero-grid::after,
             .ranking-scroll::after {
