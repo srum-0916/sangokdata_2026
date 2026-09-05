@@ -95,6 +95,49 @@ def show_histogram(df, start, end):
                                    '비율 (%)': shares.round(2).values}), hide_index=True)
 
 
+
+def show_scatter(df, start, end):
+    st.subheader('날마다의 최저기온과 최고기온은 어떤 관계일까?')
+    scope = st.radio('산점도 분석 기간', ['최근 100년', '원자료 전체'],
+                     horizontal=True, key='scatter_period')
+    selected = df.loc[df['날짜'].dt.year.between(start, end)] if scope == '최근 100년' else df
+    paired = selected.dropna(subset=['최저기온', '최고기온']).copy()
+    st.caption(f"대상 기간: {selected['날짜'].min():%Y-%m-%d}–{selected['날짜'].max():%Y-%m-%d} · "
+               f'유효 관측 {len(paired):,}일 · 두 기온 중 결측이 있는 {len(selected) - len(paired):,}일 제외')
+    st.caption('점 하나는 하루입니다. 관측이 불완전한 연도도 두 기온이 모두 있는 날은 포함합니다.')
+    if paired.empty:
+        st.info('선택한 기간에 최저기온과 최고기온이 모두 있는 날짜가 없습니다.')
+        return
+    paired['일교차'] = paired['최고기온'] - paired['최저기온']
+    chart = go.Figure(go.Scattergl(
+        x=paired['최저기온'], y=paired['최고기온'], mode='markers', name='일별 관측',
+        marker=dict(size=4, color='#4496cf', opacity=0.25),
+        customdata=list(zip(paired['날짜'].dt.strftime('%Y-%m-%d'), paired['일교차'])),
+        hovertemplate='%{customdata[0]}<br>최저기온: %{x:.1f} °C<br>'
+                      '최고기온: %{y:.1f} °C<br>일교차: %{customdata[1]:.1f} °C<extra></extra>',
+    ))
+    lower = float(paired[['최저기온', '최고기온']].min().min()) - 2
+    upper = float(paired[['최저기온', '최고기온']].max().max()) + 2
+    chart.add_trace(go.Scatter(x=[lower, upper], y=[lower, upper], mode='lines',
+                              name='최고기온 = 최저기온',
+                              line=dict(color='#e66b35', dash='dash', width=2), hoverinfo='skip'))
+    chart.update_layout(height=550, template='plotly_white',
+                        xaxis_title='최저기온 (°C)', yaxis_title='최고기온 (°C)',
+                        legend=dict(orientation='h', y=1.12),
+                        margin=dict(l=30, r=25, t=65, b=30))
+    chart.update_xaxes(range=[lower, upper])
+    chart.update_yaxes(range=[lower, upper])
+    st.plotly_chart(chart, width='stretch', config={'displayModeBar': False})
+    st.caption('점이 진하게 겹치는 곳일수록 관측이 많습니다. 점선에서 위로 떨어진 기온 차이가 그날의 일교차입니다.')
+    correlation = paired['최저기온'].corr(paired['최고기온']) if len(paired) > 1 else float('nan')
+    left, right = st.columns(2)
+    left.metric('최저·최고기온 상관계수 (피어슨)',
+                f'{correlation:.3f}' if pd.notna(correlation) else '계산 불가')
+    right.metric('평균 일교차', f'{paired["일교차"].mean():.2f} °C')
+    st.caption('상관계수가 +1에 가까울수록 두 기온이 함께 높아지는 선형 관계가 강합니다. '
+               '여러 계절을 합친 관계이며, 인과관계를 뜻하지는 않습니다.')
+
+
 def main():
     st.set_page_config(page_title='서울의 100년 기온 변화', page_icon='🌡️', layout='wide')
     st.title('서울의 100년, 얼마나 따뜻해졌을까?')
@@ -118,6 +161,7 @@ def main():
     view['10년 이동평균'] = view['연평균기온'].rolling(10, min_periods=10).mean()
     st.caption(f'표시 기간: {start}–{end}년 ({end - start + 1}개 연도) · '
                f'원자료: {df["날짜"].min():%Y-%m-%d}–{df["날짜"].max():%Y-%m-%d}')
+    show_scatter(df, start, end)
     show_histogram(df, start, end)
     st.subheader('100년간 연평균 기온 변화')
     first = view['연평균기온'].iloc[:10].dropna()
