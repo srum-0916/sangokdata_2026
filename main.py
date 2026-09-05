@@ -1653,6 +1653,237 @@ st.markdown(
         box-shadow: 0 18px 42px rgba(49,130,246,.08);
     }
 
+
+    /* =====================================================
+       SIDEBAR COMMAND CENTER
+       ===================================================== */
+    .sidebar-command {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: .9rem;
+        padding: 1rem 1rem .92rem;
+        border-radius: 20px;
+        color: white;
+        background:
+            radial-gradient(circle at 95% 0%, rgba(102,178,255,.32), transparent 35%),
+            radial-gradient(circle at 0% 120%, rgba(139,92,246,.24), transparent 40%),
+            linear-gradient(145deg, #0D1728, #163665);
+        box-shadow: 0 16px 34px rgba(25,57,105,.18);
+    }
+    .sidebar-command::after {
+        content: "";
+        position: absolute;
+        width: 110px;
+        height: 180%;
+        left: -140px;
+        top: -40%;
+        transform: rotate(18deg);
+        pointer-events: none;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+        animation: beamSweep 7s ease-in-out infinite;
+    }
+    .sidebar-command-top {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        color: #CDE2FF;
+        font-size: .64rem;
+        font-weight: 950;
+        letter-spacing: .09em;
+    }
+    .sidebar-command-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #70AFFF;
+        animation: livePulse 1.8s ease-in-out infinite;
+    }
+    .sidebar-command-title {
+        margin-top: .4rem;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 950;
+        letter-spacing: -.04em;
+    }
+    .sidebar-command-sub {
+        margin-top: .28rem;
+        color: #AFC7E8;
+        font-size: .69rem;
+        line-height: 1.55;
+    }
+    [data-testid="stSidebar"] [data-baseweb="tab-list"] {
+        gap: .2rem;
+        padding: .24rem;
+        margin-bottom: .75rem;
+        border-radius: 15px;
+        background: #F2F6FB;
+        border: 1px solid #E4EAF2;
+    }
+    [data-testid="stSidebar"] [data-baseweb="tab"] {
+        height: 38px;
+        padding: 0 .45rem;
+        border-radius: 11px;
+        color: #718096;
+        font-size: .66rem;
+        font-weight: 850;
+        transition: background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    [data-testid="stSidebar"] [data-baseweb="tab"]:hover {
+        color: #245FBD;
+        background: rgba(255,255,255,.8);
+        transform: translateY(-1px);
+    }
+    [data-testid="stSidebar"] [aria-selected="true"] {
+        color: #1759B3 !important;
+        background: #FFFFFF !important;
+        box-shadow: 0 6px 16px rgba(31,78,145,.09);
+    }
+    .side-section-label {
+        margin: .15rem 0 .55rem;
+        color: #8B98A9;
+        font-size: .62rem;
+        font-weight: 950;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .side-mini-card {
+        margin-top: .62rem;
+        padding: .82rem .86rem;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #FBFCFF, #F3F7FC);
+        border: 1px solid #E4EAF2;
+        box-shadow: 0 8px 20px rgba(15,23,42,.035);
+    }
+    .side-mini-label {
+        color: #8C99AA;
+        font-size: .61rem;
+        font-weight: 900;
+        letter-spacing: .05em;
+    }
+    .side-mini-value {
+        color: #172033;
+        margin-top: .22rem;
+        font-size: 1rem;
+        font-weight: 950;
+        letter-spacing: -.03em;
+    }
+    .side-mini-note {
+        color: #98A5B5;
+        margin-top: .18rem;
+        font-size: .61rem;
+        line-height: 1.5;
+    }
+    .side-feature-list {
+        display: grid;
+        gap: .46rem;
+        margin-top: .55rem;
+    }
+    .side-feature {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .66rem .72rem;
+        border-radius: 13px;
+        background: #F8FAFD;
+        border: 1px solid #E8EDF4;
+        color: #5B6B80;
+        font-size: .67rem;
+        font-weight: 760;
+    }
+    .side-feature-icon {
+        display: inline-flex;
+        width: 25px;
+        height: 25px;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        border-radius: 8px;
+        background: #EAF2FF;
+        color: #2563B9;
+        font-size: .72rem;
+    }
+    .side-rank-card {
+        margin-top: .62rem;
+        padding: .92rem;
+        border-radius: 17px;
+        color: white;
+        background:
+            radial-gradient(circle at 92% 0%, rgba(115,181,255,.32), transparent 38%),
+            linear-gradient(145deg, #10213B, #174C89);
+        box-shadow: 0 12px 26px rgba(29,67,118,.17);
+    }
+    .side-rank-chip {
+        display: inline-flex;
+        padding: .27rem .42rem;
+        border-radius: 8px;
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.10);
+        color: #D5E7FF;
+        font-size: .58rem;
+        font-weight: 950;
+    }
+    .side-rank-name {
+        margin-top: .58rem;
+        color: #FFFFFF;
+        font-size: .95rem;
+        font-weight: 950;
+        line-height: 1.32;
+        letter-spacing: -.035em;
+    }
+    .side-rank-value {
+        margin-top: .7rem;
+        color: white;
+        font-size: 1.3rem;
+        font-weight: 950;
+        letter-spacing: -.045em;
+    }
+    .side-rank-caption {
+        color: #AFC8E8;
+        margin-top: .1rem;
+        font-size: .59rem;
+    }
+    .side-stat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .5rem;
+        margin-top: .6rem;
+    }
+    .side-stat {
+        padding: .7rem;
+        border-radius: 13px;
+        background: #F8FAFD;
+        border: 1px solid #E7EDF4;
+    }
+    .side-stat-label {
+        color: #909DAC;
+        font-size: .57rem;
+        font-weight: 850;
+    }
+    .side-stat-value {
+        color: #243147;
+        margin-top: .17rem;
+        font-size: .85rem;
+        font-weight: 950;
+    }
+    .sidebar-tip {
+        margin-top: .75rem;
+        padding: .75rem .8rem;
+        border-radius: 14px;
+        color: #58749A;
+        background: #EEF5FF;
+        border: 1px solid #DCEAFF;
+        font-size: .64rem;
+        line-height: 1.62;
+    }
+    [data-testid="stSidebar"] .stButton > button {
+        min-height: 38px;
+        border-radius: 12px !important;
+        font-size: .68rem !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stDateInput"] input {
+        font-size: .76rem !important;
+    }
+
 </style>
     """,
     unsafe_allow_html=True,
@@ -2411,16 +2642,23 @@ def main():
     now_kst = datetime.now(kst)
     yesterday = (now_kst - timedelta(days=1)).date()
 
-    # ---------- Sidebar ----------
+    # ---------- Sidebar Control Center ----------
+    def set_quick_date(days_back: int):
+        st.session_state["selected_date"] = yesterday - timedelta(days=days_back)
+
     with st.sidebar:
         st.markdown(
             compact_html(
                 """
-                <div class="sidebar-brand">
-                    <div class="sidebar-logo">🎬 BoxOffice Pro</div>
-                    <div class="sidebar-desc">
-                        KOBIS 기반 한국 일별 박스오피스를<br>
-                        인터랙티브하게 탐색합니다.
+                <div class="sidebar-command">
+                    <div class="sidebar-command-top">
+                        <span class="sidebar-command-dot"></span>
+                        BOXOFFICE CONTROL
+                    </div>
+                    <div class="sidebar-command-title">🎬 Command Center</div>
+                    <div class="sidebar-command-sub">
+                        날짜부터 화면 모션, 분석 기본값까지<br>
+                        여기서 대시보드 전체를 조종합니다.
                     </div>
                 </div>
                 """
@@ -2428,35 +2666,239 @@ def main():
             unsafe_allow_html=True,
         )
 
-        selected_date = st.date_input(
-            "조회 날짜",
-            value=yesterday,
-            max_value=yesterday,
-            format="YYYY/MM/DD",
-            help="당일 데이터는 아직 집계 중일 수 있어 전날까지만 조회합니다.",
-        )
+        side_tabs = st.tabs(["🗓️ 조회", "🎛️ 화면", "📊 분석", "⚡ 요약"])
 
-        st.markdown(
-            compact_html(
-                f"""
-                <div class="sidebar-card">
-                    <div class="sidebar-card-label">SELECTED DATE</div>
-                    <div class="sidebar-card-value">
-                        {selected_date.strftime("%Y년 %m월 %d일")}
+        with side_tabs[0]:
+            st.markdown(
+                '<div class="side-section-label">Quick date</div>',
+                unsafe_allow_html=True,
+            )
+
+            if "selected_date" not in st.session_state:
+                st.session_state["selected_date"] = yesterday
+
+            q1, q2, q3 = st.columns(3, gap="small")
+
+            with q1:
+                st.button(
+                    "어제",
+                    width="stretch",
+                    on_click=set_quick_date,
+                    args=(0,),
+                    key="quick_yesterday",
+                )
+
+            with q2:
+                st.button(
+                    "-3일",
+                    width="stretch",
+                    on_click=set_quick_date,
+                    args=(3,),
+                    key="quick_3days",
+                )
+
+            with q3:
+                st.button(
+                    "-7일",
+                    width="stretch",
+                    on_click=set_quick_date,
+                    args=(7,),
+                    key="quick_7days",
+                )
+
+            selected_date = st.date_input(
+                "조회 날짜",
+                max_value=yesterday,
+                key="selected_date",
+                format="YYYY/MM/DD",
+                help="당일 데이터는 집계 중일 수 있어 어제까지 조회합니다.",
+            )
+
+            st.markdown(
+                compact_html(
+                    f"""
+                    <div class="side-mini-card">
+                        <div class="side-mini-label">SELECTED</div>
+                        <div class="side-mini-value">
+                            {selected_date.strftime("%Y.%m.%d")}
+                        </div>
+                        <div class="side-mini-note">
+                            이 날짜를 기준으로 모든 차트와 순위표가 갱신됩니다.
+                        </div>
+                    </div>
+                    """
+                ),
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                """
+                <div class="sidebar-tip">
+                    💡 날짜를 바꾸면 포커스 차트도 선택 날짜를 마지막 날로 잡아
+                    최근 7일 흐름을 다시 계산합니다.
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with side_tabs[1]:
+            st.markdown(
+                '<div class="side-section-label">Motion & layout</div>',
+                unsafe_allow_html=True,
+            )
+
+            motion_mode = st.select_slider(
+                "모션 강도",
+                options=["OFF", "SOFT", "MAX"],
+                value="MAX",
+                key="motion_mode",
+                help="MAX는 풀모션, SOFT는 레이저를 줄인 절제 모드입니다.",
+            )
+
+            density_mode = st.radio(
+                "화면 밀도",
+                ["여유롭게", "컴팩트"],
+                horizontal=True,
+                key="density_mode",
+            )
+
+            show_hero = st.toggle(
+                "시네마 히어로 표시",
+                value=True,
+                key="show_hero",
+            )
+
+            show_ticker = st.toggle(
+                "자동 영화 티커 표시",
+                value=True,
+                key="show_ticker",
+            )
+
+            st.markdown(
+                """
+                <div class="side-feature-list">
+                    <div class="side-feature">
+                        <span class="side-feature-icon">✦</span>
+                        모션 강도는 페이지 전체에 즉시 반영
+                    </div>
+                    <div class="side-feature">
+                        <span class="side-feature-icon">◫</span>
+                        히어로·티커를 발표 상황에 맞게 숨김
                     </div>
                 </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with side_tabs[2]:
+            st.markdown(
+                '<div class="side-section-label">Analysis defaults</div>',
+                unsafe_allow_html=True,
+            )
+
+            sidebar_metric = st.selectbox(
+                "기본 비교 지표",
+                ["관객수", "누적 관객", "스크린", "매출"],
+                index=0,
+                key="sidebar_metric",
+            )
+
+            sidebar_top_n = st.slider(
+                "기본 표시 영화 수",
+                min_value=3,
+                max_value=10,
+                value=7,
+                step=1,
+                key="sidebar_top_n",
+            )
+
+            st.markdown(
                 """
-            ),
-            unsafe_allow_html=True,
+                <div class="side-feature-list">
+                    <div class="side-feature">
+                        <span class="side-feature-icon">↗</span>
+                        본문에서 지표와 영화 수를 다시 조절 가능
+                    </div>
+                    <div class="side-feature">
+                        <span class="side-feature-icon">◎</span>
+                        MOVIE FOCUS로 최근 7일 흐름 추적
+                    </div>
+                    <div class="side-feature">
+                        <span class="side-feature-icon">VS</span>
+                        MOVIE DUEL로 두 작품 정규화 비교
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                """
+                <div class="sidebar-tip">
+                    📊 이 탭은 분석실의 초기 세팅을 빠르게 정하는 프리셋입니다.
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # 요약 탭은 데이터 로딩 후 아래에서 채웁니다.
+
+    # ---------- Dynamic presentation overrides ----------
+    override_rules = []
+
+    if motion_mode == "OFF":
+        override_rules.append(
+            """
+            *, *::before, *::after {
+                animation: none !important;
+                transition-duration: .01ms !important;
+            }
+            """
+        )
+    elif motion_mode == "SOFT":
+        override_rules.append(
+            """
+            .hero::after,
+            .hero-grid::after,
+            .ranking-scroll::after {
+                display: none !important;
+            }
+            .hero,
+            .kpi-card,
+            .podium-card,
+            .focus-card,
+            .duel-vs {
+                animation-duration: 10s !important;
+            }
+            .ticker-track {
+                animation-duration: 35s !important;
+            }
+            """
         )
 
+    if density_mode == "컴팩트":
+        override_rules.append(
+            """
+            .section-head {
+                margin-top: 1.65rem !important;
+                margin-bottom: .7rem !important;
+            }
+            .custom-table tbody td {
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+            }
+            .kpi-card,
+            .podium-card {
+                padding: .95rem !important;
+            }
+            """
+        )
+
+    if override_rules:
         st.markdown(
-            "<div style='height:1.05rem'></div>",
+            "<style>" + "\n".join(override_rules) + "</style>",
             unsafe_allow_html=True,
         )
-
-        st.caption("데이터 · 영화진흥위원회 KOBIS")
-        st.caption("캐시 · 1시간")
 
     # ---------- API key ----------
     if "KOBIS_KEY" not in st.secrets:
@@ -2507,47 +2949,136 @@ def main():
     )
     screen_sum = int(df["scrnCnt"].sum())
 
-    # ---------- Hero ----------
-    st.markdown(
-        compact_html(
-            f"""
-            <div class="hero">
-                <div class="hero-grid"></div>
-                <div class="hero-orb a"></div>
-                <div class="hero-orb b"></div>
-                <div class="hero-beam"></div>
+    # ---------- Sidebar summary tab ----------
+    million_count = int(df["isMillion"].sum())
+    rising_count = int((df["rankInten"] > 0).sum())
 
-                <div class="hero-content">
-                    <div class="hero-kicker">KOREA DAILY BOX OFFICE</div>
+    with side_tabs[3]:
+        st.markdown(
+            '<div class="side-section-label">Today at a glance</div>',
+            unsafe_allow_html=True,
+        )
 
-                    <div class="hero-title">
-                        오늘 극장의 중심은<br>{top1_name}
+        st.markdown(
+            compact_html(
+                f"""
+                <div class="side-rank-card">
+                    <div class="side-rank-chip">🥇 BOX OFFICE #1</div>
+                    <div class="side-rank-name">
+                        {html.escape(str(top1["movieNmDisplay"]))}
                     </div>
-
-                    <div class="hero-sub">
-                        그냥 숫자를 보는 대시보드가 아니라,
-                        오늘 영화관의 흐름을 직접 눌러보고 비교하고 추적하는
-                        인터랙티브 박스오피스.
+                    <div class="side-rank-value">
+                        {int(top1["audiCnt"]):,}
+                        <span style="font-size:.66rem;color:#BFD5EF;">명</span>
                     </div>
+                    <div class="side-rank-caption">선택 날짜 일일 관객</div>
+                </div>
+                """
+            ),
+            unsafe_allow_html=True,
+        )
 
-                    <div class="hero-date">
-                        {selected_date.strftime("%Y.%m.%d")} · Daily Top 10
+        st.markdown(
+            compact_html(
+                f"""
+                <div class="side-stat-grid">
+                    <div class="side-stat">
+                        <div class="side-stat-label">TOP 10 관객</div>
+                        <div class="side-stat-value">{person_short(total_audience)}명</div>
                     </div>
-
-                    <div class="hero-mini-stats">
-                        <span class="hero-chip">👥 TOP 10 {person_short(total_audience)}명</span>
-                        <span class="hero-chip">🎯 1위 점유율 {top1_share:.1f}%</span>
-                        <span class="hero-chip">✨ NEW {new_count}편</span>
-                        <span class="hero-chip">🎞️ 스크린 {screen_sum:,}개</span>
+                    <div class="side-stat">
+                        <div class="side-stat-label">1위 점유율</div>
+                        <div class="side-stat-value">{top1_share:.1f}%</div>
+                    </div>
+                    <div class="side-stat">
+                        <div class="side-stat-label">100만+ 작품</div>
+                        <div class="side-stat-value">{million_count}편</div>
+                    </div>
+                    <div class="side-stat">
+                        <div class="side-stat-label">순위 상승</div>
+                        <div class="side-stat-value">{rising_count}편</div>
                     </div>
                 </div>
-            </div>
-            """
-        ),
-        unsafe_allow_html=True,
-    )
+                """
+            ),
+            unsafe_allow_html=True,
+        )
 
-    render_ticker(df)
+        st.markdown(
+            """
+            <div class="side-feature-list">
+                <div class="side-feature">
+                    <span class="side-feature-icon">🗓</span>
+                    날짜 변경 시 모든 값 자동 갱신
+                </div>
+                <div class="side-feature">
+                    <span class="side-feature-icon">⚡</span>
+                    KOBIS API 응답은 1시간 캐시
+                </div>
+                <div class="side-feature">
+                    <span class="side-feature-icon">↗</span>
+                    본문에서 7일 추이와 영화 맞대결 지원
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            """
+            <div class="sidebar-tip">
+                <b>Source</b> · 영화진흥위원회 KOBIS<br>
+                <b>Scope</b> · 한국 일별 박스오피스 TOP 10
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # ---------- Hero ----------
+    if show_hero:
+        st.markdown(
+            compact_html(
+                f"""
+                <div class="hero">
+                    <div class="hero-grid"></div>
+                    <div class="hero-orb a"></div>
+                    <div class="hero-orb b"></div>
+                    <div class="hero-beam"></div>
+
+                    <div class="hero-content">
+                        <div class="hero-kicker">KOREA DAILY BOX OFFICE</div>
+
+                        <div class="hero-title">
+                            오늘 극장의 중심은<br>{top1_name}
+                        </div>
+
+                        <div class="hero-sub">
+                            그냥 숫자를 보는 대시보드가 아니라,
+                            오늘 영화관의 흐름을 직접 눌러보고 비교하고 추적하는
+                            인터랙티브 박스오피스.
+                        </div>
+
+                        <div class="hero-date">
+                            {selected_date.strftime("%Y.%m.%d")} · Daily Top 10
+                        </div>
+
+                        <div class="hero-mini-stats">
+                            <span class="hero-chip">👥 TOP 10 {person_short(total_audience)}명</span>
+                            <span class="hero-chip">🎯 1위 점유율 {top1_share:.1f}%</span>
+                            <span class="hero-chip">✨ NEW {new_count}편</span>
+                            <span class="hero-chip">🎞️ 스크린 {screen_sum:,}개</span>
+                        </div>
+                    </div>
+                </div>
+                """
+            ),
+            unsafe_allow_html=True,
+        )
+
+
+
+    if show_ticker:
+        render_ticker(df)
 
     # ---------- KPI ----------
     st.markdown(
@@ -2633,7 +3164,7 @@ def main():
         selected_metric = metric_selector(
             "비교 지표",
             ["관객수", "누적 관객", "스크린", "매출"],
-            "관객수",
+            sidebar_metric,
             "metric_mode",
         )
 
@@ -2642,7 +3173,7 @@ def main():
             "표시할 영화 수",
             min_value=3,
             max_value=min(10, len(df)),
-            value=min(7, len(df)),
+            value=min(sidebar_top_n, len(df)),
             step=1,
         )
 
