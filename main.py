@@ -2479,6 +2479,817 @@ st.markdown(
         animation: softBlink 4s ease-in-out infinite;
     }
 
+
+    /* =====================================================
+       HERO PREMIUM — CINEMA COMMAND STAGE
+       ===================================================== */
+    @keyframes heroRadarSpin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to   { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes heroRadarSpinReverse {
+        from { transform: translate(-50%, -50%) rotate(360deg); }
+        to   { transform: translate(-50%, -50%) rotate(0deg); }
+    }
+
+    @keyframes heroHaloPulse {
+        0%, 100% { transform: translate(-50%, -50%) scale(.96); opacity: .52; }
+        50%      { transform: translate(-50%, -50%) scale(1.06); opacity: .92; }
+    }
+
+    @keyframes heroRankFloat {
+        0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+        50%      { transform: translateY(-9px) rotate(.8deg); }
+    }
+
+    @keyframes heroEdgeScan {
+        0%   { transform: translateY(-145%); opacity: 0; }
+        12%  { opacity: .72; }
+        48%  { opacity: .12; }
+        62%, 100% { transform: translateY(470%); opacity: 0; }
+    }
+
+    @keyframes heroGlassSweep {
+        0%   { transform: translateX(-170%) skewX(-18deg); opacity: 0; }
+        13%  { opacity: .75; }
+        35%  { opacity: .10; }
+        55%, 100% { transform: translateX(260%) skewX(-18deg); opacity: 0; }
+    }
+
+    @keyframes heroMarquee {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+    }
+
+    @keyframes heroTitleGlow {
+        0%, 100% {
+            text-shadow: 0 0 0 rgba(105,169,255,0);
+            filter: brightness(1);
+        }
+        50% {
+            text-shadow:
+                0 0 22px rgba(105,169,255,.22),
+                0 0 48px rgba(139,92,246,.10);
+            filter: brightness(1.07);
+        }
+    }
+
+    @keyframes heroRankGlow {
+        0%, 100% {
+            filter: drop-shadow(0 0 8px rgba(110,168,255,.20));
+        }
+        50% {
+            filter:
+                drop-shadow(0 0 16px rgba(110,168,255,.48))
+                drop-shadow(0 0 34px rgba(139,92,246,.22));
+        }
+    }
+
+    @keyframes heroBarDance {
+        0%, 100% { transform: scaleY(.45); opacity: .45; }
+        50%      { transform: scaleY(1); opacity: 1; }
+    }
+
+    @keyframes heroDotTravel {
+        0%   { left: 0%; opacity: 0; }
+        10%  { opacity: 1; }
+        90%  { opacity: 1; }
+        100% { left: 100%; opacity: 0; }
+    }
+
+    @keyframes heroFrameBreath {
+        0%, 100% {
+            box-shadow:
+                0 34px 80px rgba(7,19,42,.32),
+                inset 0 1px 0 rgba(255,255,255,.09),
+                inset 0 0 0 1px rgba(255,255,255,.035);
+        }
+        50% {
+            box-shadow:
+                0 42px 98px rgba(7,19,42,.40),
+                0 0 60px rgba(49,130,246,.09),
+                inset 0 1px 0 rgba(255,255,255,.13),
+                inset 0 0 0 1px rgba(255,255,255,.05);
+        }
+    }
+
+    .hero.hero-cinema {
+        min-height: 465px;
+        padding: 0;
+        border-radius: 34px;
+        background:
+            radial-gradient(circle at 81% 28%, rgba(53,145,255,.25), transparent 25%),
+            radial-gradient(circle at 68% 112%, rgba(135,78,255,.24), transparent 39%),
+            radial-gradient(circle at 7% 0%, rgba(77,121,255,.10), transparent 31%),
+            linear-gradient(135deg, #060B13 0%, #0B1424 34%, #102745 69%, #123C70 100%);
+        border: 1px solid rgba(173,207,255,.12);
+        box-shadow:
+            0 34px 80px rgba(7,19,42,.32),
+            inset 0 1px 0 rgba(255,255,255,.09),
+            inset 0 0 0 1px rgba(255,255,255,.035);
+        animation:
+            heroFrameBreath 5.7s ease-in-out infinite,
+            heroPulseDepth 7s ease-in-out infinite !important;
+    }
+
+    .hero.hero-cinema:hover {
+        transform: translateY(-5px) scale(1.002);
+        box-shadow:
+            0 46px 105px rgba(7,19,42,.43),
+            0 0 75px rgba(49,130,246,.12),
+            inset 0 1px 0 rgba(255,255,255,.12);
+    }
+
+    .hero-cinema .hero-grid {
+        opacity: .20;
+        background-size: 36px 36px;
+        mask-image: linear-gradient(90deg, rgba(0,0,0,.90), rgba(0,0,0,.32) 72%, transparent);
+    }
+
+    .hero-cinema-noise {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        opacity: .16;
+        background-image:
+            radial-gradient(circle at 20% 35%, rgba(255,255,255,.28) 0 .7px, transparent .9px),
+            radial-gradient(circle at 75% 12%, rgba(255,255,255,.20) 0 .7px, transparent .9px),
+            radial-gradient(circle at 62% 76%, rgba(162,205,255,.24) 0 .8px, transparent 1px);
+        background-size: 17px 17px, 23px 23px, 31px 31px;
+        mix-blend-mode: screen;
+    }
+
+    .hero-cinema-scan {
+        position: absolute;
+        z-index: 5;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 96px;
+        pointer-events: none;
+        background: linear-gradient(
+            180deg,
+            transparent,
+            rgba(103,172,255,.035) 35%,
+            rgba(145,197,255,.13) 50%,
+            rgba(103,172,255,.035) 65%,
+            transparent
+        );
+        filter: blur(.2px);
+        animation: heroEdgeScan 8.5s ease-in-out infinite;
+    }
+
+    .hero-corner-tl,
+    .hero-corner-br {
+        position: absolute;
+        z-index: 7;
+        width: 72px;
+        height: 72px;
+        pointer-events: none;
+        opacity: .58;
+    }
+
+    .hero-corner-tl {
+        top: 20px;
+        left: 20px;
+        border-left: 1px solid rgba(165,207,255,.48);
+        border-top: 1px solid rgba(165,207,255,.48);
+        border-radius: 11px 0 0 0;
+    }
+
+    .hero-corner-br {
+        right: 20px;
+        bottom: 20px;
+        border-right: 1px solid rgba(181,157,255,.42);
+        border-bottom: 1px solid rgba(181,157,255,.42);
+        border-radius: 0 0 11px 0;
+    }
+
+    .hero-cinema-layout {
+        position: relative;
+        z-index: 10;
+        display: grid;
+        grid-template-columns: minmax(0, 1.42fr) minmax(310px, .78fr);
+        gap: 2.1rem;
+        width: 100%;
+        min-height: 465px;
+        padding: 2.5rem 2.55rem 4.15rem;
+        align-items: center;
+    }
+
+    .hero-copy {
+        position: relative;
+        z-index: 4;
+        min-width: 0;
+    }
+
+    .hero-topline {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .55rem;
+    }
+
+    .hero-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .43rem .65rem;
+        border-radius: 999px;
+        color: #CBE1FF;
+        background: rgba(255,255,255,.055);
+        border: 1px solid rgba(255,255,255,.10);
+        backdrop-filter: blur(14px);
+        font-size: .63rem;
+        font-weight: 900;
+        letter-spacing: .06em;
+    }
+
+    .hero-live-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #63A7FF;
+        box-shadow: 0 0 12px rgba(99,167,255,.65);
+        animation: livePulse 1.7s ease-in-out infinite;
+    }
+
+    .hero-verified {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .42rem .62rem;
+        border-radius: 999px;
+        color: #C9B8FF;
+        background: rgba(139,92,246,.075);
+        border: 1px solid rgba(188,160,255,.13);
+        font-size: .61rem;
+        font-weight: 850;
+        letter-spacing: .04em;
+    }
+
+    .hero-overline {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin-top: 1.25rem;
+        color: #78AFFF;
+        font-size: .72rem;
+        font-weight: 950;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+    }
+
+    .hero-overline::after {
+        content: "";
+        position: relative;
+        display: block;
+        width: 112px;
+        height: 1px;
+        overflow: visible;
+        background: linear-gradient(90deg, rgba(100,165,255,.62), transparent);
+    }
+
+    .hero-overline::before {
+        content: "";
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        margin-left: 148px;
+        border-radius: 999px;
+        background: #8CBFFF;
+        box-shadow: 0 0 10px rgba(140,191,255,.75);
+        animation: heroDotTravel 3.6s ease-in-out infinite;
+    }
+
+    .hero-title-v2 {
+        max-width: 760px;
+        margin-top: .55rem !important;
+        animation: heroTitleGlow 5s ease-in-out infinite !important;
+        transform-origin: left center;
+    }
+
+    .hero-title-small {
+        display: block;
+        color: #E5EEFA;
+        font-size: clamp(1rem, 1.6vw, 1.35rem);
+        line-height: 1.3;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        opacity: .78;
+        margin-bottom: .22rem;
+    }
+
+    .hero-title-movie {
+        display: block;
+        max-width: 740px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #FFFFFF;
+        font-size: clamp(2.4rem, 5vw, 4.65rem);
+        line-height: .98;
+        font-weight: 950;
+        letter-spacing: -.07em;
+        white-space: nowrap;
+        background:
+            linear-gradient(
+                105deg,
+                #FFFFFF 0%,
+                #FFFFFF 30%,
+                #A9D2FF 43%,
+                #D8C8FF 50%,
+                #FFFFFF 61%,
+                #FFFFFF 100%
+            );
+        background-size: 260% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shineText 6.8s linear infinite;
+    }
+
+    .hero-sub-v2 {
+        max-width: 680px;
+        margin-top: .82rem;
+        color: #AFC1D9;
+        font-size: .91rem;
+        line-height: 1.72;
+        letter-spacing: -.01em;
+    }
+
+    .hero-stat-deck {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .65rem;
+        max-width: 720px;
+        margin-top: 1.35rem;
+    }
+
+    .hero-stat-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 84px;
+        padding: .78rem .86rem;
+        border-radius: 17px;
+        background:
+            linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.035));
+        border: 1px solid rgba(255,255,255,.105);
+        backdrop-filter: blur(16px);
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,.07),
+            0 12px 26px rgba(0,0,0,.08);
+        transition: transform .22s ease, background .22s ease, border-color .22s ease;
+    }
+
+    .hero-stat-card::after {
+        content: "";
+        position: absolute;
+        top: -30%;
+        bottom: -30%;
+        left: -100px;
+        width: 70px;
+        pointer-events: none;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.20), transparent);
+        animation: heroGlassSweep 7s ease-in-out infinite;
+    }
+
+    .hero-stat-card:nth-child(2)::after { animation-delay: -2.2s; }
+    .hero-stat-card:nth-child(3)::after { animation-delay: -4.4s; }
+
+    .hero-stat-card:hover {
+        transform: translateY(-4px);
+        background: linear-gradient(145deg, rgba(255,255,255,.11), rgba(255,255,255,.05));
+        border-color: rgba(173,210,255,.22);
+    }
+
+    .hero-stat-label {
+        color: #849AB8;
+        font-size: .61rem;
+        font-weight: 850;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .hero-stat-value {
+        margin-top: .27rem;
+        color: #FFFFFF;
+        font-size: 1.28rem;
+        font-weight: 950;
+        letter-spacing: -.045em;
+    }
+
+    .hero-stat-note {
+        margin-top: .08rem;
+        color: #7892B3;
+        font-size: .58rem;
+        font-weight: 650;
+    }
+
+    .hero-meta-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .7rem;
+        margin-top: 1rem;
+        color: #8299B8;
+        font-size: .64rem;
+        font-weight: 760;
+    }
+
+    .hero-meta-date {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        color: #DCE9F8;
+        font-weight: 850;
+    }
+
+    .hero-meta-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 999px;
+        background: #54779E;
+    }
+
+    /* ---------- RIGHT HOLOGRAPHIC RANK CORE ---------- */
+    .hero-rank-zone {
+        position: relative;
+        z-index: 5;
+        min-height: 340px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hero-radar-ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .hero-radar-ring.one {
+        width: 318px;
+        height: 318px;
+        border: 1px solid rgba(105,169,255,.16);
+        border-left-color: rgba(119,185,255,.60);
+        border-top-color: rgba(119,185,255,.32);
+        animation: heroRadarSpin 13s linear infinite;
+    }
+
+    .hero-radar-ring.two {
+        width: 260px;
+        height: 260px;
+        border: 1px dashed rgba(170,142,255,.19);
+        border-right-color: rgba(190,164,255,.62);
+        animation: heroRadarSpinReverse 9s linear infinite;
+    }
+
+    .hero-radar-ring.three {
+        width: 208px;
+        height: 208px;
+        border: 1px solid rgba(115,179,255,.11);
+        box-shadow:
+            0 0 42px rgba(49,130,246,.08),
+            inset 0 0 40px rgba(49,130,246,.035);
+        animation: heroHaloPulse 4.3s ease-in-out infinite;
+    }
+
+    .hero-radar-cross {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 310px;
+        height: 310px;
+        transform: translate(-50%, -50%);
+        opacity: .15;
+        pointer-events: none;
+        background:
+            linear-gradient(90deg, transparent 49.8%, #79B2FF 50%, transparent 50.2%),
+            linear-gradient(transparent 49.8%, #79B2FF 50%, transparent 50.2%);
+        mask-image: radial-gradient(circle, black 0 58%, transparent 59%);
+    }
+
+    .hero-rank-core {
+        position: relative;
+        z-index: 4;
+        width: 235px;
+        min-height: 270px;
+        padding: 1.1rem 1.05rem 1rem;
+        border-radius: 27px;
+        background:
+            radial-gradient(circle at 80% 3%, rgba(119,180,255,.18), transparent 31%),
+            linear-gradient(155deg, rgba(14,35,66,.91), rgba(7,18,34,.86));
+        border: 1px solid rgba(155,199,255,.18);
+        box-shadow:
+            0 26px 60px rgba(0,0,0,.28),
+            0 0 58px rgba(49,130,246,.08),
+            inset 0 1px 0 rgba(255,255,255,.08),
+            inset 0 0 0 1px rgba(255,255,255,.025);
+        backdrop-filter: blur(22px);
+        animation: heroRankFloat 5s ease-in-out infinite;
+    }
+
+    .hero-rank-core::before {
+        content: "";
+        position: absolute;
+        left: 13px;
+        top: 13px;
+        width: 34px;
+        height: 34px;
+        border-left: 1px solid rgba(128,188,255,.52);
+        border-top: 1px solid rgba(128,188,255,.52);
+        border-radius: 7px 0 0 0;
+        opacity: .68;
+    }
+
+    .hero-rank-core::after {
+        content: "";
+        position: absolute;
+        right: 13px;
+        bottom: 13px;
+        width: 34px;
+        height: 34px;
+        border-right: 1px solid rgba(177,144,255,.45);
+        border-bottom: 1px solid rgba(177,144,255,.45);
+        border-radius: 0 0 7px 0;
+        opacity: .68;
+    }
+
+    .hero-rank-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+        color: #8198B8;
+        font-size: .57rem;
+        font-weight: 950;
+        letter-spacing: .11em;
+    }
+
+    .hero-rank-live {
+        display: inline-flex;
+        align-items: center;
+        gap: .28rem;
+        color: #7DB4FF;
+    }
+
+    .hero-rank-live::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: #6DB0FF;
+        box-shadow: 0 0 10px rgba(109,176,255,.8);
+        animation: livePulse 1.7s ease-in-out infinite;
+    }
+
+    .hero-rank-number {
+        margin-top: .4rem;
+        color: #FFFFFF;
+        font-size: 5.7rem;
+        line-height: .90;
+        font-weight: 950;
+        letter-spacing: -.095em;
+        text-align: center;
+        background:
+            linear-gradient(180deg, #FFFFFF 0%, #CDE4FF 51%, #6AA8FF 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: heroRankGlow 3.8s ease-in-out infinite;
+    }
+
+    .hero-rank-divider {
+        height: 1px;
+        margin: .72rem 0 .65rem;
+        background: linear-gradient(90deg, transparent, rgba(125,183,255,.38), transparent);
+    }
+
+    .hero-rank-movie {
+        overflow: hidden;
+        color: #F3F7FD;
+        font-size: .88rem;
+        font-weight: 950;
+        line-height: 1.35;
+        letter-spacing: -.025em;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .hero-rank-audience {
+        margin-top: .3rem;
+        color: #88A1C2;
+        font-size: .59rem;
+        font-weight: 750;
+        text-align: center;
+    }
+
+    .hero-eq {
+        height: 30px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 5px;
+        margin-top: .78rem;
+    }
+
+    .hero-eq span {
+        width: 4px;
+        height: 26px;
+        border-radius: 999px;
+        transform-origin: bottom;
+        background: linear-gradient(180deg, #B5D7FF, #4E94F5);
+        box-shadow: 0 0 8px rgba(78,148,245,.28);
+        animation: heroBarDance 1.45s ease-in-out infinite;
+    }
+
+    .hero-eq span:nth-child(2) { animation-delay: -.95s; }
+    .hero-eq span:nth-child(3) { animation-delay: -.35s; }
+    .hero-eq span:nth-child(4) { animation-delay: -1.15s; }
+    .hero-eq span:nth-child(5) { animation-delay: -.62s; }
+    .hero-eq span:nth-child(6) { animation-delay: -.18s; }
+    .hero-eq span:nth-child(7) { animation-delay: -.78s; }
+
+    .hero-rank-trend {
+        display: flex;
+        justify-content: center;
+        margin-top: .65rem;
+    }
+
+    .hero-rank-trend span {
+        display: inline-flex;
+        align-items: center;
+        padding: .28rem .48rem;
+        border-radius: 999px;
+        color: #BBD7FB;
+        background: rgba(101,164,255,.08);
+        border: 1px solid rgba(101,164,255,.12);
+        font-size: .56rem;
+        font-weight: 900;
+        letter-spacing: .04em;
+    }
+
+    /* ---------- BOTTOM MINI MARQUEE INSIDE HERO ---------- */
+    .hero-bottom-rail {
+        position: absolute;
+        z-index: 12;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        border-top: 1px solid rgba(255,255,255,.07);
+        background:
+            linear-gradient(90deg, rgba(4,11,21,.88), rgba(13,31,56,.78), rgba(4,11,21,.88));
+        backdrop-filter: blur(16px);
+    }
+
+    .hero-bottom-rail::before,
+    .hero-bottom-rail::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 78px;
+        z-index: 3;
+        pointer-events: none;
+    }
+
+    .hero-bottom-rail::before {
+        left: 0;
+        background: linear-gradient(90deg, #08111F, transparent);
+    }
+
+    .hero-bottom-rail::after {
+        right: 0;
+        background: linear-gradient(-90deg, #0B1A2D, transparent);
+    }
+
+    .hero-rail-track {
+        display: flex;
+        align-items: center;
+        width: max-content;
+        animation: heroMarquee 18s linear infinite;
+        will-change: transform;
+    }
+
+    .hero-rail-item {
+        display: inline-flex;
+        align-items: center;
+        gap: .52rem;
+        padding: 0 1rem;
+        color: #90A7C4;
+        font-size: .61rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .hero-rail-rank {
+        color: #78AFFF;
+        font-weight: 950;
+    }
+
+    .hero-rail-name {
+        color: #DCE8F8;
+    }
+
+    .hero-rail-sep {
+        width: 3px;
+        height: 3px;
+        border-radius: 999px;
+        background: #49688E;
+    }
+
+    /* New hero should win over generic EVERYTHING-MOVES title rules */
+    .hero.hero-cinema .hero-title-v2,
+    .hero.hero-cinema .hero-title-small,
+    .hero.hero-cinema .hero-title-movie {
+        transform-origin: left center;
+    }
+
+    @media (max-width: 1050px) {
+        .hero-cinema-layout {
+            grid-template-columns: minmax(0, 1fr) 270px;
+            gap: 1.15rem;
+            padding-left: 2rem;
+            padding-right: 1.6rem;
+        }
+
+        .hero-radar-ring.one { width: 276px; height: 276px; }
+        .hero-radar-ring.two { width: 228px; height: 228px; }
+        .hero-radar-ring.three { width: 182px; height: 182px; }
+        .hero-radar-cross { width: 270px; height: 270px; }
+        .hero-rank-core { width: 210px; }
+        .hero-rank-number { font-size: 5rem; }
+    }
+
+    @media (max-width: 820px) {
+        .hero.hero-cinema {
+            min-height: auto;
+        }
+
+        .hero-cinema-layout {
+            grid-template-columns: 1fr;
+            min-height: auto;
+            padding: 2rem 1.35rem 4.3rem;
+        }
+
+        .hero-rank-zone {
+            min-height: 265px;
+            margin-top: -.25rem;
+        }
+
+        .hero-radar-ring.one { width: 250px; height: 250px; }
+        .hero-radar-ring.two { width: 205px; height: 205px; }
+        .hero-radar-ring.three { width: 165px; height: 165px; }
+        .hero-radar-cross { width: 242px; height: 242px; }
+        .hero-rank-core { width: 205px; min-height: 220px; }
+        .hero-rank-number { font-size: 4.5rem; }
+        .hero-stat-deck { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    @media (max-width: 560px) {
+        .hero.hero-cinema {
+            border-radius: 24px;
+        }
+
+        .hero-cinema-layout {
+            padding: 1.45rem 1rem 4.1rem;
+        }
+
+        .hero-title-movie {
+            font-size: 2.4rem;
+            white-space: normal;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .hero-stat-deck {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-stat-card {
+            min-height: 68px;
+        }
+
+        .hero-rank-zone {
+            min-height: 245px;
+        }
+
+        .hero-meta-row {
+            gap: .45rem;
+        }
+    }
+
 </style>
     """,
     unsafe_allow_html=True,
@@ -3980,6 +4791,51 @@ def main():
             """
         )
 
+
+    # ---------- Premium hero motion profile ----------
+    if motion_mode == "SOFT":
+        override_rules.append(
+            """
+            .hero-cinema-scan { animation: heroEdgeScan 16s ease-in-out infinite !important; }
+            .hero-live-badge::before,
+            .hero-rank-live::before { animation: livePulse 3s ease-in-out infinite !important; }
+            .hero-title-v2 { animation: heroTitleGlow 10s ease-in-out infinite !important; }
+            .hero-title-movie { animation: shineText 13s linear infinite !important; }
+            .hero-stat-card::after { animation: heroGlassSweep 14s ease-in-out infinite !important; }
+            .hero-radar-ring.one { animation: heroRadarSpin 26s linear infinite !important; }
+            .hero-radar-ring.two { animation: heroRadarSpinReverse 20s linear infinite !important; }
+            .hero-radar-ring.three { animation: heroHaloPulse 9s ease-in-out infinite !important; }
+            .hero-rank-core { animation: heroRankFloat 10s ease-in-out infinite !important; }
+            .hero-rank-number { animation: heroRankGlow 8s ease-in-out infinite !important; }
+            .hero-eq span { animation: heroBarDance 3s ease-in-out infinite !important; }
+            .hero-rail-track { animation: heroMarquee 34s linear infinite !important; }
+            """
+        )
+
+    elif motion_mode == "MAX":
+        override_rules.append(
+            """
+            .hero.hero-cinema {
+                animation:
+                    heroFrameBreath 5.7s ease-in-out infinite,
+                    heroPulseDepth 7s ease-in-out infinite !important;
+            }
+            .hero-cinema-scan { animation: heroEdgeScan 8.5s ease-in-out infinite !important; }
+            .hero-live-badge::before,
+            .hero-rank-live::before { animation: livePulse 1.7s ease-in-out infinite !important; }
+            .hero-title-v2 { animation: heroTitleGlow 5s ease-in-out infinite !important; }
+            .hero-title-movie { animation: shineText 6.8s linear infinite !important; }
+            .hero-stat-card::after { animation: heroGlassSweep 7s ease-in-out infinite !important; }
+            .hero-radar-ring.one { animation: heroRadarSpin 13s linear infinite !important; }
+            .hero-radar-ring.two { animation: heroRadarSpinReverse 9s linear infinite !important; }
+            .hero-radar-ring.three { animation: heroHaloPulse 4.3s ease-in-out infinite !important; }
+            .hero-rank-core { animation: heroRankFloat 5s ease-in-out infinite !important; }
+            .hero-rank-number { animation: heroRankGlow 3.8s ease-in-out infinite !important; }
+            .hero-eq span { animation: heroBarDance 1.45s ease-in-out infinite !important; }
+            .hero-rail-track { animation: heroMarquee 18s linear infinite !important; }
+            """
+        )
+
     if density_mode == "컴팩트":
         override_rules.append(
             """
@@ -4052,6 +4908,30 @@ def main():
         ).sum()
     )
     screen_sum = int(df["scrnCnt"].sum())
+
+
+    top2_name = (
+        html.escape(str(df.iloc[1]["movieNmDisplay"]))
+        if len(df) > 1
+        else "-"
+    )
+    top3_name = (
+        html.escape(str(df.iloc[2]["movieNmDisplay"]))
+        if len(df) > 2
+        else "-"
+    )
+
+    top1_old_new = str(top1.get("rankOldAndNew", "")).upper()
+    top1_delta = int(top1.get("rankInten", 0))
+
+    if top1_old_new == "NEW":
+        top1_trend_text = "NEW ENTRY"
+    elif top1_delta > 0:
+        top1_trend_text = f"▲ {top1_delta} · RISING"
+    elif top1_delta < 0:
+        top1_trend_text = f"▼ {abs(top1_delta)} · MOVED"
+    else:
+        top1_trend_text = "— · HOLDING #1"
 
     # ---------- Sidebar summary tab ----------
     million_count = int(df["isMillion"].sum())
@@ -4140,37 +5020,107 @@ def main():
 
     # ---------- Hero ----------
     if show_hero:
+        rail_items = (
+            f"<span class='hero-rail-item'><span class='hero-rail-rank'>#01</span><span class='hero-rail-name'>{top1_name}</span><span class='hero-rail-sep'></span><span>{int(top1['audiCnt']):,}명</span></span>"
+            f"<span class='hero-rail-item'><span class='hero-rail-rank'>#02</span><span class='hero-rail-name'>{top2_name}</span></span>"
+            f"<span class='hero-rail-item'><span class='hero-rail-rank'>#03</span><span class='hero-rail-name'>{top3_name}</span></span>"
+            f"<span class='hero-rail-item'><span>KOBIS DAILY</span><span class='hero-rail-sep'></span><span>{selected_date.strftime('%Y.%m.%d')}</span></span>"
+        )
+
         st.markdown(
             compact_html(
                 f"""
-                <div class="hero">
+                <div class="hero hero-cinema">
                     <div class="hero-grid"></div>
                     <div class="hero-orb a"></div>
                     <div class="hero-orb b"></div>
                     <div class="hero-beam"></div>
+                    <div class="hero-cinema-noise"></div>
+                    <div class="hero-cinema-scan"></div>
+                    <div class="hero-corner-tl"></div>
+                    <div class="hero-corner-br"></div>
 
-                    <div class="hero-content">
-                        <div class="hero-kicker">KOREA DAILY BOX OFFICE</div>
+                    <div class="hero-content hero-cinema-layout">
+                        <div class="hero-copy">
+                            <div class="hero-topline">
+                                <div class="hero-kicker">KOREA DAILY BOX OFFICE</div>
+                                <div class="hero-live-badge">LIVE RANKING</div>
+                                <div class="hero-verified">✦ KOBIS VERIFIED</div>
+                            </div>
 
-                        <div class="hero-title">
-                            오늘 극장의 중심은<br>{top1_name}
+                            <div class="hero-overline">NOW SHOWING · BOX OFFICE 01</div>
+
+                            <div class="hero-title hero-title-v2">
+                                <span class="hero-title-small">오늘 극장의 중심</span>
+                                <span class="hero-title-movie">{top1_name}</span>
+                            </div>
+
+                            <div class="hero-sub-v2">
+                                지금 한국 극장에서 가장 많은 관객이 선택한 작품.
+                                오늘의 관객 흐름과 흥행 신호를 한 화면에서 읽어보세요.
+                            </div>
+
+                            <div class="hero-stat-deck">
+                                <div class="hero-stat-card">
+                                    <div class="hero-stat-label">Daily audience</div>
+                                    <div class="hero-stat-value">{int(top1['audiCnt']):,}<span style="font-size:.63rem;color:#86A0C0;margin-left:.18rem;">명</span></div>
+                                    <div class="hero-stat-note">오늘 관객수</div>
+                                </div>
+
+                                <div class="hero-stat-card">
+                                    <div class="hero-stat-label">Market share</div>
+                                    <div class="hero-stat-value">{top1_share:.1f}<span style="font-size:.63rem;color:#86A0C0;margin-left:.05rem;">%</span></div>
+                                    <div class="hero-stat-note">TOP 10 관객 점유율</div>
+                                </div>
+
+                                <div class="hero-stat-card">
+                                    <div class="hero-stat-label">Screens</div>
+                                    <div class="hero-stat-value">{int(top1['scrnCnt']):,}<span style="font-size:.63rem;color:#86A0C0;margin-left:.18rem;">개</span></div>
+                                    <div class="hero-stat-note">상영 스크린</div>
+                                </div>
+                            </div>
+
+                            <div class="hero-meta-row">
+                                <span class="hero-meta-date">◉ {selected_date.strftime('%Y.%m.%d')}</span>
+                                <span class="hero-meta-dot"></span>
+                                <span>누적 {int(top1['audiAcc']):,}명</span>
+                                <span class="hero-meta-dot"></span>
+                                <span>일일 매출 {won_short(top1.get('salesAmt', 0))}원</span>
+                            </div>
                         </div>
 
-                        <div class="hero-sub">
-                            그냥 숫자를 보는 대시보드가 아니라,
-                            오늘 영화관의 흐름을 직접 눌러보고 비교하고 추적하는
-                            인터랙티브 박스오피스.
-                        </div>
+                        <div class="hero-rank-zone">
+                            <div class="hero-radar-ring one"></div>
+                            <div class="hero-radar-ring two"></div>
+                            <div class="hero-radar-ring three"></div>
+                            <div class="hero-radar-cross"></div>
 
-                        <div class="hero-date">
-                            {selected_date.strftime("%Y.%m.%d")} · Daily Top 10
-                        </div>
+                            <div class="hero-rank-core">
+                                <div class="hero-rank-head">
+                                    <span>DAILY RANK</span>
+                                    <span class="hero-rank-live">LIVE</span>
+                                </div>
 
-                        <div class="hero-mini-stats">
-                            <span class="hero-chip">👥 TOP 10 {person_short(total_audience)}명</span>
-                            <span class="hero-chip">🎯 1위 점유율 {top1_share:.1f}%</span>
-                            <span class="hero-chip">✨ NEW {new_count}편</span>
-                            <span class="hero-chip">🎞️ 스크린 {screen_sum:,}개</span>
+                                <div class="hero-rank-number">01</div>
+                                <div class="hero-rank-divider"></div>
+                                <div class="hero-rank-movie">{top1_name}</div>
+                                <div class="hero-rank-audience">{int(top1['audiCnt']):,} audience today</div>
+
+                                <div class="hero-eq">
+                                    <span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span>
+                                </div>
+
+                                <div class="hero-rank-trend">
+                                    <span>{top1_trend_text}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-bottom-rail">
+                        <div class="hero-rail-track">
+                            {rail_items}{rail_items}
                         </div>
                     </div>
                 </div>
@@ -4178,8 +5128,6 @@ def main():
             ),
             unsafe_allow_html=True,
         )
-
-
 
     if show_ticker:
         render_ticker(df)
