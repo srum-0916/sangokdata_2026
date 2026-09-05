@@ -1,5 +1,6 @@
 from calendar import isleap
 from io import StringIO
+from math import floor
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -56,6 +57,44 @@ def annual_summary(df):
     return annual
 
 
+
+def show_histogram(df, start, end):
+    st.subheader('일별 평균기온은 어느 구간에 몰려 있을까?')
+    scope = st.radio('분석 기간', ['최근 100년', '원자료 전체'], horizontal=True)
+    selected = df.loc[df['날짜'].dt.year.between(start, end)] if scope == '최근 100년' else df
+    temperatures = selected['평균기온'].dropna()
+    st.caption(f"대상 기간: {selected['날짜'].min():%Y-%m-%d}–{selected['날짜'].max():%Y-%m-%d} · "
+               f'유효 관측 {len(temperatures):,}일 · 평균기온 결측 {selected["평균기온"].isna().sum():,}일 제외')
+    st.caption('관측이 불완전한 연도도 기온 값이 있는 날은 포함합니다. 원자료에 없는 날짜는 채우지 않습니다.')
+    if temperatures.empty:
+        st.info('선택한 기간에 유효한 일별 평균기온이 없습니다.')
+        return
+    width = st.select_slider('기온 구간 너비 (°C)', options=[1, 2, 5, 10], value=2)
+    lower = floor(temperatures.min() / width) * width
+    upper = (floor(temperatures.max() / width) + 1) * width
+    edges = list(range(lower, upper + width, width))
+    counts = pd.cut(temperatures, bins=edges, right=False).value_counts(sort=False)
+    labels = [f'{item.left:g} 이상 {item.right:g} 미만' for item in counts.index]
+    shares = counts / counts.sum() * 100
+    chart = go.Figure(go.Bar(
+        x=[(item.left + item.right) / 2 for item in counts.index],
+        y=counts.values, width=width,
+        marker=dict(color='#4496cf', line=dict(color='white', width=1)),
+        customdata=list(zip(labels, shares)),
+        hovertemplate='%{customdata[0]} °C<br>%{y:,}일 (%{customdata[1]:.1f}%)<extra></extra>',
+    ))
+    chart.update_layout(height=460, template='plotly_white', bargap=0,
+                        xaxis_title='일별 평균기온 (°C)', yaxis_title='날짜 수 (일)',
+                        margin=dict(l=30, r=25, t=25, b=30))
+    st.plotly_chart(chart, width='stretch', config={'displayModeBar': False})
+    peaks = [labels[i] for i, count in enumerate(counts) if count == counts.max()]
+    st.write('가장 많이 관측된 구간: **' + ' / '.join(peaks) + ' °C**'
+             + f' · 각 **{counts.max():,}일 ({counts.max() / counts.sum():.1%})**')
+    with st.expander('기온 구간별 날짜 수 보기'):
+        st.dataframe(pd.DataFrame({'기온 구간 (°C)': labels, '날짜 수 (일)': counts.values,
+                                   '비율 (%)': shares.round(2).values}), hide_index=True)
+
+
 def main():
     st.set_page_config(page_title='서울의 100년 기온 변화', page_icon='🌡️', layout='wide')
     st.title('서울의 100년, 얼마나 따뜻해졌을까?')
@@ -79,6 +118,8 @@ def main():
     view['10년 이동평균'] = view['연평균기온'].rolling(10, min_periods=10).mean()
     st.caption(f'표시 기간: {start}–{end}년 ({end - start + 1}개 연도) · '
                f'원자료: {df["날짜"].min():%Y-%m-%d}–{df["날짜"].max():%Y-%m-%d}')
+    show_histogram(df, start, end)
+    st.subheader('100년간 연평균 기온 변화')
     first = view['연평균기온'].iloc[:10].dropna()
     last = view['연평균기온'].iloc[-10:].dropna()
     left, center, right = st.columns(3)
