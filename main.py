@@ -1,4 +1,5 @@
 import html
+import random
 import re
 import textwrap
 from datetime import datetime, timedelta
@@ -22,7 +23,7 @@ st.set_page_config(
 
 
 # =========================================================
-# 2. DESIGN SYSTEM
+# 2. DESIGN SYSTEM + MOTION
 # =========================================================
 st.markdown(
     """
@@ -33,32 +34,80 @@ st.markdown(
         --surface-soft: #F8FAFC;
         --text: #0F172A;
         --text-sub: #64748B;
-        --line: #E7ECF3;
+        --line: #E5EAF1;
         --blue: #3182F6;
-        --blue-dark: #1B64DA;
-        --red: #FF5A65;
+        --blue-2: #6EA8FF;
+        --purple: #8B5CF6;
+        --red: #EF4444;
         --green: #10B981;
         --gold: #F5B700;
-        --shadow: 0 14px 40px rgba(15, 23, 42, 0.07);
+        --shadow: 0 16px 44px rgba(15, 23, 42, 0.07);
     }
 
-    /* ---------- App shell ---------- */
+    @keyframes heroFloatA {
+        0%, 100% { transform: translate3d(0,0,0) scale(1); }
+        50% { transform: translate3d(-34px,20px,0) scale(1.08); }
+    }
+
+    @keyframes heroFloatB {
+        0%, 100% { transform: translate3d(0,0,0) scale(1); }
+        50% { transform: translate3d(30px,-16px,0) scale(.94); }
+    }
+
+    @keyframes beamSweep {
+        0% { transform: translateX(-160%) rotate(12deg); opacity: 0; }
+        16% { opacity: .58; }
+        58% { opacity: .18; }
+        100% { transform: translateX(230%) rotate(12deg); opacity: 0; }
+    }
+
+    @keyframes livePulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(105,169,255,.42); }
+        50% { box-shadow: 0 0 0 10px rgba(105,169,255,0); }
+    }
+
+    @keyframes fadeRise {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes borderFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes softGlow {
+        0%, 100% {
+            box-shadow: 0 17px 45px rgba(15,23,42,.08), 0 0 0 rgba(49,130,246,0);
+        }
+        50% {
+            box-shadow: 0 25px 62px rgba(15,23,42,.10), 0 0 36px rgba(49,130,246,.10);
+        }
+    }
+
+    @keyframes tickerMove {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+
+    /* ---------- APP ---------- */
     .stApp {
         background:
-            radial-gradient(circle at 10% -10%, rgba(49,130,246,.09), transparent 28%),
-            radial-gradient(circle at 95% 3%, rgba(139,92,246,.06), transparent 24%),
+            radial-gradient(circle at 8% -10%, rgba(49,130,246,.10), transparent 28%),
+            radial-gradient(circle at 98% 2%, rgba(139,92,246,.07), transparent 24%),
             var(--bg);
     }
 
     [data-testid="stHeader"] {
-        background: rgba(244,247,251,.72);
-        backdrop-filter: blur(14px);
+        background: rgba(244,247,251,.70);
+        backdrop-filter: blur(16px);
     }
 
     [data-testid="stMainBlockContainer"] {
         max-width: 1280px;
-        padding-top: 2.1rem;
-        padding-bottom: 4rem;
+        padding-top: 1.8rem;
+        padding-bottom: 5rem;
     }
 
     [data-testid="stSidebar"] {
@@ -67,293 +116,691 @@ st.markdown(
     }
 
     [data-testid="stSidebar"] > div:first-child {
-        padding-top: 1.5rem;
+        padding-top: 1.4rem;
+    }
+
+    html, body, [class*="css"] {
+        font-family:
+            Pretendard, -apple-system, BlinkMacSystemFont,
+            "Segoe UI", "Noto Sans KR", sans-serif;
     }
 
     #MainMenu, footer {
         visibility: hidden;
     }
 
-    html, body, [class*="css"] {
-        font-family:
-            Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI",
-            "Noto Sans KR", sans-serif;
-    }
-
-    /* ---------- Sidebar ---------- */
+    /* ---------- SIDEBAR ---------- */
     .sidebar-brand {
-        padding: 0.25rem 0 1.3rem;
+        padding: .25rem 0 1.25rem;
     }
 
-    .sidebar-brand .logo {
-        font-size: 1.35rem;
-        font-weight: 900;
-        letter-spacing: -0.04em;
+    .sidebar-logo {
         color: var(--text);
+        font-size: 1.35rem;
+        font-weight: 950;
+        letter-spacing: -.045em;
     }
 
-    .sidebar-brand .desc {
-        color: var(--text-sub);
-        font-size: .86rem;
-        margin-top: .25rem;
-        line-height: 1.55;
+    .sidebar-desc {
+        color: #7B8798;
+        font-size: .82rem;
+        line-height: 1.65;
+        margin-top: .38rem;
     }
 
-    .sidebar-date {
-        margin-top: .75rem;
-        padding: 1rem 1.05rem;
-        border: 1px solid #DFE8F5;
-        background: linear-gradient(135deg, #F8FBFF 0%, #EEF5FF 100%);
+    .sidebar-card {
+        margin-top: .8rem;
+        padding: 1rem;
         border-radius: 18px;
+        background:
+            radial-gradient(circle at 100% 0%, rgba(49,130,246,.10), transparent 38%),
+            linear-gradient(135deg, #F9FBFF, #EDF5FF);
+        border: 1px solid #DCE9FB;
     }
 
-    .sidebar-date .label {
-        color: #7190B9;
-        font-size: .75rem;
-        font-weight: 800;
-        letter-spacing: .06em;
-        text-transform: uppercase;
+    .sidebar-card-label {
+        color: #7E9DC8;
+        font-size: .68rem;
+        font-weight: 950;
+        letter-spacing: .08em;
     }
 
-    .sidebar-date .value {
-        color: #174EA6;
-        font-size: 1.05rem;
-        font-weight: 850;
-        margin-top: .2rem;
+    .sidebar-card-value {
+        margin-top: .18rem;
+        color: #1759B3;
+        font-size: 1rem;
+        font-weight: 900;
     }
 
-    /* ---------- Hero ---------- */
+    /* ---------- HERO ---------- */
     .hero {
         position: relative;
+        isolation: isolate;
         overflow: hidden;
-        border-radius: 28px;
-        padding: 2.25rem 2.45rem;
+        min-height: 340px;
+        display: flex;
+        align-items: center;
+        padding: 2.55rem 2.6rem;
+        border-radius: 30px;
+        color: white;
         background:
-            radial-gradient(circle at 82% 18%, rgba(91,157,255,.34), transparent 26%),
-            radial-gradient(circle at 72% 115%, rgba(117,74,255,.32), transparent 32%),
-            linear-gradient(135deg, #0B1220 0%, #111F3A 48%, #153F7B 100%);
-        box-shadow: 0 28px 60px rgba(22,50,92,.22);
-        margin-bottom: 1.4rem;
+            radial-gradient(circle at 84% 18%, rgba(67,146,255,.30), transparent 27%),
+            radial-gradient(circle at 68% 116%, rgba(132,76,255,.28), transparent 34%),
+            linear-gradient(135deg, #09111F 0%, #10203C 50%, #123F79 100%);
+        box-shadow: 0 30px 70px rgba(22,50,92,.24);
+        transition:
+            transform .35s cubic-bezier(.2,.8,.2,1),
+            box-shadow .35s cubic-bezier(.2,.8,.2,1);
     }
 
-    .hero::before {
-        content: "";
-        position: absolute;
-        width: 240px;
-        height: 240px;
-        border-radius: 50%;
-        right: -80px;
-        top: -90px;
-        border: 1px solid rgba(255,255,255,.12);
+    .hero:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 39px 88px rgba(22,50,92,.31);
     }
 
-    .hero::after {
-        content: "";
+    .hero-content {
+        position: relative;
+        z-index: 8;
+        width: 100%;
+        animation: fadeRise .7s ease both;
+    }
+
+    .hero-grid {
         position: absolute;
-        width: 170px;
-        height: 170px;
-        border-radius: 50%;
-        right: 25px;
-        top: -65px;
-        border: 1px solid rgba(255,255,255,.08);
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        opacity: .22;
+        background-image:
+            linear-gradient(rgba(255,255,255,.052) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.052) 1px, transparent 1px);
+        background-size: 38px 38px;
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,.75), transparent 95%);
+    }
+
+    .hero-orb {
+        position: absolute;
+        border-radius: 999px;
+        z-index: 2;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        filter: blur(7px);
+    }
+
+    .hero-orb.a {
+        width: 350px;
+        height: 350px;
+        top: -125px;
+        right: -65px;
+        background: radial-gradient(circle, rgba(60,146,255,.62), rgba(60,146,255,0) 70%);
+        animation: heroFloatA 7s ease-in-out infinite;
+    }
+
+    .hero-orb.b {
+        width: 320px;
+        height: 320px;
+        right: 18%;
+        bottom: -200px;
+        background: radial-gradient(circle, rgba(146,82,255,.47), rgba(146,82,255,0) 70%);
+        animation: heroFloatB 8.5s ease-in-out infinite;
+    }
+
+    .hero-beam {
+        position: absolute;
+        z-index: 3;
+        width: 190px;
+        height: 165%;
+        top: -32%;
+        left: 0;
+        pointer-events: none;
+        filter: blur(5px);
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255,255,255,.03) 24%,
+            rgba(255,255,255,.22) 50%,
+            rgba(255,255,255,.03) 76%,
+            transparent 100%
+        );
+        animation: beamSweep 6.8s ease-in-out infinite;
     }
 
     .hero-kicker {
         display: inline-flex;
         align-items: center;
-        gap: .45rem;
-        padding: .45rem .75rem;
+        gap: .48rem;
+        padding: .46rem .72rem;
         border-radius: 999px;
-        background: rgba(255,255,255,.10);
-        border: 1px solid rgba(255,255,255,.12);
-        color: #CFE2FF;
-        font-size: .78rem;
-        font-weight: 800;
-        letter-spacing: .03em;
-        backdrop-filter: blur(8px);
+        color: #CDE1FF;
+        background: rgba(255,255,255,.09);
+        border: 1px solid rgba(255,255,255,.11);
+        backdrop-filter: blur(12px);
+        font-size: .72rem;
+        font-weight: 900;
+        letter-spacing: .07em;
+    }
+
+    .hero-kicker::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #70AFFF;
+        animation: livePulse 1.8s ease-in-out infinite;
     }
 
     .hero-title {
+        margin-top: 1rem;
         color: white;
-        font-size: clamp(2.15rem, 4vw, 4rem);
+        font-size: clamp(2.25rem, 4.25vw, 4.2rem);
+        line-height: 1.01;
         font-weight: 950;
-        letter-spacing: -.065em;
-        line-height: 1.02;
-        margin: 1rem 0 .6rem;
-        max-width: 850px;
+        letter-spacing: -.067em;
+        max-width: 920px;
     }
 
     .hero-sub {
-        color: #BFD0EA;
-        font-size: 1rem;
-        line-height: 1.7;
+        color: #BFD0E9;
+        font-size: .98rem;
+        line-height: 1.72;
         max-width: 760px;
+        margin-top: .68rem;
     }
 
     .hero-date {
         display: inline-block;
-        margin-top: 1.35rem;
         color: white;
-        font-weight: 800;
-        font-size: .9rem;
+        font-size: .82rem;
+        font-weight: 850;
+        margin-top: 1rem;
     }
 
-    /* ---------- Section header ---------- */
-    .section-head {
+    .hero-mini-stats {
         display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 1rem;
-        margin: 2.15rem 0 1rem;
+        flex-wrap: wrap;
+        gap: .55rem;
+        margin-top: 1.25rem;
+    }
+
+    .hero-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: .45rem .66rem;
+        border-radius: 999px;
+        color: rgba(255,255,255,.92);
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.11);
+        backdrop-filter: blur(14px);
+        font-size: .72rem;
+        font-weight: 820;
+        transition:
+            transform .2s ease,
+            background .2s ease,
+            border-color .2s ease;
+    }
+
+    .hero-chip:hover {
+        transform: translateY(-2px) scale(1.025);
+        background: rgba(255,255,255,.14);
+        border-color: rgba(255,255,255,.20);
+    }
+
+    /* ---------- TICKER ---------- */
+    .ticker-shell {
+        position: relative;
+        overflow: hidden;
+        margin-top: .9rem;
+        border-radius: 16px;
+        background: rgba(255,255,255,.78);
+        border: 1px solid #E3EAF4;
+        backdrop-filter: blur(14px);
+        box-shadow: 0 10px 26px rgba(15,23,42,.04);
+    }
+
+    .ticker-shell::before,
+    .ticker-shell::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 70px;
+        z-index: 3;
+        pointer-events: none;
+    }
+
+    .ticker-shell::before {
+        left: 0;
+        background: linear-gradient(90deg, #F7F9FC, transparent);
+    }
+
+    .ticker-shell::after {
+        right: 0;
+        background: linear-gradient(-90deg, #F7F9FC, transparent);
+    }
+
+    .ticker-track {
+        display: flex;
+        width: max-content;
+        animation: tickerMove 24s linear infinite;
+    }
+
+    .ticker-shell:hover .ticker-track {
+        animation-play-state: paused;
+    }
+
+    .ticker-item {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .8rem 1.05rem;
+        color: #4B5B71;
+        font-size: .75rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .ticker-rank {
+        color: var(--blue);
+        font-weight: 950;
+    }
+
+    .ticker-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 999px;
+        background: #C7D2E0;
+    }
+
+    /* ---------- SECTION ---------- */
+    .section-head {
+        margin: 2.4rem 0 1rem;
+        animation: fadeRise .55s ease both;
     }
 
     .section-eyebrow {
         color: var(--blue);
-        font-size: .76rem;
-        font-weight: 900;
-        letter-spacing: .08em;
+        font-size: .70rem;
+        font-weight: 950;
+        letter-spacing: .09em;
         text-transform: uppercase;
-        margin-bottom: .22rem;
     }
 
     .section-title {
         color: var(--text);
-        font-size: 1.45rem;
-        font-weight: 900;
-        letter-spacing: -.035em;
-        margin: 0;
+        font-size: 1.48rem;
+        font-weight: 950;
+        letter-spacing: -.04em;
+        margin-top: .18rem;
     }
 
     .section-caption {
-        color: var(--text-sub);
-        font-size: .86rem;
-        margin-top: .25rem;
+        color: #8090A4;
+        font-size: .79rem;
+        margin-top: .28rem;
     }
 
-    /* ---------- KPI cards ---------- */
+    /* ---------- KPI ---------- */
     .kpi-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0,1fr));
         gap: .9rem;
-        margin-top: .2rem;
+        margin-top: 1rem;
+        animation: fadeRise .6s ease both;
     }
 
     .kpi-card {
-        background: rgba(255,255,255,.92);
-        border: 1px solid rgba(226,232,240,.9);
+        position: relative;
+        overflow: hidden;
+        padding: 1.18rem 1.22rem;
         border-radius: 20px;
-        padding: 1.18rem 1.25rem;
-        box-shadow: 0 10px 30px rgba(15,23,42,.045);
+        background: rgba(255,255,255,.94);
+        border: 1px solid #E3EAF2;
+        box-shadow: 0 10px 30px rgba(15,23,42,.04);
+        transition:
+            transform .24s cubic-bezier(.2,.8,.2,1),
+            box-shadow .24s ease,
+            border-color .24s ease;
+    }
+
+    .kpi-card::after {
+        content: "";
+        position: absolute;
+        width: 95px;
+        height: 240%;
+        left: -135px;
+        top: -70%;
+        transform: rotate(17deg);
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.85),
+            transparent
+        );
+        opacity: 0;
+        transition: left .6s ease, opacity .15s ease;
+        pointer-events: none;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-7px);
+        border-color: #C6DCFF;
+        box-shadow: 0 23px 54px rgba(49,130,246,.11);
+    }
+
+    .kpi-card:hover::after {
+        left: 120%;
+        opacity: .64;
     }
 
     .kpi-label {
-        color: var(--text-sub);
-        font-size: .78rem;
-        font-weight: 750;
-        margin-bottom: .55rem;
+        color: #718096;
+        font-size: .74rem;
+        font-weight: 800;
     }
 
     .kpi-value {
         color: var(--text);
         font-size: 1.55rem;
-        font-weight: 900;
-        letter-spacing: -.04em;
+        font-weight: 950;
+        letter-spacing: -.045em;
+        margin-top: .45rem;
     }
 
     .kpi-note {
-        color: #94A3B8;
-        font-size: .72rem;
-        margin-top: .35rem;
+        color: #9BA7B6;
+        font-size: .68rem;
+        margin-top: .22rem;
     }
 
-    /* ---------- Podium ---------- */
+    /* ---------- PODIUM ---------- */
     .podium-card {
+        position: relative;
+        overflow: hidden;
         height: 100%;
-        border: 1px solid var(--line);
-        background: rgba(255,255,255,.96);
+        padding: 1.25rem;
         border-radius: 24px;
-        padding: 1.25rem 1.25rem 1.15rem;
+        background: rgba(255,255,255,.97);
+        border: 1px solid #E4EAF2;
         box-shadow: var(--shadow);
-        transition: transform .18s ease, box-shadow .18s ease;
+        transition:
+            transform .26s cubic-bezier(.2,.8,.2,1),
+            box-shadow .26s ease,
+            border-color .26s ease;
+    }
+
+    .podium-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            120deg,
+            transparent 28%,
+            rgba(255,255,255,0) 41%,
+            rgba(255,255,255,.66) 50%,
+            rgba(255,255,255,0) 59%,
+            transparent 72%
+        );
+        transform: translateX(-125%);
+        transition: transform .8s cubic-bezier(.2,.8,.2,1);
+        pointer-events: none;
     }
 
     .podium-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 18px 45px rgba(15,23,42,.10);
+        transform: translateY(-9px) scale(1.012);
+        border-color: #BFD7FF;
+        box-shadow: 0 28px 64px rgba(34,83,150,.14);
+    }
+
+    .podium-card:hover::after {
+        transform: translateX(125%);
     }
 
     .podium-card.first {
         background:
-            radial-gradient(circle at 90% 0%, rgba(49,130,246,.13), transparent 35%),
-            linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%);
+            radial-gradient(circle at 92% 0%, rgba(49,130,246,.13), transparent 36%),
+            linear-gradient(180deg, #FFFFFF, #F8FBFF);
         border-color: #CFE0FF;
+        animation: softGlow 4.8s ease-in-out infinite;
     }
 
     .rank-chip {
         display: inline-flex;
-        width: 38px;
-        height: 38px;
+        width: 40px;
+        height: 40px;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
+        border-radius: 13px;
+        background: #EEF4FF;
+        color: #2D6FD1;
         font-size: 1rem;
         font-weight: 950;
-        background: #EEF4FF;
-        color: var(--blue);
-        margin-bottom: .9rem;
+        margin-bottom: .85rem;
     }
 
     .rank-chip.gold {
-        background: #FFF7D6;
-        color: #A56D00;
+        background: #FFF5D4;
+        color: #A36C00;
     }
 
     .podium-name {
-        color: var(--text);
-        font-size: 1.14rem;
-        font-weight: 900;
-        letter-spacing: -.035em;
+        min-height: 3rem;
+        color: #182236;
+        font-size: 1.12rem;
         line-height: 1.35;
-        min-height: 3.05rem;
+        font-weight: 950;
+        letter-spacing: -.035em;
     }
 
     .podium-meta {
-        color: var(--text-sub);
-        font-size: .76rem;
-        margin-top: .38rem;
+        color: #8996A7;
+        font-size: .70rem;
+        margin-top: .35rem;
     }
 
     .podium-number {
-        color: var(--text);
-        font-size: 1.45rem;
-        font-weight: 900;
+        color: #172033;
+        font-size: 1.48rem;
+        font-weight: 950;
         letter-spacing: -.04em;
         margin-top: 1rem;
     }
 
     .podium-label {
-        color: #94A3B8;
-        font-size: .73rem;
+        color: #9AA6B5;
+        font-size: .68rem;
         margin-top: .12rem;
     }
 
-    /* ---------- Chart containers ---------- */
-    .chart-shell {
-        background: rgba(255,255,255,.96);
-        border: 1px solid var(--line);
-        border-radius: 24px;
-        padding: .75rem 1rem .35rem;
-        box-shadow: var(--shadow);
+    /* ---------- INTERACTIVE PANEL ---------- */
+    .interactive-shell {
+        position: relative;
+        border-radius: 27px;
+        padding: 1px;
+        margin: .4rem 0 .95rem;
+        background: linear-gradient(
+            115deg,
+            #3182F6,
+            #8B5CF6,
+            #27C2FF,
+            #3182F6
+        );
+        background-size: 300% 300%;
+        animation: borderFlow 8s ease infinite;
+        box-shadow: 0 20px 55px rgba(33,79,145,.10);
     }
 
-    /* ---------- Ranking table ---------- */
+    .interactive-inner {
+        border-radius: 26px;
+        padding: 1.12rem 1.15rem;
+        background:
+            radial-gradient(circle at 93% 0%, rgba(49,130,246,.08), transparent 30%),
+            rgba(255,255,255,.985);
+    }
+
+    .panel-kicker {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        color: #3182F6;
+        font-size: .68rem;
+        font-weight: 950;
+        letter-spacing: .09em;
+    }
+
+    .panel-kicker::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #3182F6;
+        box-shadow: 0 0 0 5px rgba(49,130,246,.09);
+    }
+
+    .panel-title {
+        color: #111827;
+        font-size: 1.14rem;
+        font-weight: 950;
+        letter-spacing: -.035em;
+        margin-top: .25rem;
+    }
+
+    .panel-sub {
+        color: #8391A4;
+        font-size: .73rem;
+        margin-top: .18rem;
+    }
+
+    /* ---------- FOCUS ---------- */
+    .focus-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 250px;
+        padding: 1.4rem;
+        border-radius: 24px;
+        color: white;
+        background:
+            radial-gradient(circle at 88% 5%, rgba(106,173,255,.34), transparent 30%),
+            radial-gradient(circle at 0% 112%, rgba(139,92,246,.30), transparent 40%),
+            linear-gradient(145deg, #101A2F 0%, #162D54 56%, #174D8E 100%);
+        box-shadow: 0 23px 58px rgba(18,49,92,.21);
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+    .focus-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 31px 72px rgba(18,49,92,.29);
+    }
+
+    .focus-rank {
+        display: inline-flex;
+        padding: .36rem .58rem;
+        border-radius: 10px;
+        color: #CFE2FF;
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.10);
+        font-size: .68rem;
+        font-weight: 900;
+    }
+
+    .focus-title {
+        color: white;
+        font-size: 1.55rem;
+        line-height: 1.24;
+        font-weight: 950;
+        letter-spacing: -.045em;
+        margin-top: .9rem;
+    }
+
+    .focus-meta {
+        color: #AFC5E3;
+        font-size: .70rem;
+        margin-top: .36rem;
+    }
+
+    .focus-number {
+        color: white;
+        font-size: 2rem;
+        font-weight: 950;
+        letter-spacing: -.055em;
+        margin-top: 1.1rem;
+    }
+
+    .focus-caption {
+        color: #9DB6D9;
+        font-size: .67rem;
+    }
+
+    .focus-track {
+        width: 100%;
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255,255,255,.10);
+        margin-top: 1rem;
+    }
+
+    .focus-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #67A8FF, #9B7BFF);
+        box-shadow: 0 0 18px rgba(104,168,255,.42);
+        transition: width .7s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .focus-track-label {
+        display: flex;
+        justify-content: space-between;
+        gap: .5rem;
+        color: #9DB6D9;
+        font-size: .63rem;
+        margin-top: .38rem;
+    }
+
+    /* ---------- DUEL ---------- */
+    .duel-vs {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        margin: .7rem auto 0;
+        border-radius: 18px;
+        color: white;
+        background: linear-gradient(135deg, #3182F6, #8B5CF6);
+        box-shadow: 0 12px 28px rgba(80,93,220,.25);
+        font-weight: 950;
+        transform: rotate(-4deg);
+        transition: transform .2s ease;
+    }
+
+    .duel-vs:hover {
+        transform: rotate(4deg) scale(1.08);
+    }
+
+    .duel-result {
+        margin-top: .58rem;
+        padding: .84rem .92rem;
+        border-radius: 15px;
+        background: #F7FAFF;
+        border: 1px solid #E0EAF9;
+        color: #56667C;
+        font-size: .74rem;
+        line-height: 1.65;
+    }
+
+    .duel-result b {
+        color: #1F65C8;
+    }
+
+    /* ---------- RANKING ---------- */
     .ranking-panel {
         position: relative;
         overflow: hidden;
         border-radius: 24px;
         border: 1px solid #E3EAF3;
         background: rgba(255,255,255,.98);
-        box-shadow: 0 16px 45px rgba(15,23,42,.07);
+        box-shadow: 0 17px 48px rgba(15,23,42,.07);
+        animation: fadeRise .55s ease both;
     }
 
     .ranking-panel::before {
@@ -363,72 +810,68 @@ st.markdown(
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #3182F6 0%, #6EA8FF 42%, #8B5CF6 100%);
         z-index: 4;
+        background: linear-gradient(90deg, #3182F6, #6EA8FF, #8B5CF6);
     }
 
     .ranking-toolbar {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
         gap: 1rem;
-        padding: 1rem 1.15rem .9rem;
-        background: linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);
+        padding: 1rem 1.1rem .88rem;
         border-bottom: 1px solid #EDF1F6;
+        background: linear-gradient(180deg, #FFFFFF, #FBFCFE);
     }
 
     .ranking-toolbar-left {
         display: flex;
         align-items: center;
         gap: .55rem;
-        min-width: 0;
     }
 
-    .ranking-live-dot {
+    .ranking-live {
         width: 8px;
         height: 8px;
         border-radius: 999px;
         background: #3182F6;
-        box-shadow: 0 0 0 5px rgba(49,130,246,.10);
-        flex: 0 0 auto;
+        animation: livePulse 1.8s ease-in-out infinite;
     }
 
     .ranking-toolbar-title {
         color: #152033;
-        font-size: .88rem;
-        font-weight: 900;
-        letter-spacing: -.02em;
+        font-size: .84rem;
+        font-weight: 950;
     }
 
     .ranking-toolbar-meta {
-        color: #8B98AA;
-        font-size: .73rem;
-        font-weight: 650;
-        white-space: nowrap;
+        color: #8A98AA;
+        font-size: .68rem;
+        font-weight: 700;
     }
 
-    .ranking-table-scroll {
+    .ranking-scroll {
         width: 100%;
         overflow-x: auto;
         scrollbar-width: thin;
         scrollbar-color: #CBD5E1 transparent;
     }
 
-    .ranking-table-scroll::-webkit-scrollbar {
+    .ranking-scroll::-webkit-scrollbar {
         height: 8px;
     }
 
-    .ranking-table-scroll::-webkit-scrollbar-thumb {
+    .ranking-scroll::-webkit-scrollbar-thumb {
         background: #CBD5E1;
         border-radius: 999px;
     }
 
     .custom-table {
         width: 100%;
-        min-width: 940px;
+        min-width: 950px;
         border-collapse: separate;
         border-spacing: 0;
-        background: #FFFFFF;
+        background: white;
         font-variant-numeric: tabular-nums;
     }
 
@@ -436,16 +879,16 @@ st.markdown(
         position: sticky;
         top: 0;
         z-index: 2;
+        padding: 13px 14px;
+        color: #7B8798;
         background: rgba(248,250,252,.97);
         backdrop-filter: blur(10px);
-        color: #7A8799;
-        padding: 13px 14px;
-        text-align: center;
-        font-size: .70rem;
-        font-weight: 900;
-        letter-spacing: .045em;
-        text-transform: uppercase;
         border-bottom: 1px solid #E7EDF4;
+        font-size: .66rem;
+        font-weight: 950;
+        letter-spacing: .055em;
+        text-transform: uppercase;
+        text-align: center;
         white-space: nowrap;
     }
 
@@ -453,15 +896,24 @@ st.markdown(
         text-align: left;
     }
 
+    .custom-table tbody tr {
+        transition: transform .15s ease, filter .15s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        transform: translateX(4px);
+        filter: saturate(1.04);
+    }
+
     .custom-table tbody td {
         padding: 15px 14px;
-        text-align: center;
+        color: #344156;
+        background: white;
         border-bottom: 1px solid #EEF2F7;
-        color: #334155;
-        font-size: .84rem;
+        font-size: .80rem;
+        text-align: center;
         white-space: nowrap;
-        background: #FFFFFF;
-        transition: background .14s ease, transform .14s ease;
+        transition: background .15s ease;
     }
 
     .custom-table tbody tr:last-child td {
@@ -473,55 +925,11 @@ st.markdown(
     }
 
     .custom-table tbody tr.rank-row-1 td {
-        background: linear-gradient(90deg, rgba(49,130,246,.050), rgba(255,255,255,1) 45%);
-    }
-
-    .custom-table tbody tr.rank-row-1:hover td {
-        background: linear-gradient(90deg, rgba(49,130,246,.085), #F8FBFF 48%);
+        background: linear-gradient(90deg, rgba(49,130,246,.05), white 48%);
     }
 
     .custom-table tbody tr.rank-row-1 td:first-child {
         box-shadow: inset 4px 0 0 #3182F6;
-    }
-
-    .movie-cell {
-        text-align: left !important;
-        min-width: 285px;
-        max-width: 390px;
-    }
-
-    .movie-line {
-        display: flex;
-        align-items: center;
-        gap: .45rem;
-        min-width: 0;
-    }
-
-    .movie-name {
-        color: #172033;
-        font-weight: 900;
-        letter-spacing: -.022em;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .rank-row-1 .movie-name {
-        color: #185FCA;
-    }
-
-    .million-badge {
-        display: inline-flex;
-        align-items: center;
-        flex: 0 0 auto;
-        padding: .18rem .42rem;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #FFF7D6, #FFF1B8);
-        color: #8A6300;
-        border: 1px solid #F5DF8F;
-        font-size: .62rem;
-        font-weight: 900;
-        line-height: 1.25;
     }
 
     .rank-number {
@@ -531,40 +939,46 @@ st.markdown(
         width: 34px;
         height: 34px;
         border-radius: 11px;
-        background: #F1F5F9;
         color: #64748B;
+        background: #F1F5F9;
         font-weight: 950;
-        box-shadow: inset 0 0 0 1px rgba(148,163,184,.08);
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .custom-table tbody tr:hover .rank-number {
+        transform: scale(1.1) rotate(-2deg);
+        box-shadow: 0 7px 16px rgba(15,23,42,.10);
     }
 
     .rank-number.first {
+        color: #1C67D7;
         background: linear-gradient(135deg, #E7F0FF, #DCEAFF);
-        color: #1D67D8;
         box-shadow: inset 0 0 0 1px #C8DDFF;
     }
 
     .rank-number.second {
+        color: #5A6677;
         background: linear-gradient(135deg, #F3F5F8, #E9EDF2);
-        color: #586577;
-        box-shadow: inset 0 0 0 1px #DCE2E9;
     }
 
     .rank-number.third {
+        color: #B3662D;
         background: linear-gradient(135deg, #FFF0E6, #FFE3D1);
-        color: #B7652C;
-        box-shadow: inset 0 0 0 1px #FFD2B4;
     }
 
-    .trend-up, .trend-down, .trend-new, .trend-flat {
+    .trend-up,
+    .trend-down,
+    .trend-new,
+    .trend-flat {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 48px;
-        padding: .30rem .48rem;
+        min-width: 47px;
+        padding: .29rem .46rem;
         border-radius: 999px;
-        font-size: .67rem;
-        font-weight: 900;
+        font-size: .63rem;
         line-height: 1;
+        font-weight: 950;
         border: 1px solid transparent;
     }
 
@@ -592,69 +1006,102 @@ st.markdown(
         border-color: #E8ECF1;
     }
 
-    .num-cell {
-        text-align: right !important;
-        font-weight: 760;
+    .movie-cell {
+        min-width: 285px;
+        max-width: 390px;
+        text-align: left !important;
+    }
+
+    .movie-line {
+        display: flex;
+        align-items: center;
+        gap: .44rem;
+        min-width: 0;
+    }
+
+    .movie-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #172033;
+        font-weight: 950;
+        letter-spacing: -.02em;
+    }
+
+    .million-badge {
+        display: inline-flex;
+        flex: 0 0 auto;
+        padding: .18rem .4rem;
+        border-radius: 999px;
+        color: #896200;
+        background: linear-gradient(135deg, #FFF7D6, #FFF1B8);
+        border: 1px solid #F4DE8F;
+        font-size: .58rem;
+        font-weight: 950;
     }
 
     .audience-cell {
-        text-align: right !important;
         min-width: 150px;
+        text-align: right !important;
     }
 
     .audience-value {
         display: flex;
         align-items: baseline;
         justify-content: flex-end;
-        gap: .22rem;
+        gap: .2rem;
         color: #1E293B;
-        font-weight: 900;
+        font-weight: 950;
     }
 
     .audience-unit {
-        color: #94A3B8;
-        font-size: .67rem;
-        font-weight: 750;
+        color: #97A3B2;
+        font-size: .62rem;
     }
 
     .share-row {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: .45rem;
-        margin-top: .42rem;
+        gap: .42rem;
+        margin-top: .38rem;
     }
 
     .share-track {
         width: 72px;
         height: 5px;
-        border-radius: 999px;
         overflow: hidden;
+        border-radius: 999px;
         background: #EDF2F7;
     }
 
     .share-fill {
         height: 100%;
         border-radius: 999px;
-        background: linear-gradient(90deg, #77ACFF, #3182F6);
+        background: linear-gradient(90deg, #7EB1FF, #3182F6);
+        transition: width .65s cubic-bezier(.2,.8,.2,1);
     }
 
     .share-label {
-        color: #9AA6B5;
-        font-size: .62rem;
-        font-weight: 800;
         min-width: 34px;
         text-align: right;
+        color: #98A4B3;
+        font-size: .58rem;
+        font-weight: 800;
+    }
+
+    .num-cell {
+        text-align: right !important;
+        font-weight: 780;
     }
 
     .screen-pill {
         display: inline-flex;
-        align-items: center;
-        justify-content: center;
         min-width: 58px;
-        padding: .27rem .45rem;
+        justify-content: center;
+        padding: .26rem .43rem;
         border-radius: 9px;
-        color: #566579;
+        color: #59687A;
         background: #F5F7FA;
         border: 1px solid #E8EDF3;
         font-weight: 850;
@@ -662,40 +1109,81 @@ st.markdown(
 
     .ranking-footer {
         display: flex;
-        align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        padding: .78rem 1.15rem;
+        padding: .75rem 1.1rem;
+        color: #94A0B0;
         background: #FBFCFE;
         border-top: 1px solid #EEF2F6;
-        color: #93A0B1;
-        font-size: .68rem;
+        font-size: .63rem;
         font-weight: 650;
     }
 
-    /* ---------- Footer note ---------- */
+    /* ---------- NOTES ---------- */
     .soft-note {
         margin-top: 1rem;
         padding: .9rem 1rem;
         border-radius: 16px;
+        color: #526F95;
         background: #EEF5FF;
-        color: #4A6A95;
-        font-size: .8rem;
-        line-height: 1.65;
         border: 1px solid #DCEAFF;
+        font-size: .74rem;
+        line-height: 1.65;
     }
 
-    /* ---------- Native widgets ---------- */
+    /* ---------- NATIVE STREAMLIT ---------- */
     div[data-baseweb="select"] > div,
     div[data-testid="stDateInput"] input {
         border-radius: 13px !important;
+    }
+
+    [data-testid="stMetric"] {
+        border-radius: 18px !important;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            border-color .2s ease;
+    }
+
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-4px);
+        border-color: #CFE0FF !important;
+        box-shadow: 0 16px 34px rgba(15,23,42,.08);
+    }
+
+    .stButton > button {
+        border-radius: 14px !important;
+        font-weight: 850 !important;
+        transition:
+            transform .18s ease,
+            box-shadow .18s ease,
+            border-color .18s ease !important;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        border-color: #9EC4FF !important;
+        box-shadow: 0 10px 24px rgba(49,130,246,.13);
+    }
+
+    [data-testid="stTextInput"] input {
+        border-radius: 14px !important;
+    }
+
+    [data-testid="stTextInput"] input:focus {
+        box-shadow: 0 0 0 4px rgba(49,130,246,.10) !important;
     }
 
     div[data-testid="stAlert"] {
         border-radius: 16px;
     }
 
-    /* ---------- Responsive ---------- */
+    [data-testid="stPlotlyChart"] {
+        overflow: hidden;
+        border-radius: 18px;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 900px) {
         [data-testid="stMainBlockContainer"] {
             padding-left: 1rem;
@@ -703,40 +1191,41 @@ st.markdown(
         }
 
         .hero {
-            padding: 1.7rem 1.45rem;
-            border-radius: 23px;
+            min-height: 320px;
+            padding: 1.8rem 1.45rem;
+            border-radius: 24px;
         }
 
         .kpi-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0,1fr));
         }
     }
 
     @media (max-width: 620px) {
         .hero-title {
-            font-size: 2.15rem;
+            font-size: 2.18rem;
         }
 
         .kpi-grid {
             grid-template-columns: 1fr;
         }
-    }
 
-    @media (max-width: 700px) {
-        .ranking-toolbar {
-            align-items: flex-start;
-            flex-direction: column;
-            gap: .4rem;
-        }
-
+        .ranking-toolbar,
         .ranking-footer {
             align-items: flex-start;
             flex-direction: column;
-            gap: .25rem;
         }
 
         .custom-table {
             min-width: 860px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: .001ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: .001ms !important;
         }
     }
     </style>
@@ -750,7 +1239,6 @@ st.markdown(
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_boxoffice_data(target_date: str, api_key: str):
-    """KOBIS 일별 박스오피스 TOP 10 조회."""
     url = (
         "https://www.kobis.or.kr/kobisopenapi/webservice/rest/"
         "boxoffice/searchDailyBoxOfficeList.json"
@@ -769,10 +1257,7 @@ def get_boxoffice_data(target_date: str, api_key: str):
             message = data["faultInfo"].get("message", "알 수 없는 API 오류")
             return None, f"KOBIS API 오류: {message}"
 
-        movie_list = (
-            data.get("boxOfficeResult", {})
-            .get("dailyBoxOfficeList", [])
-        )
+        movie_list = data.get("boxOfficeResult", {}).get("dailyBoxOfficeList", [])
 
         if not movie_list:
             return None, "empty"
@@ -785,6 +1270,45 @@ def get_boxoffice_data(target_date: str, api_key: str):
         return None, "서버 응답을 읽는 중 문제가 발생했어요."
     except Exception as exc:
         return None, f"예상하지 못한 오류가 발생했어요: {exc}"
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_week_boxoffice_data(end_date_str: str, api_key: str):
+    end_date = datetime.strptime(end_date_str, "%Y%m%d").date()
+    frames = []
+
+    for offset in range(6, -1, -1):
+        day = end_date - timedelta(days=offset)
+        raw, error = get_boxoffice_data(day.strftime("%Y%m%d"), api_key)
+
+        if raw is None or error:
+            continue
+
+        temp = raw.copy()
+
+        for col in [
+            "rank",
+            "rankInten",
+            "audiCnt",
+            "audiAcc",
+            "scrnCnt",
+            "salesAmt",
+            "salesAcc",
+        ]:
+            if col in temp.columns:
+                temp[col] = pd.to_numeric(
+                    temp[col],
+                    errors="coerce",
+                ).fillna(0)
+
+        temp["movieNmDisplay"] = temp["movieNm"].astype(str)
+        temp["date"] = pd.to_datetime(day)
+        frames.append(temp)
+
+    if not frames:
+        return pd.DataFrame()
+
+    return pd.concat(frames, ignore_index=True)
 
 
 def preprocess(df: pd.DataFrame) -> pd.DataFrame:
@@ -802,7 +1326,10 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
 
     for col in numeric_cols:
         if col in result.columns:
-            result[col] = pd.to_numeric(result[col], errors="coerce").fillna(0)
+            result[col] = pd.to_numeric(
+                result[col],
+                errors="coerce",
+            ).fillna(0)
 
     result["isMillion"] = result["audiAcc"] >= 1_000_000
     result["movieNmDisplay"] = result["movieNm"].astype(str)
@@ -810,8 +1337,21 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # =========================================================
-# 4. FORMATTERS
+# 4. HELPERS
 # =========================================================
+def compact_html(markup: str) -> str:
+    markup = textwrap.dedent(markup).strip()
+    markup = re.sub(r">\s+<", "><", markup)
+    return markup
+
+
+def person_short(value: float) -> str:
+    value = float(value)
+    if value >= 10_000:
+        return f"{value / 10_000:.1f}만"
+    return f"{value:,.0f}"
+
+
 def won_short(value: float) -> str:
     value = float(value)
     if value >= 100_000_000:
@@ -821,11 +1361,38 @@ def won_short(value: float) -> str:
     return f"{value:,.0f}"
 
 
-def person_short(value: float) -> str:
-    value = float(value)
-    if value >= 10_000:
-        return f"{value / 10_000:.1f}만"
-    return f"{value:,.0f}"
+def section_header(eyebrow: str, title: str, caption: str = ""):
+    st.markdown(
+        compact_html(
+            f"""
+            <div class="section-head">
+                <div class="section-eyebrow">{html.escape(eyebrow)}</div>
+                <div class="section-title">{html.escape(title)}</div>
+                <div class="section-caption">{html.escape(caption)}</div>
+            </div>
+            """
+        ),
+        unsafe_allow_html=True,
+    )
+
+
+def metric_selector(label: str, options, default, key: str):
+    if hasattr(st, "segmented_control"):
+        value = st.segmented_control(
+            label,
+            options=options,
+            default=default,
+            key=key,
+        )
+        return value or default
+
+    return st.radio(
+        label,
+        options=options,
+        index=options.index(default),
+        horizontal=True,
+        key=key,
+    )
 
 
 def trend_badge(rank_inten, old_new) -> str:
@@ -841,67 +1408,123 @@ def trend_badge(rank_inten, old_new) -> str:
         return f"<span class='trend-up'>▲ {n}</span>"
     if n < 0:
         return f"<span class='trend-down'>▼ {abs(n)}</span>"
+
     return "<span class='trend-flat'>—</span>"
 
 
 def rank_badge(rank: int) -> str:
     rank = int(rank)
     cls = "rank-number"
+
     if rank == 1:
         cls += " first"
     elif rank == 2:
         cls += " second"
     elif rank == 3:
         cls += " third"
+
     return f"<span class='{cls}'>{rank}</span>"
 
 
-def compact_html(markup: str) -> str:
-    """Markdown가 들여쓴 HTML을 코드블록으로 오해하지 않도록 안전하게 압축."""
-    markup = textwrap.dedent(markup).strip()
-    markup = re.sub(r">\s+<", "><", markup)
-    return markup
+def render_ticker(df: pd.DataFrame):
+    items = []
 
+    for _, row in df.head(5).iterrows():
+        items.append(
+            f"<span class='ticker-item'>"
+            f"<span class='ticker-rank'>#{int(row['rank'])}</span>"
+            f"<span>{html.escape(str(row['movieNmDisplay']))}</span>"
+            f"<span class='ticker-dot'></span>"
+            f"<span>{int(row['audiCnt']):,}명</span>"
+            f"</span>"
+        )
 
-def section_header(eyebrow: str, title: str, caption: str = ""):
+    doubled = "".join(items + items)
+
     st.markdown(
-        f"""
-        <div class="section-head">
-            <div>
-                <div class="section-eyebrow">{html.escape(eyebrow)}</div>
-                <div class="section-title">{html.escape(title)}</div>
-                <div class="section-caption">{html.escape(caption)}</div>
+        compact_html(
+            f"""
+            <div class="ticker-shell">
+                <div class="ticker-track">{doubled}</div>
             </div>
-        </div>
-        """,
+            """
+        ),
         unsafe_allow_html=True,
     )
 
 
 def render_podium_card(row: pd.Series, rank: int):
     name = html.escape(str(row["movieNmDisplay"]))
-    open_dt = html.escape(str(row.get("openDt", "-")))
     audience = int(row["audiCnt"])
     accumulated = int(row["audiAcc"])
-    is_million = bool(row["isMillion"])
+    open_dt = html.escape(str(row.get("openDt", "-")))
 
     first_cls = " first" if rank == 1 else ""
     chip_cls = "rank-chip gold" if rank == 1 else "rank-chip"
     medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, f"#{rank}")
-    trophy = " · 100만+ 흥행작" if is_million else ""
+    million_text = " · 🏆 100만+" if bool(row["isMillion"]) else ""
 
     st.markdown(
-        f"""
-        <div class="podium-card{first_cls}">
-            <div class="{chip_cls}">{medal}</div>
-            <div class="podium-name">{name}</div>
-            <div class="podium-meta">개봉 {open_dt}{trophy}</div>
-            <div class="podium-number">{audience:,}<span style="font-size:.78rem;font-weight:750;color:#94A3B8;"> 명</span></div>
-            <div class="podium-label">선택 날짜 일일 관객수</div>
-            <div style="height:.6rem"></div>
-            <div style="color:#64748B;font-size:.78rem;">누적 <b style="color:#334155;">{accumulated:,}명</b></div>
-        </div>
-        """,
+        compact_html(
+            f"""
+            <div class="podium-card{first_cls}">
+                <div class="{chip_cls}">{medal}</div>
+                <div class="podium-name">{name}</div>
+                <div class="podium-meta">개봉 {open_dt}{million_text}</div>
+                <div class="podium-number">
+                    {audience:,}
+                    <span style="font-size:.76rem;font-weight:800;color:#96A2B1;"> 명</span>
+                </div>
+                <div class="podium-label">선택 날짜 일일 관객</div>
+                <div style="height:.58rem"></div>
+                <div style="color:#68788C;font-size:.73rem;">
+                    누적 <b style="color:#334155;">{accumulated:,}명</b>
+                </div>
+            </div>
+            """
+        ),
+        unsafe_allow_html=True,
+    )
+
+
+def render_focus_card(row: pd.Series, total_audience: int):
+    movie_name = html.escape(str(row["movieNmDisplay"]))
+    rank = int(row["rank"])
+    audience = int(row["audiCnt"])
+    accumulated = int(row["audiAcc"])
+    share = audience / max(total_audience, 1) * 100
+
+    if accumulated >= 1_000_000:
+        progress_value = 100
+        progress_label = "🏆 100만 관객 돌파"
+    else:
+        progress_value = min(accumulated / 1_000_000 * 100, 100)
+        progress_label = f"100만까지 {1_000_000 - accumulated:,}명"
+
+    st.markdown(
+        compact_html(
+            f"""
+            <div class="focus-card">
+                <div class="focus-rank">BOX OFFICE #{rank}</div>
+                <div class="focus-title">{movie_name}</div>
+                <div class="focus-meta">
+                    TOP 10 점유율 {share:.1f}% · 스크린 {int(row['scrnCnt']):,}개
+                </div>
+                <div class="focus-number">
+                    {audience:,}
+                    <span style="font-size:.78rem;font-weight:800;color:#AFC5E3;"> 명</span>
+                </div>
+                <div class="focus-caption">선택 날짜 일일 관객</div>
+                <div class="focus-track">
+                    <div class="focus-fill" style="width:{progress_value:.1f}%"></div>
+                </div>
+                <div class="focus-track-label">
+                    <span>{progress_label}</span>
+                    <span>누적 {accumulated:,}명</span>
+                </div>
+            </div>
+            """
+        ),
         unsafe_allow_html=True,
     )
 
@@ -909,129 +1532,372 @@ def render_podium_card(row: pd.Series, rank: int):
 # =========================================================
 # 5. CHARTS
 # =========================================================
-def make_audience_chart(df: pd.DataFrame):
-    chart_df = df.head(5).copy()
-    chart_df["label"] = chart_df["movieNmDisplay"].str.slice(0, 18)
-    chart_df = chart_df.iloc[::-1]
+def make_dynamic_rank_chart(
+    df: pd.DataFrame,
+    metric_label: str,
+    top_n: int,
+):
+    metric_map = {
+        "관객수": ("audiCnt", "명", "#3182F6"),
+        "누적 관객": ("audiAcc", "명", "#7559E8"),
+        "스크린": ("scrnCnt", "개", "#16A3A3"),
+        "매출": ("salesAmt", "원", "#F59E0B"),
+    }
+
+    col, unit, accent = metric_map[metric_label]
+
+    chart_df = (
+        df.sort_values(col, ascending=False)
+        .head(int(top_n))
+        .copy()
+        .iloc[::-1]
+    )
+
+    labels = chart_df["movieNmDisplay"].str.slice(0, 20)
 
     colors = [
-        "#A9C8FF" if int(rank) != 1 else "#3182F6"
-        for rank in chart_df["rank"]
+        accent if i == len(chart_df) - 1 else "#C9D9F1"
+        for i in range(len(chart_df))
     ]
+
+    text_values = []
+
+    for value in chart_df[col]:
+        if metric_label == "매출":
+            text_values.append(f"{won_short(value)}원")
+        else:
+            text_values.append(f"{int(value):,}{unit}")
 
     fig = go.Figure(
         go.Bar(
-            x=chart_df["audiCnt"],
-            y=chart_df["label"],
+            x=chart_df[col],
+            y=labels,
             orientation="h",
-            marker=dict(color=colors),
-            text=[f"{int(v):,}명" for v in chart_df["audiCnt"]],
+            marker=dict(
+                color=colors,
+                line=dict(width=0),
+            ),
+            text=text_values,
             textposition="outside",
             cliponaxis=False,
-            hovertemplate="<b>%{y}</b><br>%{x:,.0f}명<extra></extra>",
+            customdata=chart_df[["rank", "movieNmDisplay"]].values,
+            hovertemplate=(
+                "<b>%{customdata[1]}</b><br>"
+                "박스오피스 #%{customdata[0]:.0f}<br>"
+                + (
+                    "%{x:,.0f}원"
+                    if metric_label == "매출"
+                    else f"%{{x:,.0f}}{unit}"
+                )
+                + "<extra></extra>"
+            ),
         )
     )
 
     fig.update_layout(
-        height=390,
-        margin=dict(l=8, r=72, t=20, b=20),
+        height=410,
+        margin=dict(l=8, r=82, t=14, b=18),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
+        hoverlabel=dict(
+            bgcolor="#101827",
+            bordercolor="#101827",
+            font=dict(color="white", size=12),
+        ),
         xaxis=dict(
             showgrid=True,
             gridcolor="#EEF2F7",
             zeroline=False,
             showticklabels=False,
-            title=None,
+            fixedrange=True,
         ),
         yaxis=dict(
             title=None,
             tickfont=dict(size=12, color="#334155"),
             automargin=True,
+            fixedrange=True,
         ),
         font=dict(
             family='Pretendard, "Noto Sans KR", sans-serif',
             color="#334155",
         ),
-        bargap=0.36,
+        bargap=.36,
+        transition=dict(duration=420, easing="cubic-in-out"),
     )
+
     return fig
 
 
-def make_share_chart(df: pd.DataFrame):
-    chart_df = df.head(5).copy()
-    other = max(int(df["audiCnt"].sum() - chart_df["audiCnt"].sum()), 0)
+def make_weekly_movie_chart(
+    week_df: pd.DataFrame,
+    movie_name: str,
+    end_date,
+):
+    all_days = pd.DataFrame(
+        {"date": pd.date_range(end=end_date, periods=7, freq="D")}
+    )
 
-    labels = chart_df["movieNmDisplay"].tolist()
-    values = chart_df["audiCnt"].astype(int).tolist()
+    history = (
+        week_df[week_df["movieNmDisplay"] == movie_name][
+            ["date", "audiCnt", "rank"]
+        ]
+        .copy()
+        .sort_values("date")
+    )
 
-    if other > 0:
-        labels.append("6~10위")
-        values.append(other)
+    trend = all_days.merge(history, on="date", how="left")
+    trend["audiCnt"] = trend["audiCnt"].fillna(0)
 
-    colors = [
-        "#3182F6",
-        "#6EA8FF",
-        "#9BC2FF",
-        "#BDD6FF",
-        "#D8E7FF",
-        "#E9EEF5",
-    ][: len(labels)]
+    fig = go.Figure()
 
-    fig = go.Figure(
-        go.Pie(
-            labels=labels,
-            values=values,
-            hole=0.68,
-            sort=False,
-            marker=dict(colors=colors, line=dict(color="#FFFFFF", width=3)),
-            textinfo="none",
-            hovertemplate="<b>%{label}</b><br>%{value:,.0f}명 · %{percent}<extra></extra>",
+    fig.add_trace(
+        go.Scatter(
+            x=trend["date"],
+            y=trend["audiCnt"],
+            mode="lines+markers",
+            name="일일 관객",
+            line=dict(
+                color="#3182F6",
+                width=3,
+                shape="spline",
+            ),
+            marker=dict(
+                size=8,
+                color="#FFFFFF",
+                line=dict(
+                    color="#3182F6",
+                    width=3,
+                ),
+            ),
+            fill="tozeroy",
+            fillcolor="rgba(49,130,246,.09)",
+            hovertemplate="<b>%{x|%m/%d}</b><br>%{y:,.0f}명<extra></extra>",
         )
     )
 
-    top1_share = values[0] / sum(values) * 100 if sum(values) else 0
+    rank_mask = trend["rank"].notna()
 
-    fig.add_annotation(
-        x=0.5,
-        y=0.53,
-        text=f"<b>{top1_share:.1f}%</b>",
-        showarrow=False,
-        font=dict(size=27, color="#0F172A"),
+    if rank_mask.any():
+        fig.add_trace(
+            go.Scatter(
+                x=trend.loc[rank_mask, "date"],
+                y=trend.loc[rank_mask, "rank"],
+                mode="lines+markers",
+                name="순위",
+                yaxis="y2",
+                line=dict(
+                    color="#8B5CF6",
+                    width=2,
+                    dash="dot",
+                ),
+                marker=dict(
+                    size=8,
+                    symbol="diamond",
+                    color="#8B5CF6",
+                ),
+                hovertemplate=(
+                    "<b>%{x|%m/%d}</b><br>"
+                    "박스오피스 #%{y:.0f}<extra></extra>"
+                ),
+            )
+        )
+
+    fig.update_layout(
+        height=360,
+        margin=dict(l=18, r=22, t=16, b=16),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            font=dict(
+                size=10,
+                color="#64748B",
+            ),
+        ),
+        xaxis=dict(
+            showgrid=False,
+            tickformat="%m/%d",
+            fixedrange=True,
+            tickfont=dict(color="#7A8799"),
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor="#EEF2F7",
+            zeroline=False,
+            rangemode="tozero",
+            fixedrange=True,
+            tickfont=dict(color="#7A8799"),
+        ),
+        yaxis2=dict(
+            overlaying="y",
+            side="right",
+            range=[10.7, .3],
+            tickmode="array",
+            tickvals=[1, 3, 5, 7, 10],
+            ticktext=["1위", "3위", "5위", "7위", "10위"],
+            showgrid=False,
+            fixedrange=True,
+            tickfont=dict(
+                color="#8B5CF6",
+                size=10,
+            ),
+        ),
+        font=dict(
+            family='Pretendard, "Noto Sans KR", sans-serif',
+            color="#334155",
+        ),
     )
-    fig.add_annotation(
-        x=0.5,
-        y=0.40,
-        text="1위 점유율",
-        showarrow=False,
-        font=dict(size=11, color="#94A3B8"),
+
+    return fig
+
+
+def make_duel_radar(
+    df: pd.DataFrame,
+    movie_a: str,
+    movie_b: str,
+):
+    a = df[df["movieNmDisplay"] == movie_a].iloc[0]
+    b = df[df["movieNmDisplay"] == movie_b].iloc[0]
+
+    specs = [
+        ("일일 관객", "audiCnt"),
+        ("누적 관객", "audiAcc"),
+        ("스크린", "scrnCnt"),
+        ("일일 매출", "salesAmt"),
+    ]
+
+    theta = []
+    a_values = []
+    b_values = []
+
+    for label, col in specs:
+        max_value = max(float(df[col].max()), 1.0)
+
+        theta.append(label)
+        a_values.append(float(a[col]) / max_value * 100)
+        b_values.append(float(b[col]) / max_value * 100)
+
+    theta.append("랭킹 파워")
+    a_values.append((11 - int(a["rank"])) / 10 * 100)
+    b_values.append((11 - int(b["rank"])) / 10 * 100)
+
+    theta_closed = theta + [theta[0]]
+    a_closed = a_values + [a_values[0]]
+    b_closed = b_values + [b_values[0]]
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatterpolar(
+            r=a_closed,
+            theta=theta_closed,
+            fill="toself",
+            name=movie_a,
+            line=dict(
+                color="#3182F6",
+                width=3,
+            ),
+            fillcolor="rgba(49,130,246,.15)",
+            marker=dict(size=6),
+        )
+    )
+
+    fig.add_trace(
+        go.Scatterpolar(
+            r=b_closed,
+            theta=theta_closed,
+            fill="toself",
+            name=movie_b,
+            line=dict(
+                color="#8B5CF6",
+                width=3,
+            ),
+            fillcolor="rgba(139,92,246,.12)",
+            marker=dict(size=6),
+        )
     )
 
     fig.update_layout(
-        height=390,
-        margin=dict(l=10, r=10, t=20, b=15),
+        height=430,
+        margin=dict(l=36, r=36, t=44, b=30),
         paper_bgcolor="rgba(0,0,0,0)",
         showlegend=True,
         legend=dict(
             orientation="h",
-            yanchor="top",
-            y=-0.02,
+            yanchor="bottom",
+            y=1.02,
             xanchor="center",
-            x=0.5,
-            font=dict(size=10, color="#64748B"),
+            x=.5,
+            font=dict(size=10),
         ),
-        font=dict(family='Pretendard, "Noto Sans KR", sans-serif'),
+        polar=dict(
+            bgcolor="rgba(0,0,0,0)",
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                showticklabels=False,
+                gridcolor="#E8EDF4",
+                linecolor="#E8EDF4",
+            ),
+            angularaxis=dict(
+                gridcolor="#E8EDF4",
+                linecolor="#E8EDF4",
+                tickfont=dict(
+                    size=11,
+                    color="#52627A",
+                ),
+            ),
+        ),
+        font=dict(
+            family='Pretendard, "Noto Sans KR", sans-serif',
+            color="#334155",
+        ),
     )
+
     return fig
+
+
+def duel_summary(
+    df: pd.DataFrame,
+    movie_a: str,
+    movie_b: str,
+):
+    a = df[df["movieNmDisplay"] == movie_a].iloc[0]
+    b = df[df["movieNmDisplay"] == movie_b].iloc[0]
+
+    diff = int(a["audiCnt"]) - int(b["audiCnt"])
+
+    if diff > 0:
+        return (
+            f"<b>{html.escape(movie_a)}</b>가 오늘 일일 관객에서 "
+            f"<b>{diff:,}명</b> 앞서고 있습니다."
+        )
+
+    if diff < 0:
+        return (
+            f"<b>{html.escape(movie_b)}</b>가 오늘 일일 관객에서 "
+            f"<b>{abs(diff):,}명</b> 앞서고 있습니다."
+        )
+
+    return "두 영화의 오늘 일일 관객수는 정확히 같습니다."
 
 
 # =========================================================
 # 6. TABLE
 # =========================================================
-def make_rank_table(df: pd.DataFrame, selected_date) -> str:
+def make_rank_table(
+    df: pd.DataFrame,
+    selected_date,
+    total_audience: int,
+) -> str:
     rows = []
-    total_audience = max(int(df["audiCnt"].sum()), 1)
+    share_base = max(total_audience, 1)
 
     for _, row in df.iterrows():
         rank = int(row["rank"])
@@ -1039,7 +1905,7 @@ def make_rank_table(df: pd.DataFrame, selected_date) -> str:
         audience = int(row["audiCnt"])
         accumulated = int(row["audiAcc"])
         screens = int(row["scrnCnt"])
-        share = audience / total_audience * 100
+        share = audience / share_base * 100
         share_width = min(max(share, 2.5), 100)
 
         million = (
@@ -1052,31 +1918,44 @@ def make_rank_table(df: pd.DataFrame, selected_date) -> str:
             f"<tr class='rank-row-{rank}'>"
             f"<td>{rank_badge(rank)}</td>"
             f"<td>{trend_badge(row.get('rankInten', 0), row.get('rankOldAndNew', ''))}</td>"
-            f"<td class='movie-cell'><div class='movie-line'>"
-            f"<span class='movie-name'>{movie_name}</span>{million}</div></td>"
+            f"<td class='movie-cell'>"
+            f"<div class='movie-line'>"
+            f"<span class='movie-name'>{movie_name}</span>"
+            f"{million}"
+            f"</div>"
+            f"</td>"
             f"<td>{html.escape(str(row.get('openDt', '-')))}</td>"
             f"<td class='audience-cell'>"
-            f"<div class='audience-value'>{audience:,}<span class='audience-unit'>명</span></div>"
-            f"<div class='share-row'><div class='share-track'><div class='share-fill' style='width:{share_width:.1f}%'></div></div>"
-            f"<span class='share-label'>{share:.1f}%</span></div></td>"
+            f"<div class='audience-value'>"
+            f"{audience:,}<span class='audience-unit'>명</span>"
+            f"</div>"
+            f"<div class='share-row'>"
+            f"<div class='share-track'>"
+            f"<div class='share-fill' style='width:{share_width:.1f}%'></div>"
+            f"</div>"
+            f"<span class='share-label'>{share:.1f}%</span>"
+            f"</div>"
+            f"</td>"
             f"<td class='num-cell'>{accumulated:,}</td>"
             f"<td><span class='screen-pill'>{screens:,}</span></td>"
             f"</tr>"
         )
 
     date_label = selected_date.strftime("%Y.%m.%d")
+
     table_html = (
         "<div class='ranking-panel'>"
         "<div class='ranking-toolbar'>"
         "<div class='ranking-toolbar-left'>"
-        "<span class='ranking-live-dot'></span>"
+        "<span class='ranking-live'></span>"
         "<span class='ranking-toolbar-title'>Daily Box Office · Top 10</span>"
         "</div>"
-        f"<div class='ranking-toolbar-meta'>{date_label} 기준 · {len(df)}편</div>"
+        f"<div class='ranking-toolbar-meta'>{date_label} 기준 · {len(df)}편 표시</div>"
         "</div>"
-        "<div class='ranking-table-scroll'>"
+        "<div class='ranking-scroll'>"
         "<table class='custom-table'>"
-        "<thead><tr>"
+        "<thead>"
+        "<tr>"
         "<th>Rank</th>"
         "<th>Trend</th>"
         "<th class='movie-head'>Movie</th>"
@@ -1084,21 +1963,23 @@ def make_rank_table(df: pd.DataFrame, selected_date) -> str:
         "<th style='text-align:right;'>Daily audience</th>"
         "<th style='text-align:right;'>Total audience</th>"
         "<th>Screens</th>"
-        "</tr></thead>"
+        "</tr>"
+        "</thead>"
         f"<tbody>{''.join(rows)}</tbody>"
         "</table>"
         "</div>"
         "<div class='ranking-footer'>"
-        "<span>순위 변동은 전일 대비 · 관객 비중은 TOP 10 내부 비중</span>"
+        "<span>순위 변동은 전일 대비 · 관객 비중은 원본 TOP 10 기준</span>"
         "<span>Source · KOBIS</span>"
         "</div>"
         "</div>"
     )
+
     return compact_html(table_html)
 
 
 # =========================================================
-# 7. MAIN APP
+# 7. MAIN
 # =========================================================
 def main():
     kst = pytz.timezone("Asia/Seoul")
@@ -1108,15 +1989,17 @@ def main():
     # ---------- Sidebar ----------
     with st.sidebar:
         st.markdown(
-            """
-            <div class="sidebar-brand">
-                <div class="logo">🎬 BoxOffice Pro</div>
-                <div class="desc">
-                    KOBIS 데이터를 기반으로<br>
-                    한국 일별 박스오피스를 빠르게 확인합니다.
+            compact_html(
+                """
+                <div class="sidebar-brand">
+                    <div class="sidebar-logo">🎬 BoxOffice Pro</div>
+                    <div class="sidebar-desc">
+                        KOBIS 기반 한국 일별 박스오피스를<br>
+                        인터랙티브하게 탐색합니다.
+                    </div>
                 </div>
-            </div>
-            """,
+                """
+            ),
             unsafe_allow_html=True,
         )
 
@@ -1129,31 +2012,39 @@ def main():
         )
 
         st.markdown(
-            f"""
-            <div class="sidebar-date">
-                <div class="label">Selected date</div>
-                <div class="value">{selected_date.strftime("%Y년 %m월 %d일")}</div>
-            </div>
-            """,
+            compact_html(
+                f"""
+                <div class="sidebar-card">
+                    <div class="sidebar-card-label">SELECTED DATE</div>
+                    <div class="sidebar-card-value">
+                        {selected_date.strftime("%Y년 %m월 %d일")}
+                    </div>
+                </div>
+                """
+            ),
             unsafe_allow_html=True,
         )
 
-        st.markdown("<div style='height:1.1rem'></div>", unsafe_allow_html=True)
-        st.caption("데이터 출처 · 영화진흥위원회 KOBIS")
+        st.markdown(
+            "<div style='height:1.05rem'></div>",
+            unsafe_allow_html=True,
+        )
+
+        st.caption("데이터 · 영화진흥위원회 KOBIS")
         st.caption("캐시 · 1시간")
 
-    # ---------- Secret check ----------
+    # ---------- API key ----------
     if "KOBIS_KEY" not in st.secrets:
         st.error(
-            "`.streamlit/secrets.toml`에 `KOBIS_KEY`가 없습니다. "
-            "Streamlit Cloud의 Secrets 설정도 확인해 주세요."
+            "`.streamlit/secrets.toml` 또는 Streamlit Cloud Secrets에 "
+            "`KOBIS_KEY`를 등록해 주세요."
         )
         return
 
     api_key = st.secrets["KOBIS_KEY"]
     target_dt = selected_date.strftime("%Y%m%d")
 
-    # ---------- Load ----------
+    # ---------- Current day ----------
     with st.spinner("박스오피스 데이터를 불러오는 중..."):
         df, error = get_boxoffice_data(target_dt, api_key)
 
@@ -1173,56 +2064,97 @@ def main():
     top1 = df.iloc[0]
     top1_name = html.escape(str(top1["movieNmDisplay"]))
     total_audience = int(df["audiCnt"].sum())
-    top1_share = (int(top1["audiCnt"]) / total_audience * 100) if total_audience else 0
-    new_count = int((df.get("rankOldAndNew", pd.Series(dtype=str)).astype(str).str.upper() == "NEW").sum())
+    top1_share = (
+        int(top1["audiCnt"]) / total_audience * 100
+        if total_audience
+        else 0
+    )
+    new_count = int(
+        (
+            df.get(
+                "rankOldAndNew",
+                pd.Series(dtype=str),
+            )
+            .astype(str)
+            .str.upper()
+            == "NEW"
+        ).sum()
+    )
     screen_sum = int(df["scrnCnt"].sum())
 
     # ---------- Hero ----------
     st.markdown(
-        f"""
-        <div class="hero">
-            <div class="hero-kicker">● KOREA DAILY BOX OFFICE</div>
-            <div class="hero-title">
-                오늘 극장의 중심은<br>{top1_name}
+        compact_html(
+            f"""
+            <div class="hero">
+                <div class="hero-grid"></div>
+                <div class="hero-orb a"></div>
+                <div class="hero-orb b"></div>
+                <div class="hero-beam"></div>
+
+                <div class="hero-content">
+                    <div class="hero-kicker">KOREA DAILY BOX OFFICE</div>
+
+                    <div class="hero-title">
+                        오늘 극장의 중심은<br>{top1_name}
+                    </div>
+
+                    <div class="hero-sub">
+                        그냥 숫자를 보는 대시보드가 아니라,
+                        오늘 영화관의 흐름을 직접 눌러보고 비교하고 추적하는
+                        인터랙티브 박스오피스.
+                    </div>
+
+                    <div class="hero-date">
+                        {selected_date.strftime("%Y.%m.%d")} · Daily Top 10
+                    </div>
+
+                    <div class="hero-mini-stats">
+                        <span class="hero-chip">👥 TOP 10 {person_short(total_audience)}명</span>
+                        <span class="hero-chip">🎯 1위 점유율 {top1_share:.1f}%</span>
+                        <span class="hero-chip">✨ NEW {new_count}편</span>
+                        <span class="hero-chip">🎞️ 스크린 {screen_sum:,}개</span>
+                    </div>
+                </div>
             </div>
-            <div class="hero-sub">
-                박스오피스 순위부터 관객 흐름, 스크린 점유까지.
-                복잡한 숫자를 한 화면에서 가볍게 읽어보세요.
-            </div>
-            <div class="hero-date">
-                {selected_date.strftime("%Y.%m.%d")} · Daily Top 10
-            </div>
-        </div>
-        """,
+            """
+        ),
         unsafe_allow_html=True,
     )
 
+    render_ticker(df)
+
     # ---------- KPI ----------
     st.markdown(
-        f"""
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-label">TOP 10 일일 관객</div>
-                <div class="kpi-value">{person_short(total_audience)}명</div>
-                <div class="kpi-note">상위 10편 관객수 합계</div>
+        compact_html(
+            f"""
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">TOP 10 일일 관객</div>
+                    <div class="kpi-value">{person_short(total_audience)}명</div>
+                    <div class="kpi-note">상위 10편 관객수 합계</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">1위 관객 점유율</div>
+                    <div class="kpi-value">{top1_share:.1f}%</div>
+                    <div class="kpi-note">{html.escape(str(top1['movieNmDisplay']))}</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">신규 진입작</div>
+                    <div class="kpi-value">{new_count}편</div>
+                    <div class="kpi-note">TOP 10 기준 NEW</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">TOP 10 스크린 합계</div>
+                    <div class="kpi-value">{screen_sum:,}개</div>
+                    <div class="kpi-note">영화별 스크린 수 합계</div>
+                </div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-label">1위 관객 점유율</div>
-                <div class="kpi-value">{top1_share:.1f}%</div>
-                <div class="kpi-note">{html.escape(str(top1["movieNmDisplay"]))}</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">신규 진입작</div>
-                <div class="kpi-value">{new_count}편</div>
-                <div class="kpi-note">TOP 10 기준 NEW 표시</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">TOP 10 스크린 합계</div>
-                <div class="kpi-value">{screen_sum:,}개</div>
-                <div class="kpi-note">영화별 스크린 수 단순 합계</div>
-            </div>
-        </div>
-        """,
+            """
+        ),
         unsafe_allow_html=True,
     )
 
@@ -1230,64 +2162,259 @@ def main():
     section_header(
         "TOP MOVIES",
         "오늘 가장 많이 본 영화",
-        "상위 3편을 한눈에 비교해 보세요.",
+        "카드에 마우스를 올려보세요. 상위 3편은 살아있는 포디움처럼 반응합니다.",
     )
 
-    c1, c2, c3 = st.columns([1.12, 1, 1], gap="medium")
-    with c1:
+    p1, p2, p3 = st.columns([1.12, 1, 1], gap="medium")
+
+    with p1:
         render_podium_card(df.iloc[0], 1)
-    with c2:
+
+    with p2:
         if len(df) > 1:
             render_podium_card(df.iloc[1], 2)
-    with c3:
+
+    with p3:
         if len(df) > 2:
             render_podium_card(df.iloc[2], 3)
 
-    # ---------- Charts ----------
+    # ---------- Interactive explorer ----------
     section_header(
-        "AUDIENCE INSIGHT",
-        "관객 흐름 한눈에 보기",
-        "막대그래프는 규모, 도넛차트는 상위권 집중도를 보여줍니다.",
+        "INTERACTIVE LAB",
+        "숫자를 직접 만져보는 분석실",
+        "지표와 영화 수를 바꾸면 그래프가 즉시 다시 정렬됩니다.",
     )
 
-    chart_left, chart_right = st.columns([1.55, 1], gap="medium")
+    st.markdown(
+        compact_html(
+            """
+            <div class="interactive-shell">
+                <div class="interactive-inner">
+                    <div class="panel-kicker">LIVE EXPLORER</div>
+                    <div class="panel-title">Top 10 Ranking Explorer</div>
+                    <div class="panel-sub">
+                        관객 · 누적 · 스크린 · 매출을 버튼 한 번으로 바꿔보세요.
+                    </div>
+                </div>
+            </div>
+            """
+        ),
+        unsafe_allow_html=True,
+    )
 
-    with chart_left:
-        st.markdown('<div class="chart-shell">', unsafe_allow_html=True)
+    c_metric, c_count = st.columns([1.65, 1], gap="medium")
+
+    with c_metric:
+        selected_metric = metric_selector(
+            "비교 지표",
+            ["관객수", "누적 관객", "스크린", "매출"],
+            "관객수",
+            "metric_mode",
+        )
+
+    with c_count:
+        top_n = st.slider(
+            "표시할 영화 수",
+            min_value=3,
+            max_value=min(10, len(df)),
+            value=min(7, len(df)),
+            step=1,
+        )
+
+    st.plotly_chart(
+        make_dynamic_rank_chart(
+            df,
+            selected_metric,
+            top_n,
+        ),
+        width="stretch",
+        config={
+            "displayModeBar": False,
+            "scrollZoom": False,
+        },
+        key="dynamic_rank_chart",
+    )
+
+    # ---------- Focus ----------
+    section_header(
+        "MOVIE FOCUS",
+        "한 편을 찍어서 7일 흐름 추적",
+        "오늘 TOP 10 중 하나를 골라 최근 7일의 관객수와 순위 변화를 함께 확인합니다.",
+    )
+
+    movie_options = df["movieNmDisplay"].tolist()
+
+    if (
+        "focus_selector" not in st.session_state
+        or st.session_state["focus_selector"] not in movie_options
+    ):
+        st.session_state["focus_selector"] = movie_options[0]
+
+    focus_select_col, focus_button_col = st.columns([4, 1], gap="small")
+
+    def pick_random_movie():
+        st.session_state["focus_selector"] = random.choice(movie_options)
+
+    with focus_button_col:
+        st.button(
+            "🎲 랜덤 픽",
+            width="stretch",
+            on_click=pick_random_movie,
+        )
+
+    with focus_select_col:
+        focus_movie = st.selectbox(
+            "포커스 영화",
+            movie_options,
+            key="focus_selector",
+            label_visibility="collapsed",
+        )
+
+    focus_row = df[
+        df["movieNmDisplay"] == focus_movie
+    ].iloc[0]
+
+    focus_card_col, focus_chart_col = st.columns(
+        [1, 1.65],
+        gap="medium",
+    )
+
+    with focus_card_col:
+        render_focus_card(
+            focus_row,
+            total_audience,
+        )
+
+    with focus_chart_col:
+        with st.spinner("최근 7일 흐름을 읽는 중..."):
+            week_df = get_week_boxoffice_data(
+                target_dt,
+                api_key,
+            )
+
+        if week_df.empty:
+            st.info("최근 7일 데이터를 불러오지 못했어요.")
+        else:
+            st.plotly_chart(
+                make_weekly_movie_chart(
+                    week_df,
+                    focus_movie,
+                    selected_date,
+                ),
+                width="stretch",
+                config={"displayModeBar": False},
+                key="weekly_movie_chart",
+            )
+
+    # ---------- Duel ----------
+    section_header(
+        "MOVIE DUEL",
+        "영화 vs 영화",
+        "두 작품을 직접 골라 관객·누적·스크린·매출·랭킹 파워를 레이더로 붙여봅니다.",
+    )
+
+    duel_a_col, duel_vs_col, duel_b_col = st.columns(
+        [1, .18, 1],
+        gap="small",
+    )
+
+    with duel_a_col:
+        movie_a = st.selectbox(
+            "A 영화",
+            movie_options,
+            index=0,
+            key="duel_a",
+        )
+
+    with duel_vs_col:
         st.markdown(
-            "<div style='font-weight:900;color:#0F172A;padding:.55rem .2rem 0;'>TOP 5 일일 관객수</div>",
+            '<div class="duel-vs">VS</div>',
             unsafe_allow_html=True,
         )
-        st.plotly_chart(
-            make_audience_chart(df),
-            width="stretch",
-            config={"displayModeBar": False},
-            key="audience_bar",
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
 
-    with chart_right:
-        st.markdown('<div class="chart-shell">', unsafe_allow_html=True)
-        st.markdown(
-            "<div style='font-weight:900;color:#0F172A;padding:.55rem .2rem 0;'>TOP 10 관객 비중</div>",
-            unsafe_allow_html=True,
-        )
-        st.plotly_chart(
-            make_share_chart(df),
-            width="stretch",
-            config={"displayModeBar": False},
-            key="share_donut",
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
+    default_b = 1 if len(movie_options) > 1 else 0
 
-    # ---------- Top1 details ----------
+    with duel_b_col:
+        movie_b = st.selectbox(
+            "B 영화",
+            movie_options,
+            index=default_b,
+            key="duel_b",
+        )
+
+    if movie_a == movie_b and len(movie_options) > 1:
+        st.info("서로 다른 영화를 골라보세요. 비교가 훨씬 재밌어집니다.")
+    else:
+        duel_chart_col, duel_info_col = st.columns(
+            [1.55, 1],
+            gap="medium",
+        )
+
+        with duel_chart_col:
+            st.plotly_chart(
+                make_duel_radar(
+                    df,
+                    movie_a,
+                    movie_b,
+                ),
+                width="stretch",
+                config={"displayModeBar": False},
+                key="duel_radar",
+            )
+
+        with duel_info_col:
+            row_a = df[
+                df["movieNmDisplay"] == movie_a
+            ].iloc[0]
+
+            row_b = df[
+                df["movieNmDisplay"] == movie_b
+            ].iloc[0]
+
+            st.markdown(
+                compact_html(
+                    f"""
+                    <div class="interactive-shell">
+                        <div class="interactive-inner">
+                            <div class="panel-kicker">HEAD TO HEAD</div>
+                            <div class="panel-title">오늘의 맞대결</div>
+                            <div class="panel-sub">
+                                레이더는 오늘 TOP 10 내부 최고값을 100으로 정규화합니다.
+                            </div>
+
+                            <div class="duel-result">
+                                {duel_summary(df, movie_a, movie_b)}
+                            </div>
+
+                            <div class="duel-result">
+                                <b>{html.escape(movie_a)}</b><br>
+                                관객 {int(row_a['audiCnt']):,}명 ·
+                                스크린 {int(row_a['scrnCnt']):,}개 ·
+                                순위 #{int(row_a['rank'])}
+                            </div>
+
+                            <div class="duel-result">
+                                <b>{html.escape(movie_b)}</b><br>
+                                관객 {int(row_b['audiCnt']):,}명 ·
+                                스크린 {int(row_b['scrnCnt']):,}개 ·
+                                순위 #{int(row_b['rank'])}
+                            </div>
+                        </div>
+                    </div>
+                    """
+                ),
+                unsafe_allow_html=True,
+            )
+
+    # ---------- No.1 Snapshot ----------
     section_header(
         "NO.1 SNAPSHOT",
         f"1위 영화 상세 지표 · {top1['movieNmDisplay']}",
-        "오늘 성적과 누적 흥행 규모를 빠르게 확인합니다.",
+        "오늘의 1위 성적을 핵심 숫자로 빠르게 확인합니다.",
     )
 
     m1, m2, m3, m4 = st.columns(4)
+
     with m1:
         st.metric(
             "일일 관객",
@@ -1295,6 +2422,7 @@ def main():
             border=True,
             icon=":material/groups:",
         )
+
     with m2:
         st.metric(
             "누적 관객",
@@ -1302,6 +2430,7 @@ def main():
             border=True,
             icon=":material/monitoring:",
         )
+
     with m3:
         st.metric(
             "스크린 수",
@@ -1309,32 +2438,96 @@ def main():
             border=True,
             icon=":material/theaters:",
         )
+
     with m4:
-        sales = int(top1.get("salesAmt", 0))
         st.metric(
             "일일 매출",
-            f"{won_short(sales)}원",
+            f"{won_short(top1.get('salesAmt', 0))}원",
             border=True,
             icon=":material/payments:",
         )
 
-    # ---------- Ranking table ----------
+    # ---------- Ranking ----------
     section_header(
         "FULL RANKING",
         "전체 박스오피스 순위",
-        "순위 변동, 개봉일, 일일·누적 관객, 스크린 수를 함께 볼 수 있습니다.",
+        "검색하거나 필터를 눌러 필요한 영화만 즉시 좁혀보세요.",
     )
 
-    st.markdown(make_rank_table(df, selected_date), unsafe_allow_html=True)
+    search_col, filter_col = st.columns(
+        [1.55, 1],
+        gap="medium",
+    )
+
+    with search_col:
+        rank_query = st.text_input(
+            "영화 검색",
+            placeholder="🔎 영화 제목을 입력하면 순위표가 바로 필터링됩니다",
+            label_visibility="collapsed",
+        )
+
+    with filter_col:
+        rank_filter = metric_selector(
+            "순위표 필터",
+            ["전체", "100만+", "NEW", "상승"],
+            "전체",
+            "rank_filter_mode",
+        )
+
+    filtered_df = df.copy()
+
+    if rank_query.strip():
+        filtered_df = filtered_df[
+            filtered_df["movieNmDisplay"].str.contains(
+                rank_query.strip(),
+                case=False,
+                regex=False,
+            )
+        ]
+
+    if rank_filter == "100만+":
+        filtered_df = filtered_df[
+            filtered_df["isMillion"]
+        ]
+
+    elif rank_filter == "NEW":
+        filtered_df = filtered_df[
+            filtered_df["rankOldAndNew"]
+            .astype(str)
+            .str.upper()
+            == "NEW"
+        ]
+
+    elif rank_filter == "상승":
+        filtered_df = filtered_df[
+            filtered_df["rankInten"] > 0
+        ]
+
+    if filtered_df.empty:
+        st.info(
+            "조건에 맞는 영화가 없습니다. 검색어나 필터를 바꿔보세요."
+        )
+    else:
+        st.markdown(
+            make_rank_table(
+                filtered_df,
+                selected_date,
+                total_audience,
+            ),
+            unsafe_allow_html=True,
+        )
 
     st.markdown(
-        """
-        <div class="soft-note">
-            🏆 <b>100만+</b> 배지는 누적 관객 100만 명 이상인 작품을 뜻합니다.
-            순위 변동은 전일 대비이며, <b>NEW</b>는 TOP 10 신규 진입작입니다.
-            KOBIS 일별 박스오피스 API가 제공하는 상위 목록을 기준으로 표시합니다.
-        </div>
-        """,
+        compact_html(
+            """
+            <div class="soft-note">
+                🏆 <b>100만+</b> 배지는 누적 관객 100만 명 이상인 작품입니다.
+                <b>NEW</b>는 TOP 10 신규 진입, ▲·▼는 전일 대비 순위 변화입니다.
+                포커스 7일 그래프에서 0명으로 보이는 날짜는 해당 영화가
+                그날 KOBIS TOP 10 목록에 없었을 수 있습니다.
+            </div>
+            """
+        ),
         unsafe_allow_html=True,
     )
 
