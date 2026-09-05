@@ -2752,7 +2752,7 @@ def main():
                 options=["OFF", "SOFT", "MAX"],
                 value="MAX",
                 key="motion_mode",
-                help="MAX는 풀모션, SOFT는 레이저를 줄인 절제 모드입니다.",
+                help="OFF는 정지, SOFT는 절제된 모션, MAX는 시스템 모션 제한보다 우선하는 풀모션입니다.",
             )
 
             density_mode = st.radio(
@@ -2855,7 +2855,11 @@ def main():
             }
             """
         )
+
     elif motion_mode == "SOFT":
+        # 시스템의 prefers-reduced-motion 보다 사용자가 직접 고른 SOFT가 우선합니다.
+        # animation shorthand를 !important로 다시 선언해 duration뿐 아니라
+        # iteration-count까지 확실하게 복구합니다.
         override_rules.append(
             """
             .hero::after,
@@ -2863,15 +2867,301 @@ def main():
             .ranking-scroll::after {
                 display: none !important;
             }
+
+            .stApp {
+                animation: ambientGradientDrift 22s ease-in-out infinite !important;
+            }
+
+            .hero {
+                animation: heroPulseDepth 11s ease-in-out infinite !important;
+            }
+
+            .hero::before {
+                animation: starDrift 18s linear infinite !important;
+            }
+
+            .hero-orb.a {
+                animation: heroFloatA 13s ease-in-out infinite !important;
+            }
+
+            .hero-orb.b {
+                animation: heroFloatB 15s ease-in-out infinite !important;
+            }
+
+            .hero-beam {
+                animation: beamSweep 13s ease-in-out infinite !important;
+                opacity: .42;
+            }
+
+            .hero-kicker::before,
+            .sidebar-command-dot {
+                animation: livePulse 3.2s ease-in-out infinite !important;
+            }
+
+            .ticker-track {
+                animation: tickerMove 38s linear infinite !important;
+            }
+
+            .kpi-card:nth-child(1) {
+                animation: cardFloatA 10s ease-in-out infinite !important;
+            }
+
+            .kpi-card:nth-child(2) {
+                animation: cardFloatB 11s ease-in-out infinite !important;
+            }
+
+            .kpi-card:nth-child(3) {
+                animation: cardFloatC 10.5s ease-in-out infinite !important;
+            }
+
+            .kpi-card:nth-child(4) {
+                animation: cardFloatA 12s ease-in-out infinite !important;
+            }
+
+            .kpi-value {
+                animation: shineText 13s linear infinite !important;
+            }
+
+            .podium-card.first {
+                animation:
+                    softGlow 10s ease-in-out infinite,
+                    cardFloatA 11s ease-in-out infinite !important;
+            }
+
+            div[data-testid="stHorizontalBlock"] > div:nth-child(2) .podium-card {
+                animation: cardFloatB 12s ease-in-out infinite !important;
+            }
+
+            div[data-testid="stHorizontalBlock"] > div:nth-child(3) .podium-card {
+                animation: cardFloatC 11.5s ease-in-out infinite !important;
+            }
+
+            .section-head::after {
+                animation: sectionScan 13s ease-in-out infinite !important;
+            }
+
+            .interactive-shell {
+                animation: borderFlow 15s ease infinite !important;
+            }
+
+            .interactive-inner::after {
+                animation: heroFloatB 16s ease-in-out infinite !important;
+            }
+
+            .focus-card {
+                animation: cardFloatA 12s ease-in-out infinite !important;
+            }
+
+            .duel-vs {
+                animation:
+                    pulseRing 5s ease-out infinite,
+                    cardFloatA 9s ease-in-out infinite !important;
+            }
+
+            .ranking-panel::after {
+                animation: tableTopGlow 6s ease-in-out infinite !important;
+            }
+
+            .ranking-live {
+                animation:
+                    livePulse 3.2s ease-in-out infinite,
+                    pulseRing 4.5s ease-out infinite !important;
+            }
+
+            .rank-number.first {
+                animation: pulseRing 6s ease-out infinite !important;
+            }
+
+            .rank-number.second {
+                animation: cardFloatB 9s ease-in-out infinite !important;
+            }
+
+            .rank-number.third {
+                animation: cardFloatC 10s ease-in-out infinite !important;
+            }
+
+            .sidebar-command::after {
+                animation: beamSweep 13s ease-in-out infinite !important;
+            }
+
+            /* reduced-motion이 transition까지 .001ms로 만든 경우도 복구 */
             .hero,
             .kpi-card,
             .podium-card,
             .focus-card,
-            .duel-vs {
-                animation-duration: 10s !important;
+            .stButton > button,
+            .custom-table tbody tr,
+            .rank-number {
+                transition-duration: .22s !important;
             }
+            """
+        )
+
+    elif motion_mode == "MAX":
+        # MAX는 사용자의 명시적 선택이므로 시스템 reduced-motion보다 강하게 우선합니다.
+        override_rules.append(
+            """
+            .hero::after,
+            .hero-grid::after,
+            .ranking-scroll::after {
+                display: block !important;
+            }
+
+            .stApp {
+                animation: ambientGradientDrift 13s ease-in-out infinite !important;
+            }
+
+            .hero {
+                animation:
+                    heroPulseDepth 5.5s ease-in-out infinite,
+                    fadeRise .7s ease 1 both !important;
+            }
+
+            .hero::before {
+                animation: starDrift 10s linear infinite !important;
+            }
+
+            .hero::after {
+                animation: laserFly1 7.5s ease-in-out infinite !important;
+            }
+
+            .hero-grid::after {
+                animation: laserFly2 9s ease-in-out infinite !important;
+            }
+
+            .hero-orb.a {
+                animation: heroFloatA 7s ease-in-out infinite !important;
+            }
+
+            .hero-orb.b {
+                animation: heroFloatB 8.5s ease-in-out infinite !important;
+            }
+
+            .hero-beam {
+                animation: beamSweep 6.8s ease-in-out infinite !important;
+                opacity: 1;
+            }
+
+            .hero-kicker::before {
+                animation: livePulse 1.8s ease-in-out infinite !important;
+            }
+
             .ticker-track {
-                animation-duration: 35s !important;
+                animation: tickerMove 20s linear infinite !important;
+            }
+
+            .section-head {
+                animation: fadeRise .55s ease 1 both !important;
+            }
+
+            .section-head::after {
+                animation: sectionScan 6.8s ease-in-out infinite !important;
+            }
+
+            .kpi-grid {
+                animation: fadeRise .6s ease 1 both !important;
+            }
+
+            .kpi-card:nth-child(1) {
+                animation: cardFloatA 4.8s ease-in-out infinite !important;
+            }
+
+            .kpi-card:nth-child(2) {
+                animation: cardFloatB 5.4s ease-in-out infinite !important;
+            }
+
+            .kpi-card:nth-child(3) {
+                animation: cardFloatC 5s ease-in-out infinite !important;
+            }
+
+            .kpi-card:nth-child(4) {
+                animation: cardFloatA 5.8s ease-in-out infinite !important;
+            }
+
+            .kpi-value {
+                animation: shineText 6.5s linear infinite !important;
+            }
+
+            .podium-card.first {
+                animation:
+                    softGlow 4.8s ease-in-out infinite,
+                    cardFloatA 5.6s ease-in-out infinite !important;
+            }
+
+            div[data-testid="stHorizontalBlock"] > div:nth-child(2) .podium-card {
+                animation: cardFloatB 6.2s ease-in-out infinite !important;
+            }
+
+            div[data-testid="stHorizontalBlock"] > div:nth-child(3) .podium-card {
+                animation: cardFloatC 5.8s ease-in-out infinite !important;
+            }
+
+            .interactive-shell {
+                animation: borderFlow 8s ease infinite !important;
+            }
+
+            .interactive-inner::after {
+                animation: heroFloatB 9s ease-in-out infinite !important;
+            }
+
+            .focus-card {
+                animation: cardFloatA 6.3s ease-in-out infinite !important;
+            }
+
+            .duel-vs {
+                animation:
+                    pulseRing 2.7s ease-out infinite,
+                    cardFloatA 4.4s ease-in-out infinite !important;
+            }
+
+            .ranking-panel {
+                animation: fadeRise .55s ease 1 both !important;
+            }
+
+            .ranking-panel::after {
+                animation: tableTopGlow 3s ease-in-out infinite !important;
+            }
+
+            .ranking-scroll::after {
+                animation: rankScan 9.5s ease-in-out infinite !important;
+            }
+
+            .ranking-live {
+                animation:
+                    livePulse 1.8s ease-in-out infinite,
+                    pulseRing 2.4s ease-out infinite !important;
+            }
+
+            .rank-number.first {
+                animation: pulseRing 3.2s ease-out infinite !important;
+            }
+
+            .rank-number.second {
+                animation: cardFloatB 4.8s ease-in-out infinite !important;
+            }
+
+            .rank-number.third {
+                animation: cardFloatC 5.2s ease-in-out infinite !important;
+            }
+
+            .sidebar-command::after {
+                animation: beamSweep 7s ease-in-out infinite !important;
+            }
+
+            .sidebar-command-dot {
+                animation: livePulse 1.8s ease-in-out infinite !important;
+            }
+
+            /* MAX에서는 hover/버튼 전환 효과도 복구 */
+            .hero,
+            .kpi-card,
+            .podium-card,
+            .focus-card,
+            .stButton > button,
+            .custom-table tbody tr,
+            .rank-number,
+            .hero-chip {
+                transition-duration: .22s !important;
             }
             """
         )
