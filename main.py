@@ -108,7 +108,7 @@ def apply_styles() -> None:
             border-radius: 18px; box-shadow: 0 7px 22px rgba(31, 45, 78, .05);
         }
         .calendar-empty {
-            min-height: 220px; padding: .75rem; border-radius: 15px;
+            min-height: 252px; padding: .75rem; border-radius: 15px;
             background: rgba(242, 245, 249, .78); color: #a0a9b8;
         }
         .day-number { font-size: .82rem; font-weight: 850; color: var(--muted); margin-bottom: .5rem; }
@@ -155,6 +155,11 @@ def apply_styles() -> None:
             border-radius: 12px; border-color: #dfe5ef; font-weight: 750;
         }
         .stButton > button:hover { border-color: var(--brand); color: var(--brand); }
+        [class*="st-key-meal_"] button {
+            min-height: 1.85rem; padding: .16rem .58rem;
+            border-radius: 999px; font-size: .72rem; font-weight: 800;
+            color: #667085; background: rgba(255, 255, 255, .9);
+        }
         div[data-testid="stVerticalBlockBorderWrapper"] {
             background: rgba(255,255,255,.96); border-radius: 16px;
             box-shadow: 0 6px 22px rgba(34, 46, 77, .05);
@@ -504,13 +509,13 @@ def render_month_calendar(school: dict[str, str]) -> None:
                     st.markdown("<div class='calendar-empty'></div>", unsafe_allow_html=True)
                     continue
 
-                with st.container(height=238, border=True):
+                meal = meals.get(day)
+                with st.container(height=208, border=True):
                     today_badge = "<span class='today-dot'>오늘</span>" if day == TODAY_KST else ""
                     st.markdown(
                         f"<div class='day-number'>{day.day}{today_badge}</div>",
                         unsafe_allow_html=True,
                     )
-                    meal = meals.get(day)
                     if meal:
                         names = [item["name"] for item in meal["items"]]
                         representative = names[0] if names else "급식 메뉴"
@@ -524,15 +529,20 @@ def render_month_calendar(school: dict[str, str]) -> None:
                             unsafe_allow_html=True,
                         )
                         render_calorie_badge(meal["calories"])
+                    else:
+                        st.markdown("<div class='no-meal'>급식 없음</div>", unsafe_allow_html=True)
+
+                # 상세 버튼은 식단 카드와 분리해 날짜마다 같은 높이에 작게 배치한다.
+                if meal:
+                    _, button_column, _ = st.columns([1, 3, 1])
+                    with button_column:
                         st.button(
-                            "자세히",
+                            "상세 보기",
                             key=f"meal_{anchor:%Y%m}_{week_index}_{day:%d}",
                             use_container_width=True,
                             on_click=select_meal_day,
                             args=(day,),
                         )
-                    else:
-                        st.markdown("<div class='no-meal'>급식 없음</div>", unsafe_allow_html=True)
 
 
 def render_detail_page(school: dict[str, str]) -> None:
