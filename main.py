@@ -58,6 +58,27 @@ st.set_page_config(
 )
 
 
+def load_secret_key() -> str:
+    """Streamlit Cloud Secrets에서 나이스 API 인증키를 안전하게 읽는다."""
+    try:
+        return str(st.secrets.get("SECRET_KEY", "")).strip()
+    except Exception:
+        # 로컬에 secrets.toml이 없어도 무인증 모드로 실행할 수 있다.
+        return ""
+
+
+# Streamlit Cloud의 Settings > Secrets에 아래 형식으로 등록하세요.
+# SECRET_KEY = "여기에 API 키"
+SECRET_KEY = load_secret_key()
+
+
+def add_api_key(params: dict[str, Any]) -> dict[str, Any]:
+    """인증키가 설정된 경우에만 나이스 API 요청 변수에 KEY를 추가한다."""
+    if SECRET_KEY:
+        return {**params, "KEY": SECRET_KEY}
+    return params
+
+
 def apply_styles() -> None:
     """앱 전체에 적용할 밝고 반응형인 스타일."""
     st.markdown(
@@ -253,10 +274,13 @@ def expand_school_abbreviation(name: str) -> str:
 
 @st.cache_data(ttl=60 * 60 * 12, show_spinner=False)
 def request_school_search(query: str) -> tuple[list[dict[str, str]], str | None]:
+    params = add_api_key(
+        {"Type": "json", "SCHUL_NM": query, "pSize": 100, "pIndex": 1}
+    )
     try:
         response = requests.get(
             SCHOOL_API_URL,
-            params={"Type": "json", "SCHUL_NM": query, "pSize": 5},
+            params=params,
             timeout=10,
         )
         response.raise_for_status()
@@ -357,16 +381,18 @@ def format_kcal(calories: float | None) -> str:
 
 @st.cache_data(ttl=60 * 60 * 6, show_spinner=False)
 def get_day_meal(office_code: str, school_code: str, ymd: str) -> dict[str, Any]:
-    params = {
-        "Type": "json",
-        "ATPT_OFCDC_SC_CODE": office_code,
-        "SD_SCHUL_CODE": school_code,
-        "MMEAL_SC_CODE": "2",
-        "MLSV_FROM_YMD": ymd,
-        "MLSV_TO_YMD": ymd,
-        "pSize": 1,
-        "pIndex": 1,
-    }
+    params = add_api_key(
+        {
+            "Type": "json",
+            "ATPT_OFCDC_SC_CODE": office_code,
+            "SD_SCHUL_CODE": school_code,
+            "MMEAL_SC_CODE": "2",
+            "MLSV_FROM_YMD": ymd,
+            "MLSV_TO_YMD": ymd,
+            "pSize": 1,
+            "pIndex": 1,
+        }
+    )
     try:
         response = requests.get(MEAL_API_URL, params=params, timeout=10)
         response.raise_for_status()
@@ -828,6 +854,10 @@ def render_sidebar() -> None:
     with st.sidebar:
         st.markdown("## 🏫 기준 학교 찾기")
         st.caption("학교 이름과 지역을 확인한 뒤 선택하세요.")
+        if SECRET_KEY:
+            st.caption("🔐 나이스 API 인증키 연결됨")
+        else:
+            st.caption("🔓 API 인증키 미설정 · 무인증 조회 모드")
         with st.form("base_school_search_form"):
             query = st.text_input("학교 이름", placeholder="예: 수도여고")
             submitted = st.form_submit_button("검색", use_container_width=True)
