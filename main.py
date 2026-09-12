@@ -129,16 +129,46 @@ def apply_styles() -> None:
             border-radius: 18px; box-shadow: 0 7px 22px rgba(31, 45, 78, .05);
         }
         .calendar-empty {
-            min-height: 252px; padding: .75rem; border-radius: 15px;
-            background: rgba(242, 245, 249, .78); color: #a0a9b8;
+            min-height: 252px; padding: .8rem; border-radius: 17px;
+            background: rgba(239, 243, 249, .62); color: #b8c0cd;
+            border: 1px dashed #e3e8f0;
         }
-        .day-number { font-size: .82rem; font-weight: 850; color: var(--muted); margin-bottom: .5rem; }
+        .calendar-empty span { font-size: .78rem; font-weight: 750; }
+        .month-title { text-align: center; line-height: 1.1; }
+        .month-title .year { color: #929cad; font-size: .72rem; font-weight: 800; letter-spacing: .08em; }
+        .month-title .month { color: var(--ink); font-size: 1.72rem; font-weight: 950; margin-top: .15rem; }
+        .month-stat {
+            min-height: 94px; padding: .88rem 1rem; border-radius: 18px;
+            background: rgba(255,255,255,.96); border: 1px solid var(--line);
+            box-shadow: 0 7px 24px rgba(35, 48, 83, .055);
+        }
+        .month-stat .icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 1.75rem; height: 1.75rem; margin-bottom: .42rem;
+            border-radius: 9px; background: var(--brand-soft); font-size: .88rem;
+        }
+        .month-stat .label { color: #8b95a7; font-size: .7rem; font-weight: 750; }
+        .month-stat .value { color: var(--ink); font-size: 1.03rem; font-weight: 900; margin-top: .14rem; }
+        .weekday-header {
+            text-align: center; padding: .52rem .15rem; margin: .18rem 0 .35rem;
+            border-radius: 12px; background: rgba(255,255,255,.72);
+            color: #697489; font-size: .77rem; font-weight: 900;
+            border: 1px solid rgba(232,237,244,.82);
+        }
+        .weekday-header.sun, .day-number.sun { color: #e25565; background-color: #fff1f3; }
+        .weekday-header.sat, .day-number.sat { color: #4a75da; background-color: #eef4ff; }
+        .day-number {
+            display: inline-flex; align-items: center; min-width: 1.62rem; height: 1.62rem;
+            padding: 0 .4rem; border-radius: 9px; font-size: .78rem;
+            font-weight: 900; color: var(--muted); margin-bottom: .55rem;
+            background: #f2f4f8;
+        }
         .today-dot {
-            display: inline-block; margin-left: .3rem; padding: .1rem .4rem;
-            border-radius: 999px; background: var(--brand-soft); color: var(--brand);
-            font-size: .63rem; vertical-align: middle;
+            display: inline-block; margin-left: .32rem; padding: .1rem .38rem;
+            border-radius: 999px; background: #5c67f2; color: #fff;
+            font-size: .58rem; vertical-align: middle; box-shadow: 0 3px 10px rgba(92,103,242,.22);
         }
-        .meal-title { font-weight: 850; color: var(--ink); line-height: 1.35; margin-bottom: .34rem; }
+        .meal-title { font-weight: 900; color: var(--ink); line-height: 1.35; margin-bottom: .38rem; letter-spacing: -.015em; }
         .meal-list { color: #5e6b80; font-size: .78rem; line-height: 1.45; min-height: 4.5rem; }
         .no-meal { color: #a1a9b6; font-size: .78rem; padding-top: .4rem; }
         .kcal-badge {
@@ -150,7 +180,17 @@ def apply_styles() -> None:
         .level-high { color: #9a5a00; background: #fff3d8; }
         .level-very-high { color: #b52d38; background: #ffe8eb; }
         .level-unknown { color: #64748b; background: #eef2f6; }
-        .legend { color: var(--muted); font-size: .8rem; margin: -.25rem 0 .85rem; }
+        .legend {
+            display: flex; flex-wrap: wrap; align-items: center; gap: .42rem;
+            color: var(--muted); font-size: .75rem; margin: .2rem 0 .85rem;
+            padding: .65rem .8rem; border-radius: 14px; background: rgba(255,255,255,.72);
+            border: 1px solid var(--line);
+        }
+        .legend-title { font-weight: 850; color: #515d72; margin-right: .12rem; }
+        .legend-chip { padding: .2rem .45rem; border-radius: 999px; font-weight: 750; }
+        .legend-low { color: #08765b; background: #e7f8f1; }
+        .legend-high { color: #9a5a00; background: #fff3d8; }
+        .legend-very-high { color: #b52d38; background: #ffe8eb; }
         .allergy-card {
             padding: 1rem 1.1rem; margin: .55rem 0; border-radius: 16px;
             background: #fff; border: 1px solid var(--line);
@@ -184,12 +224,24 @@ def apply_styles() -> None:
         div[data-testid="stVerticalBlockBorderWrapper"] {
             background: rgba(255,255,255,.96); border-radius: 16px;
             box-shadow: 0 6px 22px rgba(34, 46, 77, .05);
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+            transform: translateY(-2px); border-color: #d8def0;
+            box-shadow: 0 11px 28px rgba(34, 46, 77, .09);
+        }
+        div[role="radiogroup"] {
+            width: fit-content; padding: .28rem; margin-bottom: .8rem;
+            border-radius: 15px; background: rgba(255,255,255,.86);
+            border: 1px solid var(--line); box-shadow: 0 5px 18px rgba(34,46,77,.04);
         }
         @media (max-width: 780px) {
             .block-container { padding: 1.2rem .85rem 3rem; }
             .hero { padding: 1.2rem; border-radius: 19px; }
             .hero-title { font-size: 1.75rem; }
             .calendar-empty { min-height: 110px; }
+            .month-stat { min-height: 84px; padding: .72rem; }
+            .month-stat .value { font-size: .9rem; }
         }
         </style>
         """,
@@ -499,17 +551,14 @@ def render_month_calendar(school: dict[str, str]) -> None:
         st.button("← 이전 달", use_container_width=True, on_click=change_calendar_month, args=(-1,))
     with nav_title:
         st.markdown(
-            f"<h2 style='text-align:center;margin:.2rem 0'>{anchor.year}년 {anchor.month}월</h2>",
+            "<div class='month-title'>"
+            f"<div class='year'>{anchor.year} YEAR</div>"
+            f"<div class='month'>{anchor.month}월</div>"
+            "</div>",
             unsafe_allow_html=True,
         )
     with nav_right:
         st.button("다음 달 →", use_container_width=True, on_click=change_calendar_month, args=(1,))
-
-    st.markdown(
-        "<div class='legend'>열량 수준: 🟢 900 kcal 미만 · 🟠 900~1099 kcal · 🔴 1100 kcal 이상 &nbsp; "
-        "※ 빠른 구분용 표시이며 개인의 건강·섭취 판단 기준은 아닙니다.</div>",
-        unsafe_allow_html=True,
-    )
 
     start_date, end_date = month_bounds(anchor)
     with st.spinner(f"{anchor.month}월 급식을 날짜별로 확인하고 있어요…"):
@@ -518,28 +567,85 @@ def render_month_calendar(school: dict[str, str]) -> None:
     if error_count:
         st.warning(f"일부 날짜({error_count}일)의 정보를 불러오지 못했어요. 잠시 후 다시 열면 채워질 수 있어요.")
 
-    weekday_names = ["월", "화", "수", "목", "금", "토", "일"]
-    header_columns = st.columns(7)
-    for column, name in zip(header_columns, weekday_names):
+    calorie_meals = [
+        (meal_date, meal["calories"])
+        for meal_date, meal in meals.items()
+        if meal.get("calories") is not None
+    ]
+    average_calories = (
+        sum(calories for _, calories in calorie_meals) / len(calorie_meals)
+        if calorie_meals
+        else None
+    )
+    highest_meal = max(calorie_meals, key=lambda item: item[1]) if calorie_meals else None
+
+    summary_values = [
+        ("🍱", "등록된 식단", f"{len(meals)}일" if meals else "아직 없음"),
+        ("📊", "평균 열량", format_kcal(average_calories)),
+        (
+            "✨",
+            "가장 높은 날",
+            f"{highest_meal[0].day}일 · {format_kcal(highest_meal[1])}"
+            if highest_meal
+            else "정보 없음",
+        ),
+    ]
+    summary_columns = st.columns(3)
+    for column, (icon, label, value) in zip(summary_columns, summary_values):
         column.markdown(
-            f"<div style='text-align:center;font-weight:850;color:#657086;padding:.25rem'>{name}</div>",
+            "<div class='month-stat'>"
+            f"<div class='icon'>{icon}</div>"
+            f"<div class='label'>{html.escape(label)}</div>"
+            f"<div class='value'>{html.escape(value)}</div>"
+            "</div>",
             unsafe_allow_html=True,
         )
 
-    month_calendar = calendar.Calendar(firstweekday=0).monthdatescalendar(anchor.year, anchor.month)
+    st.markdown(
+        "<div class='legend'>"
+        "<span class='legend-title'>열량 수준</span>"
+        "<span class='legend-chip legend-low'>● 900 kcal 미만</span>"
+        "<span class='legend-chip legend-high'>● 900~1099 kcal</span>"
+        "<span class='legend-chip legend-very-high'>● 1100 kcal 이상</span>"
+        "<span>빠른 구분용 표시이며 개인의 건강·섭취 판단 기준은 아닙니다.</span>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+    weekday_names = [
+        ("일", "sun"),
+        ("월", ""),
+        ("화", ""),
+        ("수", ""),
+        ("목", ""),
+        ("금", ""),
+        ("토", "sat"),
+    ]
+    header_columns = st.columns(7)
+    for column, (name, tone) in zip(header_columns, weekday_names):
+        column.markdown(
+            f"<div class='weekday-header {tone}'>{name}</div>",
+            unsafe_allow_html=True,
+        )
+
+    month_calendar = calendar.Calendar(firstweekday=6).monthdatescalendar(anchor.year, anchor.month)
     for week_index, week in enumerate(month_calendar):
         columns = st.columns(7, gap="small")
-        for column, day in zip(columns, week):
+        for day_index, (column, day) in enumerate(zip(columns, week)):
             with column:
                 if day.month != anchor.month:
-                    st.markdown("<div class='calendar-empty'></div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div class='calendar-empty'><span>{day.day}</span></div>",
+                        unsafe_allow_html=True,
+                    )
                     continue
 
                 meal = meals.get(day)
                 with st.container(height=208, border=True):
                     today_badge = "<span class='today-dot'>오늘</span>" if day == TODAY_KST else ""
+                    day_tone = "sun" if day_index == 0 else "sat" if day_index == 6 else ""
                     st.markdown(
-                        f"<div class='day-number'>{day.day}{today_badge}</div>",
+                        f"<div class='day-number {day_tone}'>{day.day}{today_badge}</div>",
                         unsafe_allow_html=True,
                     )
                     if meal:
