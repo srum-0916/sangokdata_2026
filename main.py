@@ -798,6 +798,64 @@ def render_insight_cards(summary: pd.DataFrame) -> None:
         )
 
 
+def polish_comparison_chart(figure: Any, height: int = 440) -> Any:
+    """비교 화면의 모든 Plotly 그래프에 같은 디자인을 적용한다."""
+    figure.update_layout(
+        height=height,
+        margin=dict(l=12, r=18, t=28, b=12),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Pretendard, Apple SD Gothic Neo, sans-serif", color="#354057"),
+        legend_title_text="학교",
+        hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+    )
+    figure.update_xaxes(gridcolor="#edf0f5", zeroline=False)
+    figure.update_yaxes(gridcolor="#edf0f5", zeroline=False)
+    return figure
+
+
+def build_calorie_band_counts(data: pd.DataFrame) -> pd.DataFrame:
+    """학교별 열량 구간의 급식 일수를 빠짐없이 계산한다."""
+    band_order = ["900 kcal 미만", "900~1099 kcal", "1100 kcal 이상"]
+    school_order = list(dict.fromkeys(data["학교 식별"].tolist()))
+    banded = data.copy()
+    banded["열량 구간"] = pd.cut(
+        banded["칼로리"],
+        bins=[float("-inf"), 900, 1100, float("inf")],
+        labels=band_order,
+        right=False,
+    )
+    counts = (
+        banded.groupby(["학교 식별", "열량 구간"], observed=False)
+        .size()
+        .rename("급식 일수")
+        .reindex(
+            pd.MultiIndex.from_product(
+                [school_order, band_order], names=["학교 식별", "열량 구간"]
+            ),
+            fill_value=0,
+        )
+        .reset_index()
+    )
+    return counts
+
+
+def build_daily_school_gap(data: pd.DataFrame) -> pd.DataFrame:
+    """같은 날짜에 데이터가 있는 학교들의 최고·최저 열량 차이를 계산한다."""
+    daily_gap = (
+        data.groupby("날짜")
+        .agg(
+            최고_칼로리=("칼로리", "max"),
+            최저_칼로리=("칼로리", "min"),
+            비교_학교수=("학교 식별", "nunique"),
+        )
+        .reset_index()
+    )
+    daily_gap = daily_gap[daily_gap["비교_학교수"] >= 2].copy()
+    daily_gap["학교 간 차이"] = daily_gap["최고_칼로리"] - daily_gap["최저_칼로리"]
+    return daily_gap
+
+
 def render_comparison_page(base_school: dict[str, str]) -> None:
     st.subheader("여러 학교의 급식 비교")
     st.caption("기준 학교는 자동으로 포함됩니다. 비교 학교를 두 곳 이상 추가하면 3개 학교를 한눈에 볼 수 있어요.")
@@ -902,58 +960,157 @@ def render_comparison_page(base_school: dict[str, str]) -> None:
     display_summary["평균 칼로리"] = display_summary["평균 칼로리"].map(lambda value: f"{value:,.1f} kcal")
     st.dataframe(display_summary, hide_index=True, use_container_width=True)
 
-    st.markdown("### 일자별 급식 칼로리")
-    line_figure = px.line(
-        data.sort_values("날짜"),
-        x="날짜",
-        y="칼로리",
-        color="학교 식별",
-        markers=True,
-        labels={"학교 식별": "학교", "칼로리": "칼로리(kcal)"},
-        color_discrete_sequence=px.colors.qualitative.Set2,
+    st.markdown("### 그래프로 비교하기")
+    st.caption("탭을 바꾸면 변화·평균·분포·구간 구성·날짜별 차이를 서로 다른 관점에서 볼 수 있어요.")
+    trend_tab, average_tab, distribution_tab, band_tab, heatmap_tab, gap_tab = st.tabs(
+        ["📈 날짜별 변화", "📊 학교별 평균", "📦 전체 분포", "🎨 구간 구성", "🗓️ 히트맵", "↔️ 학교 간 차이"]
     )
-    line_figure.update_traces(
-        hovertemplate="<b>%{fullData.name}</b><br>날짜 %{x|%Y-%m-%d}<br>%{y:,.1f} kcal<extra></extra>"
-    )
-    line_figure.update_layout(
-        height=470,
-        hovermode="x unified",
-        legend_title_text="학교",
-        margin=dict(l=10, r=10, t=20, b=10),
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-    )
-    line_figure.update_xaxes(showgrid=False)
-    line_figure.update_yaxes(gridcolor="#e8edf4")
-    st.plotly_chart(line_figure, use_container_width=True)
 
-    st.markdown("### 학교별 평균 칼로리")
-    bar_figure = px.bar(
-        summary.sort_values("평균 칼로리"),
-        x="평균 칼로리",
-        y="학교",
-        orientation="h",
-        text="평균 칼로리",
-        color="평균 칼로리",
-        color_continuous_scale=["#68cbb1", "#7e87fb", "#ef8a70"],
-        labels={"평균 칼로리": "평균 칼로리(kcal)"},
-    )
-    bar_figure.update_traces(
-        texttemplate="%{text:,.1f} kcal",
-        textposition="outside",
-        hovertemplate="<b>%{y}</b><br>평균 %{x:,.1f} kcal<extra></extra>",
-    )
-    bar_figure.update_layout(
-        height=max(340, 80 * len(summary)),
-        showlegend=False,
-        coloraxis_showscale=False,
-        margin=dict(l=10, r=70, t=20, b=10),
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-    )
-    bar_figure.update_xaxes(gridcolor="#e8edf4")
-    bar_figure.update_yaxes(title=None)
-    st.plotly_chart(bar_figure, use_container_width=True)
+    with trend_tab:
+        st.markdown("#### 날짜별 급식 열량 변화")
+        st.caption("날짜가 지나면서 각 학교의 급식 열량이 어떻게 달라졌는지 확인해요.")
+        line_figure = px.line(
+            data.sort_values("날짜"),
+            x="날짜",
+            y="칼로리",
+            color="학교 식별",
+            markers=True,
+            labels={"학교 식별": "학교", "칼로리": "열량(kcal)"},
+            color_discrete_sequence=px.colors.qualitative.Set2,
+        )
+        line_figure.update_traces(
+            hovertemplate="<b>%{fullData.name}</b><br>날짜 %{x|%Y-%m-%d}<br>%{y:,.1f} kcal<extra></extra>"
+        )
+        line_figure.update_layout(hovermode="x unified")
+        line_figure.update_xaxes(showgrid=False)
+        st.plotly_chart(polish_comparison_chart(line_figure, 480), use_container_width=True)
+
+    with average_tab:
+        st.markdown("#### 학교별 평균 열량")
+        st.caption("조회 기간 전체의 평균을 비교해 학교별 차이를 간단히 확인해요.")
+        bar_figure = px.bar(
+            summary.sort_values("평균 칼로리"),
+            x="평균 칼로리",
+            y="학교",
+            orientation="h",
+            text="평균 칼로리",
+            color="평균 칼로리",
+            color_continuous_scale=["#68cbb1", "#7e87fb", "#ef8a70"],
+            labels={"평균 칼로리": "평균 열량(kcal)"},
+        )
+        bar_figure.update_traces(
+            texttemplate="%{text:,.1f} kcal",
+            textposition="outside",
+            hovertemplate="<b>%{y}</b><br>평균 %{x:,.1f} kcal<extra></extra>",
+        )
+        bar_figure.update_layout(showlegend=False, coloraxis_showscale=False)
+        bar_figure.update_yaxes(title=None)
+        st.plotly_chart(
+            polish_comparison_chart(bar_figure, max(360, 82 * len(summary))),
+            use_container_width=True,
+        )
+
+    with distribution_tab:
+        st.markdown("#### 학교별 급식 열량 분포")
+        st.caption("상자의 위치와 길이로 평소 범위와 날짜별 퍼짐 정도를 함께 비교해요.")
+        box_figure = px.box(
+            data,
+            x="칼로리",
+            y="학교 식별",
+            color="학교 식별",
+            orientation="h",
+            points="all",
+            hover_data={"날짜": "|%Y-%m-%d", "학교 식별": False},
+            labels={"학교 식별": "학교", "칼로리": "열량(kcal)"},
+            color_discrete_sequence=px.colors.qualitative.Set2,
+        )
+        box_figure.update_traces(jitter=0.28, marker_size=6)
+        box_figure.update_layout(showlegend=False)
+        box_figure.update_yaxes(title=None)
+        st.plotly_chart(
+            polish_comparison_chart(box_figure, max(380, 86 * len(summary))),
+            use_container_width=True,
+        )
+
+    with band_tab:
+        st.markdown("#### 열량 구간별 급식 일수")
+        st.caption("각 학교의 식단이 세 열량 구간에 며칠씩 포함되었는지 비교해요.")
+        band_counts = build_calorie_band_counts(data)
+        band_figure = px.bar(
+            band_counts,
+            x="학교 식별",
+            y="급식 일수",
+            color="열량 구간",
+            barmode="stack",
+            text="급식 일수",
+            category_orders={
+                "열량 구간": ["900 kcal 미만", "900~1099 kcal", "1100 kcal 이상"]
+            },
+            color_discrete_map={
+                "900 kcal 미만": "#36b998",
+                "900~1099 kcal": "#f2b457",
+                "1100 kcal 이상": "#eb6b78",
+            },
+            labels={"학교 식별": "학교", "급식 일수": "급식 일수", "열량 구간": "열량 구간"},
+        )
+        band_figure.update_traces(
+            texttemplate="%{text}일",
+            textposition="inside",
+            hovertemplate="<b>%{x}</b><br>%{fullData.name}: %{y}일<extra></extra>",
+        )
+        band_figure.update_layout(legend_title_text="열량 구간")
+        band_figure.update_xaxes(tickangle=-12)
+        st.plotly_chart(polish_comparison_chart(band_figure, 460), use_container_width=True)
+
+    with heatmap_tab:
+        st.markdown("#### 날짜와 학교별 열량 히트맵")
+        st.caption("색이 진한 칸을 따라가면 어느 학교의 어느 날짜가 상대적으로 높았는지 빠르게 찾을 수 있어요.")
+        heatmap_data = data.pivot_table(
+            index="학교 식별", columns="날짜", values="칼로리", aggfunc="mean"
+        ).sort_index(axis=1)
+        heatmap_data.columns = [column.strftime("%m.%d") for column in heatmap_data.columns]
+        heatmap_figure = px.imshow(
+            heatmap_data,
+            aspect="auto",
+            color_continuous_scale=["#e9f8f3", "#fff0c8", "#f27f87"],
+            labels={"x": "날짜", "y": "학교", "color": "열량(kcal)"},
+        )
+        heatmap_figure.update_traces(
+            hovertemplate="<b>%{y}</b><br>날짜 %{x}<br>%{z:,.1f} kcal<extra></extra>"
+        )
+        heatmap_figure.update_layout(coloraxis_colorbar=dict(title="kcal"))
+        heatmap_figure.update_yaxes(title=None)
+        st.plotly_chart(
+            polish_comparison_chart(heatmap_figure, max(380, 82 * len(summary))),
+            use_container_width=True,
+        )
+
+    with gap_tab:
+        st.markdown("#### 날짜별 학교 간 열량 차이")
+        st.caption("같은 날 급식이 등록된 학교 중 가장 높은 값과 낮은 값의 차이를 보여 줘요.")
+        daily_gap = build_daily_school_gap(data)
+        if daily_gap.empty:
+            st.info("같은 날짜에 두 학교 이상의 데이터가 있어야 학교 간 차이를 계산할 수 있어요.")
+        else:
+            gap_figure = px.bar(
+                daily_gap,
+                x="날짜",
+                y="학교 간 차이",
+                color="학교 간 차이",
+                color_continuous_scale=["#8fdac6", "#7f89f4", "#ed7180"],
+                labels={"학교 간 차이": "최고−최저 차이(kcal)"},
+                custom_data=["최고_칼로리", "최저_칼로리", "비교_학교수"],
+            )
+            gap_figure.update_traces(
+                hovertemplate=(
+                    "<b>%{x|%Y-%m-%d}</b><br>학교 간 차이 %{y:,.1f} kcal"
+                    "<br>최고 %{customdata[0]:,.1f} · 최저 %{customdata[1]:,.1f} kcal"
+                    "<br>비교 학교 %{customdata[2]}곳<extra></extra>"
+                )
+            )
+            gap_figure.update_layout(coloraxis_showscale=False)
+            gap_figure.update_xaxes(showgrid=False)
+            st.plotly_chart(polish_comparison_chart(gap_figure, 440), use_container_width=True)
 
 
 def render_sidebar() -> None:
