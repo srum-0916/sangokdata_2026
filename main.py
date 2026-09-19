@@ -553,6 +553,220 @@ else:
     )
 
 
+
+# ------------------------------------------------------------
+# 6차원 산점도
+# x + y + z + 점 크기 + 연속 색 + 점 모양 = 6차원
+# 묶음 정보는 hover와 범례에서 함께 확인
+# ------------------------------------------------------------
+st.subheader("🚀 레전드 6차원 산점도")
+st.caption(
+    "6차원 공간을 그대로 화면에 그릴 수는 없기 때문에, "
+    "**x·y·z 위치 + 점 크기 + 점 색 + 점 모양**으로 "
+    "한 영화의 여섯 가지 정보를 동시에 표현합니다."
+)
+
+if len(selected_features) < 4:
+    st.info(
+        "6차원 산점도를 보려면 군집화 속성 네 개를 모두 선택해 주세요."
+    )
+else:
+    # 첫 세 차원
+    d61, d62, d63 = st.columns(3)
+
+    with d61:
+        x6 = st.selectbox(
+            "6D x축",
+            options=selected_features,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="x_6d",
+        )
+
+    with d62:
+        y6_options = [f for f in selected_features if f != x6]
+        y6 = st.selectbox(
+            "6D y축",
+            options=y6_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="y_6d",
+        )
+
+    with d63:
+        z6_options = [
+            f for f in selected_features
+            if f not in {x6, y6}
+        ]
+        z6 = st.selectbox(
+            "6D z축",
+            options=z6_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="z_6d",
+        )
+
+    # 4, 5, 6번째 차원
+    d64, d65, d66 = st.columns(3)
+
+    with d64:
+        size6_options = [
+            f for f in selected_features
+            if f not in {x6, y6, z6}
+        ]
+        size6 = st.selectbox(
+            "4번째 차원 · 점 크기",
+            options=size6_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="size_6d",
+        )
+
+    with d65:
+        color6 = st.selectbox(
+            "5번째 차원 · 점 색",
+            options=[
+                "log_first_show",
+                "log_first_week_audi",
+                "peak",
+            ],
+            index=0,
+            format_func=lambda x: {
+                "log_first_show": "첫 관측일 상영횟수(상용로그)",
+                "log_first_week_audi": "첫 주 관객 수(상용로그)",
+                "peak": "성수기 개봉 여부",
+            }[x],
+            key="color_6d",
+        )
+
+    with d66:
+        symbol6 = st.selectbox(
+            "6번째 차원 · 점 모양",
+            options=[
+                "peak",
+                "genre",
+                "nation",
+            ],
+            index=0,
+            format_func=lambda x: {
+                "peak": "성수기 개봉 여부",
+                "genre": "장르",
+                "nation": "국가",
+            }[x],
+            key="symbol_6d",
+        )
+
+    six_df = df[
+        df[color6].notna()
+        & df[symbol6].notna()
+    ].copy()
+
+    # 점 크기는 Plotly에서 양수여야 하므로 표시용 값을 따로 만듦
+    size_min_6 = six_df[size6].min()
+
+    if size_min_6 <= 0:
+        six_df["_size_6d"] = six_df[size6] - size_min_6 + 0.1
+    else:
+        six_df["_size_6d"] = six_df[size6]
+
+    # 점 모양의 종류가 너무 많으면 시각화가 깨지므로
+    # 빈도가 높은 7개 범주 + 기타로 묶어서 표시
+    symbol_counts = six_df[symbol6].astype(str).value_counts()
+    top_symbol_values = symbol_counts.head(7).index.tolist()
+
+    six_df["_symbol_6d"] = (
+        six_df[symbol6]
+        .astype(str)
+        .where(
+            six_df[symbol6].astype(str).isin(top_symbol_values),
+            "기타",
+        )
+    )
+
+    # 원래 범주는 hover에서 그대로 확인할 수 있도록 별도 보존
+    six_df["_symbol_original"] = six_df[symbol6].astype(str)
+
+    color6_label = {
+        "log_first_show": "첫 관측일 상영횟수(상용로그)",
+        "log_first_week_audi": "첫 주 관객 수(상용로그)",
+        "peak": "성수기 개봉 여부",
+    }[color6]
+
+    symbol6_label = {
+        "peak": "성수기 개봉 여부",
+        "genre": "장르",
+        "nation": "국가",
+    }[symbol6]
+
+    fig6d = px.scatter_3d(
+        six_df,
+        x=x6,
+        y=y6,
+        z=z6,
+        size="_size_6d",
+        size_max=22,
+        color=color6,
+        symbol="_symbol_6d",
+        hover_name="movieNm",
+        hover_data={
+            "묶음": True,
+            "movieCd": True,
+            "total_audi": ":,.0f",
+            size6: ":.3f",
+            color6: ":.3f",
+            "_symbol_original": True,
+            "_size_6d": False,
+            "_symbol_6d": False,
+        },
+        labels={
+            x6: FEATURES[x6],
+            y6: FEATURES[y6],
+            z6: FEATURES[z6],
+            size6: FEATURES[size6],
+            color6: color6_label,
+            "_symbol_original": symbol6_label,
+            "묶음": "영화 묶음",
+            "movieCd": "영화코드",
+            "total_audi": "누적 관객",
+        },
+        color_continuous_scale="Turbo",
+    )
+
+    fig6d.update_layout(
+        height=800,
+        margin=dict(l=0, r=0, t=30, b=0),
+        scene=dict(
+            xaxis_title=FEATURES[x6],
+            yaxis_title=FEATURES[y6],
+            zaxis_title=FEATURES[z6],
+        ),
+        legend_title_text=f"점 모양 · {symbol6_label}",
+    )
+
+    st.plotly_chart(fig6d, use_container_width=True)
+
+    st.markdown(
+        f"""
+**현재 6차원 해석**
+
+- **1차원 · x축:** {FEATURES[x6]}
+- **2차원 · y축:** {FEATURES[y6]}
+- **3차원 · z축:** {FEATURES[z6]}
+- **4차원 · 점 크기:** {FEATURES[size6]}
+- **5차원 · 점 색:** {color6_label}
+- **6차원 · 점 모양:** {symbol6_label}
+- **추가 정보:** 마우스를 올리면 영화 제목과 **㉮·㉯·㉰ 등의 묶음**도 확인 가능
+"""
+    )
+
+    if symbol6 in {"genre", "nation"} and six_df["_symbol_original"].nunique() > 8:
+        st.caption(
+            "※ 점 모양이 지나치게 많아지는 것을 막기 위해 "
+            f"{symbol6_label}은 빈도가 높은 7개 범주만 따로 표시하고 "
+            "나머지는 '기타' 모양으로 합쳤습니다. 원래 값은 마우스를 올리면 확인할 수 있습니다."
+        )
+
+
 # ------------------------------------------------------------
 # 묶음별 특징
 # ------------------------------------------------------------
