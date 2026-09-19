@@ -34,7 +34,6 @@ FEATURE_INFO = {
     "nation": ("국가", "categorical"),
 }
 
-# 개선 프롬프트의 비교 기준
 BASE_FEATURES = ["first_scrn", "first_show", "days_in_top10"]
 PLUS_WEEK_FEATURES = BASE_FEATURES + ["first_week_audi"]
 
@@ -56,10 +55,10 @@ def load_data():
         dtype={"movieCd": str},
     )
 
-    # 원본 맨 위 10줄을 그대로 보여주기 위해 별도 보관
+    # 원본 맨 위 10줄 보관
     movies_head10 = movies.head(10).copy()
 
-    # 일별 표의 날짜로 기준 기간 계산
+    # 일별 데이터의 기간 계산
     daily["날짜_변환"] = pd.to_datetime(
         daily["날짜"].astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(8),
         format="%Y%m%d",
@@ -73,7 +72,7 @@ def load_data():
     period_start = valid_dates.min()
     period_end = valid_dates.max()
 
-    # 영화코드 정렬이 숫자/문자 혼합에도 안정적으로 되도록 보조 열 생성
+    # 영화코드 순 정렬
     movies["movieCd"] = movies["movieCd"].astype(str)
     movies["_movieCd_num"] = pd.to_numeric(movies["movieCd"], errors="coerce")
 
@@ -83,7 +82,6 @@ def load_data():
         kind="stable",
     ).reset_index(drop=True)
 
-    # 숫자형 열 정리
     numeric_columns = [
         "first_scrn",
         "first_show",
@@ -97,8 +95,8 @@ def load_data():
         if col in movies.columns:
             movies[col] = pd.to_numeric(movies[col], errors="coerce")
 
-    # 영화별 표에 있는 영화를 모두 분할 대상으로 사용
-    # 정렬 후 10편 단위로 앞 3편(index % 10 = 0,1,2)을 테스트로 둠
+    # 앞과 동일:
+    # 영화코드 순 정렬 후 10편마다 앞 3편을 테스트용으로 분리
     movies["_row_no"] = np.arange(len(movies))
     movies["_is_test"] = (movies["_row_no"] % 10) < 3
 
@@ -120,6 +118,7 @@ def build_model(feature_cols):
         col for col in feature_cols
         if FEATURE_INFO[col][1] == "numeric"
     ]
+
     categorical_features = [
         col for col in feature_cols
         if FEATURE_INFO[col][1] == "categorical"
@@ -133,9 +132,7 @@ def build_model(feature_cols):
                 ("imputer", SimpleImputer(strategy="median")),
             ]
         )
-        transformers.append(
-            ("num", numeric_pipe, numeric_features)
-        )
+        transformers.append(("num", numeric_pipe, numeric_features))
 
     if categorical_features:
         categorical_pipe = Pipeline(
@@ -150,9 +147,7 @@ def build_model(feature_cols):
                 ),
             ]
         )
-        transformers.append(
-            ("cat", categorical_pipe, categorical_features)
-        )
+        transformers.append(("cat", categorical_pipe, categorical_features))
 
     preprocessor = ColumnTransformer(
         transformers=transformers,
@@ -176,8 +171,7 @@ def evaluate_model(feature_cols):
     if movies[TARGET].isna().any():
         missing_target = int(movies[TARGET].isna().sum())
         raise ValueError(
-            f"총 관객 수(total_audi)가 비어 있는 영화가 {missing_target}편 있어 "
-            "모든 영화를 평가에 사용할 수 없습니다."
+            f"총 관객 수(total_audi)가 비어 있는 영화가 {missing_target}편 있습니다."
         )
 
     train_df = movies.loc[~movies["_is_test"]].copy()
@@ -191,29 +185,33 @@ def evaluate_model(feature_cols):
 
     model = build_model(feature_cols)
     model.fit(X_train, y_train)
+
     pred = model.predict(X_test)
 
     r2 = r2_score(y_test, pred)
     mae = mean_absolute_error(y_test, pred)
     rmse = np.sqrt(mean_squared_error(y_test, pred))
 
-    # 0명인 영화가 있을 경우 MAPE 분모 문제를 피함
     nonzero = y_test != 0
     if nonzero.any():
         mape = np.mean(
-            np.abs((y_test[nonzero].to_numpy() - pred[nonzero]) / y_test[nonzero].to_numpy())
+            np.abs(
+                (y_test[nonzero].to_numpy() - pred[nonzero])
+                / y_test[nonzero].to_numpy()
+            )
         ) * 100
     else:
         mape = np.nan
 
     result = test_df[
-        ["movieCd", "movieNm", TARGET]
+        ["movieCd", "movieNm", "first_scrn", TARGET]
     ].copy()
 
     result["predicted_audi"] = pred
-    result["abs_error"] = np.abs(
-        result[TARGET] - result["predicted_audi"]
-    )
+
+    # 요청한 오차 정의: 실제 총 관객 수 - 예측값
+    result["error"] = result[TARGET] - result["predicted_audi"]
+    result["abs_error"] = np.abs(result["error"])
 
     return {
         "model": model,
@@ -235,9 +233,7 @@ st.caption(
     "KOBIS 영화별 집계 데이터로 총 관객 수(total_audi)를 예측하는 다중 회귀 모델입니다."
 )
 
-period_text = (
-    f"{period_start:%Y-%m-%d} ~ {period_end:%Y-%m-%d}"
-)
+period_text = f"{period_start:%Y-%m-%d} ~ {period_end:%Y-%m-%d}"
 
 st.info(
     "⚠️ 이 데이터의 변수들은 사후에 집계된 값을 포함합니다. "
@@ -288,10 +284,6 @@ with right:
 # 변수 선택
 # ------------------------------------------------------------
 st.subheader("내가 사용할 변수 고르기")
-st.write(
-    "체크한 변수들만 사용해 새 다중 회귀 모델을 학습합니다. "
-    "숫자형 변수의 빈칸은 중앙값으로, 장르·국가의 빈칸은 최빈값으로 보완합니다."
-)
 
 selected_features = []
 
@@ -342,83 +334,69 @@ if np.isfinite(selected_eval["mape"]):
 else:
     e2.metric("평균 절대 백분율 오차", "계산 불가")
 
-st.caption(
-    "R²는 1에 가까울수록 실제값을 잘 설명합니다. "
-    "MAE는 테스트 영화 한 편당 예측이 실제 총 관객 수에서 평균적으로 얼마나 빗나갔는지를 뜻합니다."
-)
-
 
 # ------------------------------------------------------------
-# 실제값 vs 예측값 Plotly 산점도
+# 산점도 상세 분석
 # ------------------------------------------------------------
 st.subheader("테스트 영화: 실제 총 관객 수 vs 예측 총 관객 수")
 
 result = selected_eval["results"].copy()
 
-# 예측값이 1,000명 미만이면 로그축에서 바닥(1,000명)에 붙여 표시
+# 대각선 기준:
+# 아래 = 예측 < 실제
+# 위   = 예측 > 실제
+below_diagonal_count = int((result["predicted_audi"] < result[TARGET]).sum())
+above_diagonal_count = int((result["predicted_audi"] > result[TARGET]).sum())
+on_diagonal_count = int(np.isclose(result["predicted_audi"], result[TARGET]).sum())
+
+negative_count = int((result["predicted_audi"] < 0).sum())
+min_prediction = float(result["predicted_audi"].min())
+
+# 1,000명 미만 예측은 그래프 바닥에 표시
 under_1000 = result["predicted_audi"] < 1000
 under_1000_count = int(under_1000.sum())
 
 result["plot_predicted_audi"] = result["predicted_audi"].clip(lower=1000)
-
-# 로그축을 위해 실제값도 0 이하가 있을 경우 최소 1명으로만 안전 처리
 result["plot_actual_audi"] = result[TARGET].clip(lower=1)
 
-st.write(
-    f"예측 관객 수가 **1,000명보다 작게 나온 영화는 {under_1000_count:,}편**입니다. "
-    "이 영화들은 그래프의 1,000명 선에 붙여 표시합니다."
-)
-
-positive_values = pd.concat(
-    [
-        result["plot_actual_audi"],
-        result["plot_predicted_audi"],
-    ],
-    ignore_index=True,
-)
-
-axis_min = max(1, float(positive_values[positive_values > 0].min()))
 axis_max = max(
     float(result["plot_actual_audi"].max()),
     float(result["plot_predicted_audi"].max()),
     1000.0,
 )
 
-# 대각선 범위
-diag_min = max(1, min(axis_min, 1000))
-diag_max = axis_max
-
 fig = go.Figure()
 
 normal = result[~under_1000]
 low = result[under_1000]
 
-fig.add_trace(
-    go.Scatter(
-        x=normal["plot_actual_audi"],
-        y=normal["plot_predicted_audi"],
-        mode="markers",
-        name="예측 1,000명 이상",
-        customdata=np.stack(
-            [
-                normal["movieNm"].astype(str),
-                normal["movieCd"].astype(str),
-                normal[TARGET].to_numpy(),
-                normal["predicted_audi"].to_numpy(),
-                normal["abs_error"].to_numpy(),
-            ],
-            axis=-1,
-        ) if len(normal) else None,
-        hovertemplate=(
-            "영화명: %{customdata[0]}<br>"
-            "영화코드: %{customdata[1]}<br>"
-            "실제: %{customdata[2]:,.0f}명<br>"
-            "예측: %{customdata[3]:,.0f}명<br>"
-            "절대 오차: %{customdata[4]:,.0f}명"
-            "<extra></extra>"
-        ),
+if len(normal):
+    fig.add_trace(
+        go.Scatter(
+            x=normal["plot_actual_audi"],
+            y=normal["plot_predicted_audi"],
+            mode="markers",
+            name="예측 1,000명 이상",
+            customdata=np.stack(
+                [
+                    normal["movieNm"].astype(str),
+                    normal["movieCd"].astype(str),
+                    normal[TARGET].to_numpy(),
+                    normal["predicted_audi"].to_numpy(),
+                    normal["error"].to_numpy(),
+                ],
+                axis=-1,
+            ),
+            hovertemplate=(
+                "영화명: %{customdata[0]}<br>"
+                "영화코드: %{customdata[1]}<br>"
+                "실제: %{customdata[2]:,.0f}명<br>"
+                "예측: %{customdata[3]:,.0f}명<br>"
+                "오차(실제-예측): %{customdata[4]:+,.0f}명"
+                "<extra></extra>"
+            ),
+        )
     )
-)
 
 if len(low):
     fig.add_trace(
@@ -433,7 +411,7 @@ if len(low):
                     low["movieCd"].astype(str),
                     low[TARGET].to_numpy(),
                     low["predicted_audi"].to_numpy(),
-                    low["abs_error"].to_numpy(),
+                    low["error"].to_numpy(),
                 ],
                 axis=-1,
             ),
@@ -443,20 +421,20 @@ if len(low):
                 "실제: %{customdata[2]:,.0f}명<br>"
                 "원래 예측: %{customdata[3]:,.0f}명<br>"
                 "그래프 표시 위치: 1,000명<br>"
-                "절대 오차: %{customdata[4]:,.0f}명"
+                "오차(실제-예측): %{customdata[4]:+,.0f}명"
                 "<extra></extra>"
             ),
         )
     )
 
-# 실제값 = 예측값 대각선
 fig.add_trace(
     go.Scatter(
-        x=[diag_min, diag_max],
-        y=[diag_min, diag_max],
+        x=[1, axis_max],
+        y=[1, axis_max],
         mode="lines",
         name="실제값 = 예측값",
         hoverinfo="skip",
+        line=dict(dash="dash"),
     )
 )
 
@@ -469,9 +447,148 @@ fig.update_layout(
 )
 
 fig.update_xaxes(type="log")
-fig.update_yaxes(type="log", range=[3, np.log10(diag_max) + 0.1])
+fig.update_yaxes(
+    type="log",
+    range=[3, np.log10(axis_max) + 0.1],
+)
 
-st.plotly_chart(fig, use_container_width=True)
+scatter_col, detail_col = st.columns([3, 1])
+
+with scatter_col:
+    st.plotly_chart(fig, use_container_width=True)
+
+with detail_col:
+    st.markdown("#### 산점도 읽기")
+    st.metric(
+        "대각선보다 아래",
+        f"{below_diagonal_count:,}편",
+        help="예측값이 실제값보다 작은 영화입니다.",
+    )
+    st.metric(
+        "대각선보다 위",
+        f"{above_diagonal_count:,}편",
+        help="예측값이 실제값보다 큰 영화입니다.",
+    )
+
+    if on_diagonal_count:
+        st.caption(f"대각선과 거의 같은 점: {on_diagonal_count:,}편")
+
+    st.metric(
+        "음수로 예측된 영화",
+        f"{negative_count:,}편",
+    )
+    st.metric(
+        "가장 작은 예측값",
+        f"{min_prediction:,.0f}명",
+    )
+    st.metric(
+        "1,000명 미만 예측",
+        f"{under_1000_count:,}편",
+        help="로그축 표시를 위해 1,000명 위치에 붙여 표시합니다.",
+    )
+
+st.caption(
+    "대각선 아래 점은 실제 관객 수가 예측보다 많았던 영화이고, "
+    "대각선 위 점은 예측 관객 수가 실제보다 많았던 영화입니다."
+)
+
+
+# ------------------------------------------------------------
+# 절대오차 상위 8편 분석
+# ------------------------------------------------------------
+st.subheader("예측이 가장 크게 빗나간 8편")
+
+top8 = (
+    result.nlargest(8, "abs_error")
+    .copy()
+    .sort_values("error")
+)
+
+total_abs_error = float(result["abs_error"].sum())
+top8_abs_error = float(top8["abs_error"].sum())
+
+if total_abs_error > 0:
+    top8_share = top8_abs_error / total_abs_error * 100
+else:
+    top8_share = 0.0
+
+st.write(
+    f"절대오차가 큰 8편의 절대오차 합은 **{top8_abs_error:,.0f}명**이고, "
+    f"테스트용 영화 전체 절대오차 합 **{total_abs_error:,.0f}명**의 "
+    f"**{top8_share:.1f}%**입니다."
+)
+
+# 막대 라벨: 영화명 + 첫 관측일 스크린 수
+top8["bar_label"] = top8.apply(
+    lambda row: (
+        f"{row['movieNm']} · 첫 스크린 "
+        f"{int(row['first_scrn']):,}개"
+        if pd.notna(row["first_scrn"])
+        else f"{row['movieNm']} · 첫 스크린 정보 없음"
+    ),
+    axis=1,
+)
+
+# 양수(실제 > 예측) / 음수(예측 > 실제) 색상 구분
+bar_colors = np.where(
+    top8["error"] >= 0,
+    "#2E86DE",
+    "#E74C3C",
+)
+
+bar_fig = go.Figure()
+
+bar_fig.add_trace(
+    go.Bar(
+        x=top8["error"],
+        y=top8["bar_label"],
+        orientation="h",
+        marker_color=bar_colors,
+        text=top8["error"].map(lambda x: f"{x:+,.0f}명"),
+        textposition="outside",
+        customdata=np.stack(
+            [
+                top8["movieNm"].astype(str),
+                top8["first_scrn"].fillna(-1).to_numpy(),
+                top8[TARGET].to_numpy(),
+                top8["predicted_audi"].to_numpy(),
+                top8["error"].to_numpy(),
+                top8["abs_error"].to_numpy(),
+            ],
+            axis=-1,
+        ),
+        hovertemplate=(
+            "영화명: %{customdata[0]}<br>"
+            "첫 관측일 스크린 수: %{customdata[1]:,.0f}개<br>"
+            "실제 총 관객 수: %{customdata[2]:,.0f}명<br>"
+            "예측 총 관객 수: %{customdata[3]:,.0f}명<br>"
+            "오차(실제-예측): %{customdata[4]:+,.0f}명<br>"
+            "절대오차: %{customdata[5]:,.0f}명"
+            "<extra></extra>"
+        ),
+    )
+)
+
+bar_fig.add_vline(
+    x=0,
+    line_width=2,
+    line_dash="solid",
+)
+
+bar_fig.update_layout(
+    xaxis_title="오차 = 실제 총 관객 수 - 예측 총 관객 수",
+    yaxis_title="",
+    showlegend=False,
+    margin=dict(l=20, r=90, t=20, b=20),
+    height=500,
+)
+
+st.plotly_chart(bar_fig, use_container_width=True)
+
+st.caption(
+    "오른쪽 막대는 실제 관객 수가 예측보다 많았던 영화, "
+    "왼쪽 막대는 예측 관객 수가 실제보다 많았던 영화입니다."
+)
 
 
 # ------------------------------------------------------------
@@ -482,8 +599,10 @@ with st.expander("테스트 영화별 예측 결과 보기"):
         [
             "movieCd",
             "movieNm",
+            "first_scrn",
             TARGET,
             "predicted_audi",
+            "error",
             "abs_error",
         ]
     ].copy()
@@ -491,12 +610,19 @@ with st.expander("테스트 영화별 예측 결과 보기"):
     table.columns = [
         "영화코드",
         "영화명",
+        "첫 관측일 스크린 수",
         "실제 총 관객 수",
         "예측 총 관객 수",
-        "절대 오차",
+        "오차(실제-예측)",
+        "절대오차",
     ]
 
-    for col in ["실제 총 관객 수", "예측 총 관객 수", "절대 오차"]:
+    for col in [
+        "실제 총 관객 수",
+        "예측 총 관객 수",
+        "오차(실제-예측)",
+        "절대오차",
+    ]:
         table[col] = table[col].round(0).astype("int64")
 
     st.dataframe(
