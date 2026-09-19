@@ -57,14 +57,15 @@ def load_and_prepare():
 
     for col in [
         "first_scrn",
+        "first_show",
         "first_week_audi",
         "total_audi",
         "days_in_top10",
+        "peak",
     ]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # 네 속성 중 값이 없거나 첫 주 관객이 0인 영화 제외
-    # 로그 계산을 위해 first_scrn, total_audi는 0보다 커야 함
+    # 기본 네 속성 계산에 필요한 값이 없는 영화 제외
     valid = df[
         df["first_scrn"].notna()
         & df["total_audi"].notna()
@@ -75,14 +76,21 @@ def load_and_prepare():
         & (df["total_audi"] > 0)
     ].copy()
 
-    # 상용로그
     valid["log_first_scrn"] = valid["first_scrn"].map(math.log10)
     valid["log_total_audi"] = valid["total_audi"].map(math.log10)
 
-    # 롱런 지수 = 누적 관객 / 첫 주 관객, 최대 20
     valid["longrun_index"] = (
         valid["total_audi"] / valid["first_week_audi"]
     ).clip(upper=20)
+
+    # 5차원 시각화용 추가 속성
+    valid["log_first_show"] = valid["first_show"].apply(
+        lambda x: math.log10(x) if pd.notna(x) and x > 0 else float("nan")
+    )
+
+    valid["log_first_week_audi"] = valid["first_week_audi"].apply(
+        lambda x: math.log10(x) if pd.notna(x) and x > 0 else float("nan")
+    )
 
     grouped_count = len(valid)
 
@@ -104,6 +112,12 @@ FEATURES = {
     "log_total_audi": "누적 관객(상용로그)",
     "days_in_top10": "10위권 일수",
     "longrun_index": "롱런 지수",
+}
+
+FIFTH_FEATURES = {
+    "log_first_show": "첫 관측일 상영횟수(상용로그)",
+    "log_first_week_audi": "첫 주 관객 수(상용로그)",
+    "peak": "성수기 개봉 여부",
 }
 
 CLUSTER_SYMBOLS = ["㉮", "㉯", "㉰", "㉱", "㉲", "㉳", "㉴"]
@@ -227,8 +241,6 @@ fig2d = px.scatter(
         "묶음": True,
         "movieCd": True,
         "total_audi": ":,.0f",
-        x_feature: ":.3f" if x_feature.startswith("log_") else ":.2f",
-        y_feature: ":.3f" if y_feature.startswith("log_") else ":.2f",
     },
     labels={
         x_feature: FEATURES[x_feature],
@@ -254,16 +266,14 @@ st.plotly_chart(fig2d, use_container_width=True)
 st.subheader("3차원 산점도")
 
 if len(selected_features) < 3:
-    st.info(
-        "3차원 산점도를 보려면 묶는 데 사용할 속성을 세 개 이상 선택해 주세요."
-    )
+    st.info("3차원 산점도를 보려면 속성을 세 개 이상 선택해 주세요.")
 else:
-    axis3_col1, axis3_col2, axis3_col3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
 
-    with axis3_col1:
+    with c1:
         x3 = st.selectbox(
             "3D x축",
-            options=selected_features,
+            selected_features,
             index=0,
             format_func=lambda x: FEATURES[x],
             key="x_3d",
@@ -271,10 +281,10 @@ else:
 
     y3_options = [f for f in selected_features if f != x3]
 
-    with axis3_col2:
+    with c2:
         y3 = st.selectbox(
             "3D y축",
-            options=y3_options,
+            y3_options,
             index=0,
             format_func=lambda x: FEATURES[x],
             key="y_3d",
@@ -282,10 +292,10 @@ else:
 
     z3_options = [f for f in selected_features if f not in {x3, y3}]
 
-    with axis3_col3:
+    with c3:
         z3 = st.selectbox(
             "3D z축",
-            options=z3_options,
+            z3_options,
             index=0,
             format_func=lambda x: FEATURES[x],
             key="z_3d",
@@ -301,7 +311,6 @@ else:
         hover_name="movieNm",
         hover_data={
             "묶음": True,
-            "movieCd": True,
             "total_audi": ":,.0f",
         },
         labels={
@@ -309,89 +318,73 @@ else:
             y3: FEATURES[y3],
             z3: FEATURES[z3],
             "묶음": "묶음",
-            "movieCd": "영화코드",
-            "total_audi": "누적 관객",
         },
     )
 
     fig3d.update_traces(marker=dict(size=3))
-    fig3d.update_layout(
-        legend_title_text="묶음",
-        margin=dict(l=0, r=0, t=20, b=0),
-        height=650,
-    )
+    fig3d.update_layout(height=650)
 
     st.plotly_chart(fig3d, use_container_width=True)
 
 
 # ------------------------------------------------------------
 # 4차원 산점도
-# x, y, z + 점 크기로 네 번째 속성 표현
-# 색은 묶음 표시
 # ------------------------------------------------------------
 st.subheader("4차원 산점도")
-st.caption(
-    "화면은 3차원이지만, 네 번째 속성을 **점의 크기**로 표현합니다. "
-    "점의 색은 영화가 속한 묶음을 나타냅니다."
-)
+st.caption("x·y·z 세 축에 더해 네 번째 속성을 점 크기로 표현합니다.")
 
 if len(selected_features) < 4:
-    st.info(
-        "4차원 산점도를 보려면 묶는 데 사용할 네 속성을 모두 선택해 주세요."
-    )
+    st.info("4차원 산점도를 보려면 네 속성을 모두 선택해 주세요.")
 else:
-    axis4_col1, axis4_col2, axis4_col3, axis4_col4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
-    with axis4_col1:
+    with c1:
         x4 = st.selectbox(
             "4D x축",
-            options=selected_features,
+            selected_features,
             index=0,
             format_func=lambda x: FEATURES[x],
             key="x_4d",
         )
 
-    y4_options = [f for f in selected_features if f != x4]
-
-    with axis4_col2:
+    with c2:
+        y4_options = [f for f in selected_features if f != x4]
         y4 = st.selectbox(
             "4D y축",
-            options=y4_options,
+            y4_options,
             index=0,
             format_func=lambda x: FEATURES[x],
             key="y_4d",
         )
 
-    z4_options = [f for f in selected_features if f not in {x4, y4}]
-
-    with axis4_col3:
+    with c3:
+        z4_options = [f for f in selected_features if f not in {x4, y4}]
         z4 = st.selectbox(
             "4D z축",
-            options=z4_options,
+            z4_options,
             index=0,
             format_func=lambda x: FEATURES[x],
             key="z_4d",
         )
 
-    size4_options = [
-        f for f in selected_features if f not in {x4, y4, z4}
-    ]
-
-    with axis4_col4:
+    with c4:
+        size4_options = [
+            f for f in selected_features if f not in {x4, y4, z4}
+        ]
         size4 = st.selectbox(
             "4번째 차원 · 점 크기",
-            options=size4_options,
+            size4_options,
             index=0,
             format_func=lambda x: FEATURES[x],
             key="size_4d",
         )
 
-    # 점 크기는 양수여야 하므로 최소값을 약간 띄워서 별도 열 생성
     size_min = df[size4].min()
-    if size_min <= 0:
-        df["_size_4d"] = df[size4] - size_min + 0.1
-    else:
-        df["_size_4d"] = df[size4]
+    df["_size_4d"] = (
+        df[size4] - size_min + 0.1
+        if size_min <= 0
+        else df[size4]
+    )
 
     fig4d = px.scatter_3d(
         df,
@@ -405,9 +398,7 @@ else:
         hover_name="movieNm",
         hover_data={
             "묶음": True,
-            "movieCd": True,
-            "total_audi": ":,.0f",
-            size4: ":.3f" if size4.startswith("log_") else ":.2f",
+            size4: ":.3f",
             "_size_4d": False,
         },
         labels={
@@ -416,23 +407,149 @@ else:
             z4: FEATURES[z4],
             size4: FEATURES[size4],
             "묶음": "묶음",
-            "movieCd": "영화코드",
-            "total_audi": "누적 관객",
         },
     )
 
-    fig4d.update_layout(
-        legend_title_text="묶음",
-        margin=dict(l=0, r=0, t=20, b=0),
-        height=700,
-    )
-
+    fig4d.update_layout(height=700)
     st.plotly_chart(fig4d, use_container_width=True)
 
-    st.write(
-        f"이 그래프에서는 **{FEATURES[x4]}**, **{FEATURES[y4]}**, "
-        f"**{FEATURES[z4]}**가 공간의 세 축이고, "
-        f"**{FEATURES[size4]}**가 점의 크기로 표현됩니다."
+
+# ------------------------------------------------------------
+# 5차원 산점도
+# x + y + z + 점 크기 + 점 색 = 숫자 5차원
+# 묶음은 점 모양으로 별도 표현
+# ------------------------------------------------------------
+st.subheader("🔥 5차원 산점도")
+st.caption(
+    "x·y·z = 공간 위치, **점 크기 = 4번째 차원**, "
+    "**점 색의 연속적인 변화 = 5번째 차원**입니다. "
+    "영화 묶음은 점 모양으로 따로 구분합니다."
+)
+
+if len(selected_features) < 4:
+    st.info(
+        "5차원 산점도를 보려면 군집화 속성 네 개를 모두 선택해 주세요."
+    )
+else:
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        x5 = st.selectbox(
+            "5D x축",
+            selected_features,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="x_5d",
+        )
+
+    with c2:
+        y5_options = [f for f in selected_features if f != x5]
+        y5 = st.selectbox(
+            "5D y축",
+            y5_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="y_5d",
+        )
+
+    with c3:
+        z5_options = [f for f in selected_features if f not in {x5, y5}]
+        z5 = st.selectbox(
+            "5D z축",
+            z5_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="z_5d",
+        )
+
+    c4, c5 = st.columns(2)
+
+    with c4:
+        size5_options = [
+            f for f in selected_features
+            if f not in {x5, y5, z5}
+        ]
+
+        size5 = st.selectbox(
+            "4번째 차원 · 점 크기",
+            size5_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="size_5d",
+        )
+
+    with c5:
+        color5 = st.selectbox(
+            "5번째 차원 · 점 색",
+            options=list(FIFTH_FEATURES.keys()),
+            index=0,
+            format_func=lambda x: FIFTH_FEATURES[x],
+            key="color_5d",
+        )
+
+    five_df = df[df[color5].notna()].copy()
+
+    size_min_5 = five_df[size5].min()
+    five_df["_size_5d"] = (
+        five_df[size5] - size_min_5 + 0.1
+        if size_min_5 <= 0
+        else five_df[size5]
+    )
+
+    fig5d = px.scatter_3d(
+        five_df,
+        x=x5,
+        y=y5,
+        z=z5,
+        size="_size_5d",
+        size_max=20,
+        color=color5,
+        symbol="묶음",
+        category_orders={"묶음": ACTIVE_CLUSTER_SYMBOLS},
+        hover_name="movieNm",
+        hover_data={
+            "묶음": True,
+            "movieCd": True,
+            "total_audi": ":,.0f",
+            size5: ":.3f",
+            color5: ":.3f",
+            "_size_5d": False,
+        },
+        labels={
+            x5: FEATURES[x5],
+            y5: FEATURES[y5],
+            z5: FEATURES[z5],
+            size5: FEATURES[size5],
+            color5: FIFTH_FEATURES[color5],
+            "묶음": "묶음",
+            "movieCd": "영화코드",
+            "total_audi": "누적 관객",
+        },
+        color_continuous_scale="Turbo",
+    )
+
+    fig5d.update_layout(
+        height=760,
+        margin=dict(l=0, r=0, t=20, b=0),
+        scene=dict(
+            xaxis_title=FEATURES[x5],
+            yaxis_title=FEATURES[y5],
+            zaxis_title=FEATURES[z5],
+        ),
+    )
+
+    st.plotly_chart(fig5d, use_container_width=True)
+
+    st.markdown(
+        f"""
+**현재 5차원 표현**
+- x축: **{FEATURES[x5]}**
+- y축: **{FEATURES[y5]}**
+- z축: **{FEATURES[z5]}**
+- 점 크기: **{FEATURES[size5]}**
+- 점 색: **{FIFTH_FEATURES[color5]}**
+- 점 모양: **영화 묶음(㉮·㉯·㉰ …)**
+"""
     )
 
 
@@ -494,7 +611,6 @@ for start in range(0, cluster_count, 3):
 
         with col:
             st.markdown(f"### {cluster_name}")
-
             for rank, (_, row) in enumerate(top5.iterrows(), start=1):
                 st.write(
                     f"{rank}. **{row['movieNm']}** "
@@ -539,7 +655,6 @@ fig_elbow.add_trace(
         x=inertia_df["묶음 수"],
         y=inertia_df["중심에서 떨어진 거리 제곱합"],
         mode="lines+markers",
-        name="거리 제곱합",
         hovertemplate=(
             "묶음 수: %{x}<br>"
             "거리 제곱합: %{y:,.2f}"
@@ -563,7 +678,6 @@ fig_elbow.update_layout(
         tickmode="array",
         tickvals=list(range(1, 8)),
     ),
-    margin=dict(l=20, r=20, t=30, b=20),
     showlegend=False,
 )
 
@@ -571,7 +685,7 @@ st.plotly_chart(fig_elbow, use_container_width=True)
 
 
 # ------------------------------------------------------------
-# 엘보 계산 표
+# 엘보 표
 # ------------------------------------------------------------
 display_inertia = inertia_df.copy()
 
@@ -615,13 +729,9 @@ st.write(
     "1에 가까울수록 묶음이 더 뚜렷하게 나뉜다는 뜻입니다."
 )
 
-
-# ------------------------------------------------------------
-# 설명
-# ------------------------------------------------------------
 st.caption(
-    "※ 스크린 수와 누적 관객은 군집화할 때 상용로그 값으로 사용합니다. "
-    "10위권 일수는 원래 값을 그대로 사용하며, "
-    "롱런 지수는 누적 관객 ÷ 첫 주 관객으로 계산한 뒤 최대 20으로 제한합니다. "
-    "K-평균에 넣기 전 선택한 속성은 모두 표준화합니다."
+    "※ 스크린 수와 누적 관객은 상용로그 값으로 군집화하고, "
+    "10위권 일수는 그대로 사용합니다. "
+    "롱런 지수는 누적 관객 ÷ 첫 주 관객이며 최대 20입니다. "
+    "선택한 군집화 속성은 K-평균에 넣기 전에 표준화합니다."
 )
