@@ -55,7 +55,6 @@ def load_and_prepare():
 
     total_count = len(df)
 
-    # 계산에 필요한 열을 숫자로 변환
     for col in [
         "first_scrn",
         "first_week_audi",
@@ -65,7 +64,7 @@ def load_and_prepare():
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
     # 네 속성 중 값이 없거나 첫 주 관객이 0인 영화 제외
-    # 로그를 취해야 하므로 first_scrn, total_audi가 0 이하인 경우도 제외
+    # 로그 계산을 위해 first_scrn, total_audi는 0보다 커야 함
     valid = df[
         df["first_scrn"].notna()
         & df["total_audi"].notna()
@@ -76,7 +75,7 @@ def load_and_prepare():
         & (df["total_audi"] > 0)
     ].copy()
 
-    # 상용로그 속성
+    # 상용로그
     valid["log_first_scrn"] = valid["first_scrn"].map(math.log10)
     valid["log_total_audi"] = valid["total_audi"].map(math.log10)
 
@@ -98,7 +97,7 @@ except Exception as e:
 
 
 # ------------------------------------------------------------
-# 속성 정보
+# 속성 정의
 # ------------------------------------------------------------
 FEATURES = {
     "log_first_scrn": "스크린 수(상용로그)",
@@ -150,17 +149,13 @@ if len(df) < cluster_count:
 
 
 # ------------------------------------------------------------
-# 현재 선택한 속성 표준화
+# 선택 속성 표준화 + KMeans
 # ------------------------------------------------------------
 X = df[selected_features].copy()
 
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-
-# ------------------------------------------------------------
-# 현재 선택한 묶음 수로 KMeans
-# ------------------------------------------------------------
 kmeans = KMeans(
     n_clusters=cluster_count,
     random_state=42,
@@ -171,7 +166,6 @@ df["cluster_raw"] = kmeans.fit_predict(X_scaled)
 
 
 # ------------------------------------------------------------
-# 묶음 이름 재지정
 # 누적 관객 평균이 큰 묶음부터 ㉮, ㉯, ...
 # ------------------------------------------------------------
 cluster_order = (
@@ -190,10 +184,6 @@ cluster_label_map = {
 df["묶음"] = df["cluster_raw"].map(cluster_label_map)
 ACTIVE_CLUSTER_SYMBOLS = CLUSTER_SYMBOLS[:cluster_count]
 
-
-# ------------------------------------------------------------
-# 현재 결과 요약
-# ------------------------------------------------------------
 st.write(
     f"현재 **{len(selected_features)}개 속성**을 사용해 "
     f"영화를 **{cluster_count}개 묶음**으로 나눴습니다."
@@ -335,7 +325,119 @@ else:
 
 
 # ------------------------------------------------------------
-# 묶음별 평균 표
+# 4차원 산점도
+# x, y, z + 점 크기로 네 번째 속성 표현
+# 색은 묶음 표시
+# ------------------------------------------------------------
+st.subheader("4차원 산점도")
+st.caption(
+    "화면은 3차원이지만, 네 번째 속성을 **점의 크기**로 표현합니다. "
+    "점의 색은 영화가 속한 묶음을 나타냅니다."
+)
+
+if len(selected_features) < 4:
+    st.info(
+        "4차원 산점도를 보려면 묶는 데 사용할 네 속성을 모두 선택해 주세요."
+    )
+else:
+    axis4_col1, axis4_col2, axis4_col3, axis4_col4 = st.columns(4)
+
+    with axis4_col1:
+        x4 = st.selectbox(
+            "4D x축",
+            options=selected_features,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="x_4d",
+        )
+
+    y4_options = [f for f in selected_features if f != x4]
+
+    with axis4_col2:
+        y4 = st.selectbox(
+            "4D y축",
+            options=y4_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="y_4d",
+        )
+
+    z4_options = [f for f in selected_features if f not in {x4, y4}]
+
+    with axis4_col3:
+        z4 = st.selectbox(
+            "4D z축",
+            options=z4_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="z_4d",
+        )
+
+    size4_options = [
+        f for f in selected_features if f not in {x4, y4, z4}
+    ]
+
+    with axis4_col4:
+        size4 = st.selectbox(
+            "4번째 차원 · 점 크기",
+            options=size4_options,
+            index=0,
+            format_func=lambda x: FEATURES[x],
+            key="size_4d",
+        )
+
+    # 점 크기는 양수여야 하므로 최소값을 약간 띄워서 별도 열 생성
+    size_min = df[size4].min()
+    if size_min <= 0:
+        df["_size_4d"] = df[size4] - size_min + 0.1
+    else:
+        df["_size_4d"] = df[size4]
+
+    fig4d = px.scatter_3d(
+        df,
+        x=x4,
+        y=y4,
+        z=z4,
+        size="_size_4d",
+        size_max=18,
+        color="묶음",
+        category_orders={"묶음": ACTIVE_CLUSTER_SYMBOLS},
+        hover_name="movieNm",
+        hover_data={
+            "묶음": True,
+            "movieCd": True,
+            "total_audi": ":,.0f",
+            size4: ":.3f" if size4.startswith("log_") else ":.2f",
+            "_size_4d": False,
+        },
+        labels={
+            x4: FEATURES[x4],
+            y4: FEATURES[y4],
+            z4: FEATURES[z4],
+            size4: FEATURES[size4],
+            "묶음": "묶음",
+            "movieCd": "영화코드",
+            "total_audi": "누적 관객",
+        },
+    )
+
+    fig4d.update_layout(
+        legend_title_text="묶음",
+        margin=dict(l=0, r=0, t=20, b=0),
+        height=700,
+    )
+
+    st.plotly_chart(fig4d, use_container_width=True)
+
+    st.write(
+        f"이 그래프에서는 **{FEATURES[x4]}**, **{FEATURES[y4]}**, "
+        f"**{FEATURES[z4]}**가 공간의 세 축이고, "
+        f"**{FEATURES[size4]}**가 점의 크기로 표현됩니다."
+    )
+
+
+# ------------------------------------------------------------
+# 묶음별 특징
 # ------------------------------------------------------------
 st.subheader("묶음별 특징")
 
@@ -379,7 +481,6 @@ st.dataframe(
 # ------------------------------------------------------------
 st.subheader("묶음별 누적 관객 상위 5편")
 
-# 묶음 수에 따라 한 줄에 너무 많이 나오지 않도록 3열씩 배치
 for start in range(0, cluster_count, 3):
     row_symbols = ACTIVE_CLUSTER_SYMBOLS[start:start + 3]
     cols = st.columns(len(row_symbols))
@@ -402,8 +503,7 @@ for start in range(0, cluster_count, 3):
 
 
 # ------------------------------------------------------------
-# 묶음 수 비교: 엘보 방법
-# 현재 선택한 속성으로 k=1~7 다시 계산
+# 묶음 수 비교 - 엘보 방법
 # ------------------------------------------------------------
 st.subheader("묶음 수 비교")
 
@@ -427,7 +527,6 @@ for k in range(1, 8):
 
 inertia_df = pd.DataFrame(inertia_rows)
 
-# 바로 앞 값에서 얼마나 줄었는지 계산
 inertia_df["앞 값에서 줄어든 양"] = (
     inertia_df["중심에서 떨어진 거리 제곱합"].shift(1)
     - inertia_df["중심에서 떨어진 거리 제곱합"]
@@ -449,7 +548,6 @@ fig_elbow.add_trace(
     )
 )
 
-# 현재 선택한 묶음 수 위치에 세로선
 fig_elbow.add_vline(
     x=cluster_count,
     line_width=2,
@@ -485,7 +583,6 @@ display_inertia["앞 값에서 줄어든 양"] = (
     display_inertia["앞 값에서 줄어든 양"].round(2)
 )
 
-# 첫 줄은 비교 대상이 없으므로 빈칸
 display_inertia["앞 값에서 줄어든 양"] = (
     display_inertia["앞 값에서 줄어든 양"]
     .apply(lambda x: "" if pd.isna(x) else f"{x:,.2f}")
@@ -514,7 +611,8 @@ current_silhouette = silhouette_score(
 st.write(
     f"현재 선택한 **{cluster_count}개 묶음의 실루엣 점수는 "
     f"{current_silhouette:.3f}**입니다. "
-    "실루엣 점수는 -1에서 1 사이이며, 1에 가까울수록 묶음이 더 뚜렷하게 나뉜다는 뜻입니다."
+    "실루엣 점수는 -1에서 1 사이이며, "
+    "1에 가까울수록 묶음이 더 뚜렷하게 나뉜다는 뜻입니다."
 )
 
 
