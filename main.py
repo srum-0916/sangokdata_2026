@@ -1,120 +1,174 @@
-"""급식 규칙 찾기: 학교 중식 장바구니 연관 규칙 대시보드."""
+"""뇌졸중 예측 실습실 — 1단계: 데이터 소개 화면.
 
-from __future__ import annotations
-
-import re
-from collections import Counter
-from itertools import combinations
+실행: streamlit run main.py
+필요 패키지: streamlit, pandas, plotly, scikit-learn
+"""
 
 import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 
 
-DATA_URL = (
-    "https://raw.githubusercontent.com/teacher188-netizen/2026-datascience/"
-    "refs/heads/main/dorim_meals.csv"
-)
-COLUMNS = ["조건", "결과", "동시", "지지도", "신뢰도", "향상도"]
-SORT_OPTIONS = {
-    "향상도 높은 순": ["향상도", "신뢰도", "동시"],
-    "신뢰도 높은 순": ["신뢰도", "동시", "향상도"],
-    "동시 등장 많은 순": ["동시", "신뢰도", "향상도"],
-}
+DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/stroke.csv"
+EXPECTED_COLUMNS = [
+    "id",
+    "gender",
+    "age",
+    "hypertension",
+    "heart_disease",
+    "ever_married",
+    "work_type",
+    "Residence_type",
+    "avg_glucose_level",
+    "bmi",
+    "smoking_status",
+    "stroke",
+]
+
 
 st.set_page_config(
-    page_title="급식 규칙 찾기 | MEAL LAB",
-    page_icon="🍱",
+    page_title="뇌졸중 예측 실습실",
+    page_icon="🧠",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
+
 
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
-    html, body, [class*="css"], [data-testid="stApp"] {
-        font-family: 'DM Sans', 'Noto Sans KR', sans-serif;
-    }
-    [data-testid="stAppViewContainer"] {
-        background: radial-gradient(circle at 92% 2%, #e9eefe 0, transparent 28%),
-                    linear-gradient(180deg, #f7f9fd 0%, #f1f5fb 100%);
-    }
-    [data-testid="stHeader"] {background: transparent;}
-    [data-testid="stSidebar"] {
-        background: #ffffff;
-        border-right: 1px solid #e7ecf6;
-    }
-    [data-testid="stSidebar"] .block-container {padding-top: 2rem;}
-    .block-container {padding-top: 2.0rem; padding-bottom: 3rem; max-width: 1400px;}
-    h1, h2, h3 {letter-spacing: -.045em;}
-    div[data-testid="stVerticalBlock"] {gap: .75rem;}
-    .hero {
-        background: linear-gradient(112deg, #151f46 0%, #293a89 55%, #6654d5 100%);
+      /* 전체 화면과 글꼴 */
+      .stApp {
+        background: #f6f8fc;
+        color: #192b42;
+      }
+      .block-container {
+        max-width: 1190px;
+        padding-top: 2.1rem;
+        padding-bottom: 4rem;
+      }
+      html, body, [class*="css"], [data-testid="stAppViewContainer"] {
+        font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+      }
+      #MainMenu, footer {visibility: hidden;}
+
+      /* 머리말 */
+      .hero {
+        background: linear-gradient(112deg, #16304f 0%, #14556d 58%, #137c89 100%);
+        padding: 2.25rem 2.4rem;
+        border-radius: 24px;
         color: white;
-        padding: 35px 40px 38px;
-        border-radius: 25px;
+        box-shadow: 0 12px 30px rgba(18, 55, 78, .12);
+        margin-bottom: 1.65rem;
+      }
+      .hero .eyebrow {
+        display: inline-block;
+        font-size: .75rem;
+        font-weight: 700;
+        letter-spacing: .15em;
+        color: #a4f3ec;
+        margin-bottom: .7rem;
+      }
+      .hero h1 {
+        font-size: clamp(1.75rem, 3vw, 2.5rem);
+        letter-spacing: -.055em;
+        font-weight: 850;
+        margin: 0 0 .8rem 0;
+        line-height: 1.25;
+        color: #ffffff !important;
+      }
+      .hero p {
+        max-width: 750px;
+        color: #d7e9f0;
+        margin: 0;
+        line-height: 1.85;
+        font-size: .99rem;
+      }
+      .section-kicker {
+        color: #138e96;
+        font-weight: 800;
+        font-size: .74rem;
+        letter-spacing: .17em;
+        padding-top: .4rem;
+      }
+      .section-heading {
+        color: #1e3149;
+        font-weight: 800;
+        font-size: 1.5rem;
+        letter-spacing: -.04em;
+        margin: .15rem 0 .55rem;
+      }
+      .section-description {
+        color: #62758b;
+        font-size: .92rem;
+        margin: 0 0 .9rem;
+        line-height: 1.7;
+      }
+      /* 메트릭 카드 */
+      .metric-card {
+        background: #ffffff;
+        border: 1px solid #e3eaf1;
+        border-radius: 18px;
+        padding: 1.35rem 1.25rem 1.25rem;
+        min-height: 146px;
+        box-shadow: 0 5px 19px rgba(35, 66, 95, .045);
         position: relative;
         overflow: hidden;
-        box-shadow: 0 16px 35px rgba(43, 64, 145, .15);
-        margin-bottom: 16px;
-    }
-    .hero:after {
-        content: ''; position: absolute; width: 290px; height: 290px;
-        right: -90px; top: -160px; border: 57px solid rgba(255,255,255,.09);
-        border-radius: 50%; pointer-events: none;
-    }
-    .eyebrow {font-size: 12px; font-weight: 800; letter-spacing: .2em;
-              color: #c3d2ff; margin-bottom: 13px;}
-    .hero-title {font-size: clamp(30px, 3.3vw, 48px); font-weight: 900;
-                 letter-spacing: -.055em; line-height: 1.25; margin-bottom: 10px;}
-    .hero-sub {color: #e4e9ff; font-size: 15px; line-height: 1.85; max-width: 790px;}
-    .stat-card {
-        padding: 19px 22px 18px;
-        background: white; border: 1px solid #e6ebf6;
-        border-radius: 18px;
-        box-shadow: 0 7px 25px rgba(33, 53, 105, .045);
-        min-height: 117px;
-    }
-    .stat-label {font-size: 13px; font-weight: 700; color: #75829c;}
-    .stat-value {font-size: clamp(27px, 2.7vw, 38px); font-weight: 900;
-                 color: #1d2855; letter-spacing: -.04em; margin-top: 5px;}
-    .stat-unit {font-size: 14px; font-weight: 700; color: #8b97ae; margin-left: 5px;}
-    .section-title {font-weight: 900; font-size: 22px; color: #1b2852;
-                    letter-spacing: -.045em; margin: 26px 0 4px;}
-    .section-desc {font-size: 13px; color: #71809d; margin-bottom: 8px;}
-    .side-brand {font-weight: 900; font-size: 19px; color: #253575;
-                 letter-spacing: -.04em; margin: 0 0 7px;}
-    .side-caption {font-size: 12px; color: #8190ab; margin: 0 0 17px; line-height: 1.75;}
-    div[data-testid="stDataFrame"] {
-        border: 1px solid #e7ebf5; border-radius: 14px; overflow: hidden;
-        box-shadow: 0 7px 24px rgba(33, 53, 105, .04);
-    }
-    div.stButton > button, div.stDownloadButton > button {
-        border-radius: 11px; font-weight: 750; border: 1px solid #d6dff2;
-    }
-    div.stDownloadButton > button {
-        background: #253a82; color: white; border-color: #253a82;
-    }
-    div.stDownloadButton > button:hover {
-        background: #3b50a8; color: white; border-color: #3b50a8;
-    }
-    div[data-testid="stPlotlyChart"] {
-        border: 1px solid #e7ebf5; border-radius: 17px;
-        background: #fff; overflow: hidden;
-        box-shadow: 0 7px 24px rgba(33, 53, 105, .04);
-    }
-    .help-note {background: #edf2fe; border: 1px solid #dfe8ff;
-                border-radius: 13px; color: #45608e; padding: 13px 17px;
-                font-size: 13px; line-height: 1.8; margin-top: 13px;}
-    @media(max-width: 720px) {
-        .hero {padding: 26px 22px; border-radius: 18px;}
-        .hero-sub {font-size: 13px;}
-        .stat-card {padding: 15px 12px; min-height: 98px;}
-        .stat-label {font-size: 11px;}
-        .stat-value {font-size: 25px;}
-        .stat-unit {font-size: 11px;}
-    }
+        margin-bottom: .4rem;
+      }
+      .metric-card:before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: var(--accent, #14b8a6);
+      }
+      .metric-title {
+        color: #687b91;
+        font-size: .85rem;
+        font-weight: 700;
+        margin-bottom: .55rem;
+      }
+      .metric-value {
+        color: #20344e;
+        font-size: clamp(1.55rem, 2.3vw, 2.15rem);
+        font-weight: 800;
+        line-height: 1.2;
+        letter-spacing: -.04em;
+      }
+      .metric-foot {
+        color: #8191a4;
+        font-size: .75rem;
+        margin-top: .6rem;
+      }
+      /* 데이터 표 및 버튼 */
+      div[data-testid="stDataFrame"], div[data-testid="stDataEditor"] {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #e3eaf1;
+        background: #fff;
+      }
+      div[data-testid="stDownloadButton"] button {
+        border-radius: 12px;
+        border-color: #c8e4e4;
+        color: #137b82;
+        font-weight: 700;
+        background: #fff;
+      }
+      div[data-testid="stDownloadButton"] button:hover {
+        background: #edfbfa;
+        border-color: #5dbbbb;
+      }
+      div[data-testid="stTextArea"] textarea {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #dbe6ef;
+      }
+      hr {border-color: #e4eaf1 !important;}
+      @media (max-width: 760px) {
+        .block-container { padding-top: 1.1rem; }
+        .hero { padding: 1.7rem 1.45rem; border-radius: 18px; }
+        .metric-card { min-height: 128px; }
+      }
     </style>
     """,
     unsafe_allow_html=True,
@@ -122,400 +176,172 @@ st.markdown(
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def load_meals() -> pd.DataFrame:
-    """원본 CSV를 가져와 중식만 골라 날짜당 1개의 장바구니로 정리한다."""
-    raw = pd.read_csv(DATA_URL, encoding="utf-8-sig", dtype=str, keep_default_na=False)
-    raw.columns = raw.columns.str.strip().str.replace("\ufeff", "", regex=False)
-    missing = set(("날짜", "식사", "메뉴")) - set(raw.columns)
-    if missing:
-        raise ValueError(f"CSV에 필요한 열이 없습니다: {', '.join(sorted(missing))}")
-
-    raw = raw.loc[raw["식사"].str.strip().eq("중식")].copy()
-    date_text = raw["날짜"].str.strip().str.replace(r"\.0$", "", regex=True)
-    raw["날짜"] = pd.to_datetime(date_text, format="%Y%m%d", errors="coerce")
-    raw = raw.dropna(subset=["날짜"])
-
-    # 같은 날짜의 행이 두 개 이상 있어도 장바구니는 하루에 정확히 하나.
-    meals = (
-        raw.groupby("날짜", as_index=False)["메뉴"]
-        .agg(lambda values: " | ".join(values))
-        .sort_values("날짜")
-        .reset_index(drop=True)
-    )
-    meals["메뉴목록"] = meals["메뉴"].map(parse_menu_items)
-    meals = meals.loc[meals["메뉴목록"].map(bool)].reset_index(drop=True)
-    return meals
+def load_data():
+    """원본 CSV를 UTF-8로 읽고 1시간 동안 캐시한다."""
+    return pd.read_csv(DATA_URL, encoding="utf-8")
 
 
-def clean_name(name: str) -> str:
-    """괄호(중첩 괄호 포함) 및 그 내부 설명을 완전히 제거한다."""
-    name = str(name)
-    # 일반 소괄호, 전각 소괄호, 대괄호, 전각 대괄호도 제거.
-    pattern = r"\([^()]*\)|（[^（）]*）|\[[^\[\]]*\]|【[^【】]*】"
-    previous = None
-    while name != previous:
-        previous = name
-        name = re.sub(pattern, "", name)
-    return re.sub(r"\s+", " ", name).strip()
+def value_kind(series, column):
+    """숫자 자료는 형태를, 범주 자료는 실제 값의 종류를 소개한다."""
+    if column == "id":
+        return "식별번호 (숫자)"
+
+    values = series.dropna()
+    distinct_count = values.nunique()
+
+    if column in {"hypertension", "heart_disease", "stroke"}:
+        return "0 / 1"
+
+    if pd.api.types.is_numeric_dtype(series):
+        return f"숫자형 · 고유 값 {distinct_count:,}개"
+
+    distinct_values = [str(value) for value in values.drop_duplicates().tolist()]
+    if len(distinct_values) <= 8:
+        return " / ".join(distinct_values)
+    return f"범주형 · {len(distinct_values)}종"
 
 
-def parse_menu_items(text: str) -> list[str]:
-    # 하루에 동일한 이름의 음식이 중복되어도 한 번만 센다.
-    return sorted({item for chunk in str(text).split("|") if (item := clean_name(chunk))})
+def section(kicker, title, description):
+    st.markdown(f'<div class="section-kicker">{kicker}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-heading">{title}</div>', unsafe_allow_html=True)
+    if description:
+        st.markdown(f'<div class="section-description">{description}</div>', unsafe_allow_html=True)
 
 
-def find_rules(baskets: list[list[str]]) -> tuple[pd.DataFrame, Counter, Counter]:
-    """두 방향 A→B, B→A의 지지도/신뢰도/향상도를 계산한다.
-
-    지지도(%) = P(A ∩ B) × 100
-    신뢰도(%) = P(B | A) × 100
-    향상도     = P(B | A) / P(B)
-    """
-    n_days = len(baskets)
-    singles: Counter = Counter()
-    pairs: Counter = Counter()
-
-    for basket in baskets:
-        unique = sorted(set(basket))
-        singles.update(unique)
-        pairs.update(combinations(unique, 2))
-
-    rows = []
-    for (a, b), both in pairs.items():
-        for condition, result in ((a, b), (b, a)):
-            rows.append(
-                {
-                    "조건": condition,
-                    "결과": result,
-                    "동시": both,
-                    "지지도": both / n_days * 100,
-                    "신뢰도": both / singles[condition] * 100,
-                    "향상도": (both * n_days) / (singles[condition] * singles[result]),
-                }
-            )
-
-    return pd.DataFrame(rows, columns=COLUMNS), singles, pairs
-
-
-def section(title: str, description: str) -> None:
+def metric_card(title, value, foot, accent):
     st.markdown(
-        f'<div class="section-title">{title}</div>'
-        f'<div class="section-desc">{description}</div>',
+        f"""
+        <div class="metric-card" style="--accent: {accent}">
+            <div class="metric-title">{title}</div>
+            <div class="metric-value">{value}</div>
+            <div class="metric-foot">{foot}</div>
+        </div>
+        """,
         unsafe_allow_html=True,
-    )
-
-
-def draw_lift_chart(rules: pd.DataFrame) -> None:
-    top = rules.sort_values(
-        by=["향상도", "신뢰도", "동시", "조건", "결과"],
-        ascending=[False, False, False, True, True],
-        kind="stable",
-    ).head(10).iloc[::-1].copy()
-    top["이름"] = top["조건"] + " → " + top["결과"]
-    hover_data = top[["동시", "지지도", "신뢰도"]].to_numpy()
-
-    fig = go.Figure(
-        go.Bar(
-            x=top["향상도"],
-            y=top["이름"],
-            orientation="h",
-            customdata=hover_data,
-            text=top["향상도"].map(lambda v: f"{v:.2f}배"),
-            textposition="outside",
-            cliponaxis=False,
-            marker={
-                "color": top["향상도"],
-                "colorscale": [[0, "#9db9f6"], [1, "#6050c6"]],
-                "showscale": False,
-                "line": {"width": 0},
-            },
-            hovertemplate=(
-                "<b>%{y}</b><br>향상도 <b>%{x:.2f}배</b>"
-                "<br>동시 등장 %{customdata[0]}일"
-                "<br>지지도 %{customdata[1]:.2f}%"
-                "<br>신뢰도 %{customdata[2]:.2f}%<extra></extra>"
-            ),
-        )
-    )
-    fig.update_layout(
-        template="plotly_white",
-        height=max(385, 56 * len(top) + 95),
-        margin=dict(l=24, r=85, t=30, b=45),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Noto Sans KR, DM Sans, sans-serif", color="#415078", size=12),
-        xaxis=dict(
-            title="향상도 (배)",
-            gridcolor="#edf0f7",
-            zeroline=False,
-            rangemode="tozero",
-        ),
-        yaxis=dict(title=None, automargin=True, tickfont=dict(size=11)),
-        bargap=0.32,
-        showlegend=False,
-        hoverlabel=dict(bgcolor="white", font=dict(color="#25356b")),
-    )
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-        config={"displaylogo": False, "toImageButtonOptions": {"filename": "급식_향상도_TOP10"}},
     )
 
 
 st.markdown(
     """
     <div class="hero">
-        <div class="eyebrow">MEAL LAB · ASSOCIATION ANALYTICS</div>
-        <div class="hero-title">급식 규칙 찾기 🍱</div>
-        <div class="hero-sub">
-            함께 등장한 메뉴 사이의 숨은 관계를 찾아보세요.<br>
-            하루 식단을 하나의 장바구니로 분석하고, 지지도·신뢰도·향상도를 한눈에 비교합니다.
-        </div>
+      <div class="eyebrow">🧠 STROKE PREDICTION LAB · 01 DATA OVERVIEW</div>
+      <h1>뇌졸중 예측 실습실</h1>
+      <p>
+        데이터를 먼저 이해하는 것부터 시작해요. 사람들의 나이, 건강 정보, 생활 습관과
+        뇌졸중 발생 여부가 담긴 데이터를 살펴보고, 열의 의미와 비어 있는 값을 확인해 봅시다.
+      </p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-try:
-    meals = load_meals()
-except Exception as exc:
-    st.error("급식 데이터를 불러오지 못했어요. CSV 주소와 네트워크 연결을 확인해 주세요.")
-    st.code(str(exc))
-    if st.button("데이터 다시 불러오기"):
-        load_meals.clear()
-        st.rerun()
+with st.spinner("데이터를 불러오는 중이에요..."):
+    try:
+        df = load_data()
+    except Exception as error:
+        st.error("CSV 데이터를 불러오지 못했어요. 인터넷 연결과 데이터 주소를 확인해 주세요.")
+        with st.expander("오류 자세히 보기"):
+            st.code(str(error))
+        st.stop()
+
+missing_columns = [name for name in EXPECTED_COLUMNS if name not in df.columns]
+if missing_columns:
+    st.error("데이터의 열 구성이 예상과 달라요: " + ", ".join(missing_columns))
     st.stop()
 
-if meals.empty:
-    st.warning("CSV에서 날짜와 메뉴가 있는 중식 데이터를 찾지 못했어요.")
-    st.stop()
+person_count = len(df)
+column_count = len(df.columns)
+stroke_count = int(pd.to_numeric(df["stroke"], errors="coerce").eq(1).sum())
+stroke_ratio = (stroke_count / person_count * 100) if person_count else 0.0
 
-with st.sidebar:
-    st.markdown('<div class="side-brand">⚙️ 분석 설정</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="side-caption">선택하는 즉시 규칙 표와 그래프가 함께 바뀝니다.</div>',
-        unsafe_allow_html=True,
-    )
-    min_day, max_day = meals["날짜"].min().date(), meals["날짜"].max().date()
-    selected_dates = st.date_input(
-        "분석 기간",
-        value=(min_day, max_day),
-        min_value=min_day,
-        max_value=max_day,
-        format="YYYY.MM.DD",
-        help="이 기간에 해당하는 중식 날짜만 계산합니다.",
-    )
-    if isinstance(selected_dates, (tuple, list)) and len(selected_dates) == 2:
-        start_date, end_date = selected_dates
-    else:
-        # 날짜 범위 선택 중 한 날짜만 눌린 임시 상태에서는 전체 기간 유지.
-        start_date, end_date = min_day, max_day
+section("01 / DATA SNAPSHOT", "데이터 한눈에 보기", "전체 데이터를 기준으로 자동 계산한 숫자입니다.")
+col1, col2, col3, col4 = st.columns(4, gap="medium")
+with col1:
+    metric_card("👥 전체 사람 수", f"{person_count:,}명", "CSV의 전체 행 수", "#2cb8a7")
+with col2:
+    metric_card("▦ 열 개수", f"{column_count:,}개", "데이터 항목의 수", "#4c8dd9")
+with col3:
+    metric_card("🧠 뇌졸중 발생", f"{stroke_count:,}명", "stroke = 1인 사람", "#eb9673")
+with col4:
+    metric_card("◉ 발생 비율", f"{stroke_ratio:.2f}%", "전체 사람 수 대비", "#a68be8")
 
-period = meals.loc[
-    meals["날짜"].dt.date.between(start_date, end_date)
-].copy()
-
-if period.empty:
-    st.warning("선택한 기간에 급식 데이터가 없어요. 왼쪽에서 기간을 바꿔 주세요.")
-    st.stop()
-
-baskets = period["메뉴목록"].tolist()
-rules, singles, pairs = find_rules(baskets)
-menu_options = ["전체 메뉴"] + sorted(singles)
-
-with st.sidebar:
-    st.divider()
-    st.markdown("**규칙 필터**")
-    chosen_menu = st.selectbox(
-        "메뉴 선택",
-        menu_options,
-        help="조건이나 결과에 해당 메뉴가 등장하는 모든 규칙을 찾습니다.",
-    )
-    menu_role = st.radio(
-        "메뉴가 등장하는 위치",
-        ["조건 또는 결과", "조건에만", "결과에만"],
-        horizontal=False,
-        disabled=(chosen_menu == "전체 메뉴"),
-    )
-    sort_label = st.selectbox("정렬 기준", list(SORT_OPTIONS))
-    min_cooccurrence = st.slider(
-        "최소 동시 일수",
-        min_value=1,
-        max_value=10,
-        value=1,
-        step=1,
-        help="선택한 일수 이상 함께 나온 규칙만 표와 그래프에 표시합니다.",
-    )
-    min_confidence = st.slider(
-        "최소 신뢰도 (%)", min_value=0, max_value=100, value=0, step=5
-    )
-    search_text = st.text_input(
-        "메뉴 이름 추가 검색", placeholder="예: 김치, 치킨, 국"
-    ).strip()
-    st.divider()
-    if st.button("🔄 CSV 최신 데이터 새로고침", use_container_width=True):
-        load_meals.clear()
-        st.rerun()
-    st.caption("데이터 출처: GitHub의 dorim_meals.csv · 중식만 분석 · 1시간 캐시")
-
-filtered = rules.copy()
-if chosen_menu != "전체 메뉴":
-    if menu_role == "조건에만":
-        filtered = filtered.loc[filtered["조건"].eq(chosen_menu)]
-    elif menu_role == "결과에만":
-        filtered = filtered.loc[filtered["결과"].eq(chosen_menu)]
-    else:
-        filtered = filtered.loc[
-            filtered["조건"].eq(chosen_menu) | filtered["결과"].eq(chosen_menu)
-        ]
-if search_text:
-    filtered = filtered.loc[
-        filtered["조건"].str.contains(search_text, case=False, regex=False)
-        | filtered["결과"].str.contains(search_text, case=False, regex=False)
-    ]
-filtered = filtered.loc[
-    (filtered["동시"] >= min_cooccurrence)
-    & (filtered["신뢰도"] >= min_confidence)
-]
-filtered = filtered.sort_values(
-    SORT_OPTIONS[sort_label] + ["조건", "결과"],
-    ascending=[False, False, False, True, True],
-    kind="stable",
-).reset_index(drop=True)
-
-st.caption(
-    f"📅 분석 범위  {period['날짜'].min():%Y.%m.%d} — "
-    f"{period['날짜'].max():%Y.%m.%d}  |  조건을 바꾸면 결과가 자동으로 갱신됩니다."
+st.write("")
+st.divider()
+section(
+    "02 / COLUMN DICTIONARY",
+    "열 살펴보기",
+    "<b>‘우리말 뜻’ 칸만 직접 수정</b>할 수 있어요. 교재를 보고 채워 넣으세요. "
+    "‘값의 종류’는 숫자형 여부 또는 실제 범주값을 보여 줍니다.",
 )
 
-c1, c2, c3 = st.columns(3, gap="medium")
-for target, label, value, unit in (
-    (c1, "분석한 급식 일수", len(baskets), "일"),
-    (c2, "등장한 메뉴 종류", len(singles), "종"),
-    (c3, "함께 나온 메뉴 쌍", len(pairs), "쌍"),
-):
-    with target:
-        st.markdown(
-            '<div class="stat-card">'
-            f'<div class="stat-label">{label}</div>'
-            f'<div class="stat-value">{value:,}<span class="stat-unit">{unit}</span></div>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
+# 작성한 뜻은 Streamlit 세션 동안 보관된다. 다른 열은 수정 불가.
+if "korean_meanings" not in st.session_state:
+    st.session_state.korean_meanings = {name: "" for name in df.columns}
 
-left, right = st.columns([3, 1], vertical_alignment="center")
-with left:
-    section("📈 향상도 TOP 10", "현재 메뉴·횟수·신뢰도 필터에 해당하는 규칙 중 향상도가 높은 10개")
-with right:
-    st.caption(f"표시 중인 규칙: **{len(filtered):,}개** / 전체 {len(rules):,}개")
-
-if filtered.empty:
-    st.info("조건에 맞는 규칙이 없어요. 메뉴나 최소 동시 횟수·신뢰도를 완화해 보세요.")
-else:
-    draw_lift_chart(filtered)
-
-section("📋 메뉴 연관 규칙", "각 메뉴 쌍을 A → B와 B → A 두 방향으로 계산했습니다. 표의 열 제목을 눌러 정렬할 수도 있어요.")
-st.caption(
-    f"최소 동시 일수 **{min_cooccurrence}일** 적용 · "
-    f"현재 표에 남은 규칙 **{len(filtered):,}개** "
-    f"(전체 {len(rules):,}개 중)"
+schema = pd.DataFrame(
+    {
+        "열 이름": df.columns,
+        "우리말 뜻": [st.session_state.korean_meanings.get(name, "") for name in df.columns],
+        "값의 종류": [value_kind(df[name], name) for name in df.columns],
+        "빈 값 개수": [int(df[name].isna().sum()) for name in df.columns],
+    }
 )
 
-if not filtered.empty:
-    st.dataframe(
-        filtered,
-        use_container_width=True,
-        hide_index=True,
-        height=min(690, max(195, 43 * len(filtered) + 40)),
-        column_config={
-            "조건": st.column_config.TextColumn("조건", width="medium"),
-            "결과": st.column_config.TextColumn("결과", width="medium"),
-            "동시": st.column_config.NumberColumn("동시", format="%d", help="두 메뉴가 함께 나온 날짜 수"),
-            "지지도": st.column_config.NumberColumn("지지도", format="%.2f%%", help="동시 등장 일수 ÷ 전체 급식 일수"),
-            "신뢰도": st.column_config.NumberColumn("신뢰도", format="%.2f%%", help="동시 등장 일수 ÷ 조건 메뉴 등장 일수"),
-            "향상도": st.column_config.NumberColumn("향상도", format="%.2f", help="신뢰도 ÷ 결과 메뉴 등장 비율"),
-        },
-    )
-else:
-    st.caption("표시할 규칙이 없습니다.")
+edited_schema = st.data_editor(
+    schema,
+    hide_index=True,
+    use_container_width=True,
+    num_rows="fixed",
+    disabled=["열 이름", "값의 종류", "빈 값 개수"],
+    column_config={
+        "열 이름": st.column_config.TextColumn("열 이름", width="medium"),
+        "우리말 뜻": st.column_config.TextColumn(
+            "우리말 뜻 ✏️", help="교재를 보고 직접 입력하는 칸입니다.", width="medium"
+        ),
+        "값의 종류": st.column_config.TextColumn("값의 종류", width="large"),
+        "빈 값 개수": st.column_config.NumberColumn("빈 값 개수", format="%d", width="small"),
+    },
+    key="stroke_column_dictionary_editor",
+)
+
+# 사용자가 작성한 내용을 다음 재실행에서도 기본값으로 사용한다.
+st.session_state.korean_meanings = {
+    str(name): "" if pd.isna(meaning) else str(meaning)
+    for name, meaning in zip(edited_schema["열 이름"], edited_schema["우리말 뜻"])
+}
 
 st.download_button(
-    "⬇️ 현재 규칙 CSV 다운로드",
-    data=filtered.to_csv(index=False).encode("utf-8-sig"),
-    file_name="급식_연관규칙.csv",
+    label="📥 작성한 열 설명표 CSV로 저장",
+    data=edited_schema.rename(columns={"우리말 뜻 ✏️": "우리말 뜻"}).to_csv(index=False).encode("utf-8-sig"),
+    file_name="stroke_column_dictionary.csv",
     mime="text/csv",
-    disabled=filtered.empty,
+    use_container_width=False,
 )
 
+missing_total = int(df.isna().sum().sum())
+if missing_total > 0:
+    st.info(f"💡 전체 데이터에 빈 값이 {missing_total:,}개 있어요. 분석 전 결측치를 확인해야 해요.")
+
+st.write("")
+st.divider()
 section(
-    "🚫 함께 나온 적 없는 짝",
-    "선택한 메뉴와 같은 날 한 번도 등장하지 않은 메뉴 중, 분석 기간에 10일 이상 나온 메뉴만 보여 줍니다. "
-    "이 분석은 위쪽 연관 규칙 필터의 영향을 받지 않습니다.",
+    "03 / RAW DATA PREVIEW",
+    "원본 데이터 미리 보기",
+    "원본 CSV에서 처음 다섯 행을 그대로 가져왔어요. 비어 있는 셀은 채우거나 삭제하지 않았습니다.",
 )
+st.dataframe(df.head(5), hide_index=True, use_container_width=True)
 
-nonoverlap_menu = st.selectbox(
-    "함께 나온 적 없는 짝을 찾을 기준 메뉴",
-    options=sorted(singles),
-    key="nonoverlap_reference_menu",
-    help="위쪽 '메뉴 선택'과 별개로 작동하며, 현재 분석 기간의 전체 중식 날짜를 기준으로 계산합니다.",
+st.write("")
+st.divider()
+section(
+    "04 / SOURCE NOTE",
+    "데이터 출처 기록하기",
+    "아래 칸은 비워 두었어요. 교재에 나온 데이터 출처를 직접 적어 보세요.",
 )
-
-# pairs에는 한 번이라도 함께 나온 두 메뉴만 (이름 오름차순 튜플로) 저장된다.
-# 이 목록에 없다면 두 메뉴가 겹쳐 나온 날은 정확히 0일이다.
-nonoverlap_rows = [
-    {"메뉴": menu, "나온 날": days}
-    for menu, days in singles.items()
-    if menu != nonoverlap_menu
-    and days >= 10
-    and tuple(sorted((nonoverlap_menu, menu))) not in pairs
-]
-nonoverlap_rows.sort(key=lambda item: (-item["나온 날"], item["메뉴"]))
-nonoverlap_df = pd.DataFrame(nonoverlap_rows, columns=["메뉴", "나온 날"])
-
-nonoverlap_col1, nonoverlap_col2 = st.columns(2, gap="medium")
-with nonoverlap_col1:
-    st.metric(f"'{nonoverlap_menu}' 등장 일수", f"{singles[nonoverlap_menu]:,}일")
-with nonoverlap_col2:
-    st.metric("함께 나온 적 없는 메뉴 (10일 이상 등장)", f"{len(nonoverlap_df):,}종")
-
-if nonoverlap_df.empty:
-    st.info("이 메뉴와 한 번도 함께 나오지 않으면서 10일 이상 등장한 다른 메뉴는 없습니다.")
-else:
-    st.dataframe(
-        nonoverlap_df,
-        use_container_width=True,
-        hide_index=True,
-        height=min(520, max(140, 43 * len(nonoverlap_df) + 40)),
-        column_config={
-            "메뉴": st.column_config.TextColumn("메뉴", width="large"),
-            "나온 날": st.column_config.NumberColumn(
-                "나온 날", format="%d일", help="분석 기간에 해당 메뉴가 등장한 날짜 수"
-            ),
-        },
-    )
-
-st.markdown(
-    """
-    <div class="help-note">
-        <b>📌 지표 읽는 법</b><br>
-        <b>동시</b> = 두 메뉴가 함께 나온 날 수 &nbsp;·&nbsp;
-        <b>지지도</b> = 전체 급식 중 두 메뉴가 함께 나온 비율 &nbsp;·&nbsp;
-        <b>신뢰도</b> = 조건 메뉴가 나온 날 결과 메뉴도 나온 비율 &nbsp;·&nbsp;
-        <b>향상도</b> = 두 메뉴가 무관하다고 가정할 때보다 얼마나 자주 함께 나왔는지<br>
-        향상도 1 초과는 예상보다 함께 자주 나왔다는 뜻입니다. 단, 등장 횟수가 1~2회인 희귀 규칙은 과대평가될 수 있으니
-        <b>동시 등장 횟수</b>도 함께 확인해 보세요. 연관성이 원인과 결과를 뜻하지는 않습니다.
-    </div>
-    """,
-    unsafe_allow_html=True,
+st.text_area(
+    "데이터 출처",
+    key="stroke_source_note",
+    placeholder="교재에 나온 데이터 출처를 여기에 입력하세요.",
+    height=115,
+    label_visibility="collapsed",
 )
-
-with st.expander("🔎 날짜별로 원본 식단 확인하기"):
-    picked = st.selectbox(
-        "급식 날짜",
-        options=period["날짜"].dt.date.tolist(),
-        format_func=lambda day: day.strftime("%Y년 %m월 %d일"),
-    )
-    one_day = period.loc[period["날짜"].dt.date == picked].iloc[0]
-    st.markdown("**분석에 실제로 사용한 메뉴**")
-    st.write(" · ".join(one_day["메뉴목록"]))
-    st.caption("괄호 속 부가 정보 제거 전 원본 메뉴: " + one_day["메뉴"])
