@@ -338,13 +338,13 @@ with st.sidebar:
         disabled=(chosen_menu == "전체 메뉴"),
     )
     sort_label = st.selectbox("정렬 기준", list(SORT_OPTIONS))
-    min_cooccurrence = st.number_input(
-        "최소 동시 등장 횟수",
+    min_cooccurrence = st.slider(
+        "최소 동시 일수",
         min_value=1,
-        max_value=max(1, max(pairs.values(), default=1)),
+        max_value=10,
         value=1,
         step=1,
-        help="기본값 1은 한 번이라도 같이 나온 모든 메뉴 쌍을 보여 줍니다.",
+        help="선택한 일수 이상 함께 나온 규칙만 표와 그래프에 표시합니다.",
     )
     min_confidence = st.slider(
         "최소 신뢰도 (%)", min_value=0, max_value=100, value=0, step=5
@@ -415,6 +415,11 @@ else:
     draw_lift_chart(filtered)
 
 section("📋 메뉴 연관 규칙", "각 메뉴 쌍을 A → B와 B → A 두 방향으로 계산했습니다. 표의 열 제목을 눌러 정렬할 수도 있어요.")
+st.caption(
+    f"최소 동시 일수 **{min_cooccurrence}일** 적용 · "
+    f"현재 표에 남은 규칙 **{len(filtered):,}개** "
+    f"(전체 {len(rules):,}개 중)"
+)
 
 if not filtered.empty:
     st.dataframe(
@@ -441,6 +446,53 @@ st.download_button(
     mime="text/csv",
     disabled=filtered.empty,
 )
+
+section(
+    "🚫 함께 나온 적 없는 짝",
+    "선택한 메뉴와 같은 날 한 번도 등장하지 않은 메뉴 중, 분석 기간에 10일 이상 나온 메뉴만 보여 줍니다. "
+    "이 분석은 위쪽 연관 규칙 필터의 영향을 받지 않습니다.",
+)
+
+nonoverlap_menu = st.selectbox(
+    "함께 나온 적 없는 짝을 찾을 기준 메뉴",
+    options=sorted(singles),
+    key="nonoverlap_reference_menu",
+    help="위쪽 '메뉴 선택'과 별개로 작동하며, 현재 분석 기간의 전체 중식 날짜를 기준으로 계산합니다.",
+)
+
+# pairs에는 한 번이라도 함께 나온 두 메뉴만 (이름 오름차순 튜플로) 저장된다.
+# 이 목록에 없다면 두 메뉴가 겹쳐 나온 날은 정확히 0일이다.
+nonoverlap_rows = [
+    {"메뉴": menu, "나온 날": days}
+    for menu, days in singles.items()
+    if menu != nonoverlap_menu
+    and days >= 10
+    and tuple(sorted((nonoverlap_menu, menu))) not in pairs
+]
+nonoverlap_rows.sort(key=lambda item: (-item["나온 날"], item["메뉴"]))
+nonoverlap_df = pd.DataFrame(nonoverlap_rows, columns=["메뉴", "나온 날"])
+
+nonoverlap_col1, nonoverlap_col2 = st.columns(2, gap="medium")
+with nonoverlap_col1:
+    st.metric(f"'{nonoverlap_menu}' 등장 일수", f"{singles[nonoverlap_menu]:,}일")
+with nonoverlap_col2:
+    st.metric("함께 나온 적 없는 메뉴 (10일 이상 등장)", f"{len(nonoverlap_df):,}종")
+
+if nonoverlap_df.empty:
+    st.info("이 메뉴와 한 번도 함께 나오지 않으면서 10일 이상 등장한 다른 메뉴는 없습니다.")
+else:
+    st.dataframe(
+        nonoverlap_df,
+        use_container_width=True,
+        hide_index=True,
+        height=min(520, max(140, 43 * len(nonoverlap_df) + 40)),
+        column_config={
+            "메뉴": st.column_config.TextColumn("메뉴", width="large"),
+            "나온 날": st.column_config.NumberColumn(
+                "나온 날", format="%d일", help="분석 기간에 해당 메뉴가 등장한 날짜 수"
+            ),
+        },
+    )
 
 st.markdown(
     """
