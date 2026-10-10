@@ -1,951 +1,469 @@
-import math
+"""급식 규칙 찾기: 학교 중식 장바구니 연관 규칙 대시보드."""
+
+from __future__ import annotations
+
+import re
+from collections import Counter
+from itertools import combinations
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import StandardScaler
 
-# ------------------------------------------------------------
-# 기본 설정
-# ------------------------------------------------------------
-APP_TITLE = "영화 유형 나누기"
-DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
+
+DATA_URL = (
+    "https://raw.githubusercontent.com/teacher188-netizen/2026-datascience/"
+    "refs/heads/main/dorim_meals.csv"
+)
+COLUMNS = ["조건", "결과", "동시", "지지도", "신뢰도", "향상도"]
+SORT_OPTIONS = {
+    "향상도 높은 순": ["향상도", "신뢰도", "동시"],
+    "신뢰도 높은 순": ["신뢰도", "동시", "향상도"],
+    "동시 등장 많은 순": ["동시", "신뢰도", "향상도"],
+}
 
 st.set_page_config(
-    page_title=APP_TITLE,
-    page_icon="🎬",
+    page_title="급식 규칙 찾기 | MEAL LAB",
+    page_icon="🍱",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-st.title("🎬 영화 유형 나누기")
-st.caption(
-    "영화의 규모와 흥행 지속성을 나타내는 속성을 골라 "
-    "K-평균으로 영화 유형을 나눠 봅니다."
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+    html, body, [class*="css"], [data-testid="stApp"] {
+        font-family: 'DM Sans', 'Noto Sans KR', sans-serif;
+    }
+    [data-testid="stAppViewContainer"] {
+        background: radial-gradient(circle at 92% 2%, #e9eefe 0, transparent 28%),
+                    linear-gradient(180deg, #f7f9fd 0%, #f1f5fb 100%);
+    }
+    [data-testid="stHeader"] {background: transparent;}
+    [data-testid="stSidebar"] {
+        background: #ffffff;
+        border-right: 1px solid #e7ecf6;
+    }
+    [data-testid="stSidebar"] .block-container {padding-top: 2rem;}
+    .block-container {padding-top: 2.0rem; padding-bottom: 3rem; max-width: 1400px;}
+    h1, h2, h3 {letter-spacing: -.045em;}
+    div[data-testid="stVerticalBlock"] {gap: .75rem;}
+    .hero {
+        background: linear-gradient(112deg, #151f46 0%, #293a89 55%, #6654d5 100%);
+        color: white;
+        padding: 35px 40px 38px;
+        border-radius: 25px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 16px 35px rgba(43, 64, 145, .15);
+        margin-bottom: 16px;
+    }
+    .hero:after {
+        content: ''; position: absolute; width: 290px; height: 290px;
+        right: -90px; top: -160px; border: 57px solid rgba(255,255,255,.09);
+        border-radius: 50%; pointer-events: none;
+    }
+    .eyebrow {font-size: 12px; font-weight: 800; letter-spacing: .2em;
+              color: #c3d2ff; margin-bottom: 13px;}
+    .hero-title {font-size: clamp(30px, 3.3vw, 48px); font-weight: 900;
+                 letter-spacing: -.055em; line-height: 1.25; margin-bottom: 10px;}
+    .hero-sub {color: #e4e9ff; font-size: 15px; line-height: 1.85; max-width: 790px;}
+    .stat-card {
+        padding: 19px 22px 18px;
+        background: white; border: 1px solid #e6ebf6;
+        border-radius: 18px;
+        box-shadow: 0 7px 25px rgba(33, 53, 105, .045);
+        min-height: 117px;
+    }
+    .stat-label {font-size: 13px; font-weight: 700; color: #75829c;}
+    .stat-value {font-size: clamp(27px, 2.7vw, 38px); font-weight: 900;
+                 color: #1d2855; letter-spacing: -.04em; margin-top: 5px;}
+    .stat-unit {font-size: 14px; font-weight: 700; color: #8b97ae; margin-left: 5px;}
+    .section-title {font-weight: 900; font-size: 22px; color: #1b2852;
+                    letter-spacing: -.045em; margin: 26px 0 4px;}
+    .section-desc {font-size: 13px; color: #71809d; margin-bottom: 8px;}
+    .side-brand {font-weight: 900; font-size: 19px; color: #253575;
+                 letter-spacing: -.04em; margin: 0 0 7px;}
+    .side-caption {font-size: 12px; color: #8190ab; margin: 0 0 17px; line-height: 1.75;}
+    div[data-testid="stDataFrame"] {
+        border: 1px solid #e7ebf5; border-radius: 14px; overflow: hidden;
+        box-shadow: 0 7px 24px rgba(33, 53, 105, .04);
+    }
+    div.stButton > button, div.stDownloadButton > button {
+        border-radius: 11px; font-weight: 750; border: 1px solid #d6dff2;
+    }
+    div.stDownloadButton > button {
+        background: #253a82; color: white; border-color: #253a82;
+    }
+    div.stDownloadButton > button:hover {
+        background: #3b50a8; color: white; border-color: #3b50a8;
+    }
+    div[data-testid="stPlotlyChart"] {
+        border: 1px solid #e7ebf5; border-radius: 17px;
+        background: #fff; overflow: hidden;
+        box-shadow: 0 7px 24px rgba(33, 53, 105, .04);
+    }
+    .help-note {background: #edf2fe; border: 1px solid #dfe8ff;
+                border-radius: 13px; color: #45608e; padding: 13px 17px;
+                font-size: 13px; line-height: 1.8; margin-top: 13px;}
+    @media(max-width: 720px) {
+        .hero {padding: 26px 22px; border-radius: 18px;}
+        .hero-sub {font-size: 13px;}
+        .stat-card {padding: 15px 12px; min-height: 98px;}
+        .stat-label {font-size: 11px;}
+        .stat-value {font-size: 25px;}
+        .stat-unit {font-size: 11px;}
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 
-# ------------------------------------------------------------
-# 데이터 불러오기 및 속성 만들기
-# ------------------------------------------------------------
-@st.cache_data
-def load_and_prepare():
-    df = pd.read_csv(DATA_URL, encoding="utf-8")
-
-    required_cols = [
-        "movieCd",
-        "movieNm",
-        "openDt",
-        "genre",
-        "nation",
-        "first_scrn",
-        "first_show",
-        "first_date",
-        "peak",
-        "first_week_audi",
-        "total_audi",
-        "days_in_top10",
-    ]
-
-    missing = [col for col in required_cols if col not in df.columns]
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_meals() -> pd.DataFrame:
+    """원본 CSV를 가져와 중식만 골라 날짜당 1개의 장바구니로 정리한다."""
+    raw = pd.read_csv(DATA_URL, encoding="utf-8-sig", dtype=str, keep_default_na=False)
+    raw.columns = raw.columns.str.strip().str.replace("\ufeff", "", regex=False)
+    missing = set(("날짜", "식사", "메뉴")) - set(raw.columns)
     if missing:
-        raise ValueError(f"필요한 열이 없습니다: {', '.join(missing)}")
+        raise ValueError(f"CSV에 필요한 열이 없습니다: {', '.join(sorted(missing))}")
 
-    total_count = len(df)
+    raw = raw.loc[raw["식사"].str.strip().eq("중식")].copy()
+    date_text = raw["날짜"].str.strip().str.replace(r"\.0$", "", regex=True)
+    raw["날짜"] = pd.to_datetime(date_text, format="%Y%m%d", errors="coerce")
+    raw = raw.dropna(subset=["날짜"])
 
-    for col in [
-        "first_scrn",
-        "first_show",
-        "first_week_audi",
-        "total_audi",
-        "days_in_top10",
-        "peak",
-    ]:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
+    # 같은 날짜의 행이 두 개 이상 있어도 장바구니는 하루에 정확히 하나.
+    meals = (
+        raw.groupby("날짜", as_index=False)["메뉴"]
+        .agg(lambda values: " | ".join(values))
+        .sort_values("날짜")
+        .reset_index(drop=True)
+    )
+    meals["메뉴목록"] = meals["메뉴"].map(parse_menu_items)
+    meals = meals.loc[meals["메뉴목록"].map(bool)].reset_index(drop=True)
+    return meals
 
-    # 기본 네 속성 계산에 필요한 값이 없는 영화 제외
-    valid = df[
-        df["first_scrn"].notna()
-        & df["total_audi"].notna()
-        & df["days_in_top10"].notna()
-        & df["first_week_audi"].notna()
-        & (df["first_week_audi"] != 0)
-        & (df["first_scrn"] > 0)
-        & (df["total_audi"] > 0)
-    ].copy()
 
-    valid["log_first_scrn"] = valid["first_scrn"].map(math.log10)
-    valid["log_total_audi"] = valid["total_audi"].map(math.log10)
+def clean_name(name: str) -> str:
+    """괄호(중첩 괄호 포함) 및 그 내부 설명을 완전히 제거한다."""
+    name = str(name)
+    # 일반 소괄호, 전각 소괄호, 대괄호, 전각 대괄호도 제거.
+    pattern = r"\([^()]*\)|（[^（）]*）|\[[^\[\]]*\]|【[^【】]*】"
+    previous = None
+    while name != previous:
+        previous = name
+        name = re.sub(pattern, "", name)
+    return re.sub(r"\s+", " ", name).strip()
 
-    valid["longrun_index"] = (
-        valid["total_audi"] / valid["first_week_audi"]
-    ).clip(upper=20)
 
-    # 5차원 시각화용 추가 속성
-    valid["log_first_show"] = valid["first_show"].apply(
-        lambda x: math.log10(x) if pd.notna(x) and x > 0 else float("nan")
+def parse_menu_items(text: str) -> list[str]:
+    # 하루에 동일한 이름의 음식이 중복되어도 한 번만 센다.
+    return sorted({item for chunk in str(text).split("|") if (item := clean_name(chunk))})
+
+
+def find_rules(baskets: list[list[str]]) -> tuple[pd.DataFrame, Counter, Counter]:
+    """두 방향 A→B, B→A의 지지도/신뢰도/향상도를 계산한다.
+
+    지지도(%) = P(A ∩ B) × 100
+    신뢰도(%) = P(B | A) × 100
+    향상도     = P(B | A) / P(B)
+    """
+    n_days = len(baskets)
+    singles: Counter = Counter()
+    pairs: Counter = Counter()
+
+    for basket in baskets:
+        unique = sorted(set(basket))
+        singles.update(unique)
+        pairs.update(combinations(unique, 2))
+
+    rows = []
+    for (a, b), both in pairs.items():
+        for condition, result in ((a, b), (b, a)):
+            rows.append(
+                {
+                    "조건": condition,
+                    "결과": result,
+                    "동시": both,
+                    "지지도": both / n_days * 100,
+                    "신뢰도": both / singles[condition] * 100,
+                    "향상도": (both * n_days) / (singles[condition] * singles[result]),
+                }
+            )
+
+    return pd.DataFrame(rows, columns=COLUMNS), singles, pairs
+
+
+def section(title: str, description: str) -> None:
+    st.markdown(
+        f'<div class="section-title">{title}</div>'
+        f'<div class="section-desc">{description}</div>',
+        unsafe_allow_html=True,
     )
 
-    valid["log_first_week_audi"] = valid["first_week_audi"].apply(
-        lambda x: math.log10(x) if pd.notna(x) and x > 0 else float("nan")
+
+def draw_lift_chart(rules: pd.DataFrame) -> None:
+    top = rules.sort_values(
+        by=["향상도", "신뢰도", "동시", "조건", "결과"],
+        ascending=[False, False, False, True, True],
+        kind="stable",
+    ).head(10).iloc[::-1].copy()
+    top["이름"] = top["조건"] + " → " + top["결과"]
+    hover_data = top[["동시", "지지도", "신뢰도"]].to_numpy()
+
+    fig = go.Figure(
+        go.Bar(
+            x=top["향상도"],
+            y=top["이름"],
+            orientation="h",
+            customdata=hover_data,
+            text=top["향상도"].map(lambda v: f"{v:.2f}배"),
+            textposition="outside",
+            cliponaxis=False,
+            marker={
+                "color": top["향상도"],
+                "colorscale": [[0, "#9db9f6"], [1, "#6050c6"]],
+                "showscale": False,
+                "line": {"width": 0},
+            },
+            hovertemplate=(
+                "<b>%{y}</b><br>향상도 <b>%{x:.2f}배</b>"
+                "<br>동시 등장 %{customdata[0]}일"
+                "<br>지지도 %{customdata[1]:.2f}%"
+                "<br>신뢰도 %{customdata[2]:.2f}%<extra></extra>"
+            ),
+        )
+    )
+    fig.update_layout(
+        template="plotly_white",
+        height=max(385, 56 * len(top) + 95),
+        margin=dict(l=24, r=85, t=30, b=45),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Noto Sans KR, DM Sans, sans-serif", color="#415078", size=12),
+        xaxis=dict(
+            title="향상도 (배)",
+            gridcolor="#edf0f7",
+            zeroline=False,
+            rangemode="tozero",
+        ),
+        yaxis=dict(title=None, automargin=True, tickfont=dict(size=11)),
+        bargap=0.32,
+        showlegend=False,
+        hoverlabel=dict(bgcolor="white", font=dict(color="#25356b")),
+    )
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={"displaylogo": False, "toImageButtonOptions": {"filename": "급식_향상도_TOP10"}},
     )
 
-    grouped_count = len(valid)
 
-    return valid, total_count, grouped_count
-
+st.markdown(
+    """
+    <div class="hero">
+        <div class="eyebrow">MEAL LAB · ASSOCIATION ANALYTICS</div>
+        <div class="hero-title">급식 규칙 찾기 🍱</div>
+        <div class="hero-sub">
+            함께 등장한 메뉴 사이의 숨은 관계를 찾아보세요.<br>
+            하루 식단을 하나의 장바구니로 분석하고, 지지도·신뢰도·향상도를 한눈에 비교합니다.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 try:
-    df, total_count, grouped_count = load_and_prepare()
-except Exception as e:
-    st.error(f"데이터를 불러오거나 처리하는 중 오류가 발생했습니다.\n\n{e}")
+    meals = load_meals()
+except Exception as exc:
+    st.error("급식 데이터를 불러오지 못했어요. CSV 주소와 네트워크 연결을 확인해 주세요.")
+    st.code(str(exc))
+    if st.button("데이터 다시 불러오기"):
+        load_meals.clear()
+        st.rerun()
     st.stop()
 
-
-# ------------------------------------------------------------
-# 속성 정의
-# ------------------------------------------------------------
-FEATURES = {
-    "log_first_scrn": "스크린 수(상용로그)",
-    "log_total_audi": "누적 관객(상용로그)",
-    "days_in_top10": "10위권 일수",
-    "longrun_index": "롱런 지수",
-}
-
-FIFTH_FEATURES = {
-    "log_first_show": "첫 관측일 상영횟수(상용로그)",
-    "log_first_week_audi": "첫 주 관객 수(상용로그)",
-    "peak": "성수기 개봉 여부",
-}
-
-CLUSTER_SYMBOLS = ["㉮", "㉯", "㉰", "㉱", "㉲", "㉳", "㉴"]
-
-st.write(
-    f"전체 영화 **{total_count:,}편** 중 조건을 만족해 유형을 묶은 영화는 "
-    f"**{grouped_count:,}편**입니다."
-)
-
-
-# ------------------------------------------------------------
-# 군집화 설정
-# ------------------------------------------------------------
-st.subheader("군집화 설정")
-
-setting_col1, setting_col2 = st.columns([2, 1])
-
-with setting_col1:
-    selected_features = st.multiselect(
-        "묶는 데 사용할 속성",
-        options=list(FEATURES.keys()),
-        default=list(FEATURES.keys()),
-        format_func=lambda x: FEATURES[x],
-        help="두 개 이상의 속성을 선택해 주세요.",
-    )
-
-with setting_col2:
-    cluster_count = st.slider(
-        "묶음 수",
-        min_value=2,
-        max_value=7,
-        value=3,
-        step=1,
-    )
-
-if len(selected_features) < 2:
-    st.warning("K-평균 군집화를 하려면 속성을 두 개 이상 선택해야 합니다.")
+if meals.empty:
+    st.warning("CSV에서 날짜와 메뉴가 있는 중식 데이터를 찾지 못했어요.")
     st.stop()
 
-if len(df) < cluster_count:
-    st.warning("영화 수보다 묶음 수가 많습니다.")
-    st.stop()
-
-
-# ------------------------------------------------------------
-# 선택 속성 표준화 + KMeans
-# ------------------------------------------------------------
-X = df[selected_features].copy()
-
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-kmeans = KMeans(
-    n_clusters=cluster_count,
-    random_state=42,
-    n_init=10,
-)
-
-df["cluster_raw"] = kmeans.fit_predict(X_scaled)
-
-
-# ------------------------------------------------------------
-# 누적 관객 평균이 큰 묶음부터 ㉮, ㉯, ...
-# ------------------------------------------------------------
-cluster_order = (
-    df.groupby("cluster_raw")["total_audi"]
-    .mean()
-    .sort_values(ascending=False)
-    .index
-    .tolist()
-)
-
-cluster_label_map = {
-    raw_cluster: CLUSTER_SYMBOLS[i]
-    for i, raw_cluster in enumerate(cluster_order)
-}
-
-df["묶음"] = df["cluster_raw"].map(cluster_label_map)
-ACTIVE_CLUSTER_SYMBOLS = CLUSTER_SYMBOLS[:cluster_count]
-
-st.write(
-    f"현재 **{len(selected_features)}개 속성**을 사용해 "
-    f"영화를 **{cluster_count}개 묶음**으로 나눴습니다."
-)
-
-
-# ------------------------------------------------------------
-# 2차원 산점도
-# ------------------------------------------------------------
-st.subheader("2차원 산점도")
-
-axis_col1, axis_col2 = st.columns(2)
-
-with axis_col1:
-    x_feature = st.selectbox(
-        "가로축",
-        options=selected_features,
-        index=0,
-        format_func=lambda x: FEATURES[x],
-        key="x_2d",
-    )
-
-with axis_col2:
-    y_options = [f for f in selected_features if f != x_feature]
-    y_feature = st.selectbox(
-        "세로축",
-        options=y_options,
-        index=0,
-        format_func=lambda x: FEATURES[x],
-        key="y_2d",
-    )
-
-fig2d = px.scatter(
-    df,
-    x=x_feature,
-    y=y_feature,
-    color="묶음",
-    category_orders={"묶음": ACTIVE_CLUSTER_SYMBOLS},
-    hover_name="movieNm",
-    hover_data={
-        "묶음": True,
-        "movieCd": True,
-        "total_audi": ":,.0f",
-    },
-    labels={
-        x_feature: FEATURES[x_feature],
-        y_feature: FEATURES[y_feature],
-        "묶음": "묶음",
-        "movieCd": "영화코드",
-        "total_audi": "누적 관객",
-    },
-)
-
-fig2d.update_traces(marker=dict(size=7))
-fig2d.update_layout(
-    legend_title_text="묶음",
-    margin=dict(l=20, r=20, t=20, b=20),
-)
-
-st.plotly_chart(fig2d, use_container_width=True)
-
-
-# ------------------------------------------------------------
-# 3차원 산점도
-# ------------------------------------------------------------
-st.subheader("3차원 산점도")
-
-if len(selected_features) < 3:
-    st.info("3차원 산점도를 보려면 속성을 세 개 이상 선택해 주세요.")
-else:
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        x3 = st.selectbox(
-            "3D x축",
-            selected_features,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="x_3d",
-        )
-
-    y3_options = [f for f in selected_features if f != x3]
-
-    with c2:
-        y3 = st.selectbox(
-            "3D y축",
-            y3_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="y_3d",
-        )
-
-    z3_options = [f for f in selected_features if f not in {x3, y3}]
-
-    with c3:
-        z3 = st.selectbox(
-            "3D z축",
-            z3_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="z_3d",
-        )
-
-    fig3d = px.scatter_3d(
-        df,
-        x=x3,
-        y=y3,
-        z=z3,
-        color="묶음",
-        category_orders={"묶음": ACTIVE_CLUSTER_SYMBOLS},
-        hover_name="movieNm",
-        hover_data={
-            "묶음": True,
-            "total_audi": ":,.0f",
-        },
-        labels={
-            x3: FEATURES[x3],
-            y3: FEATURES[y3],
-            z3: FEATURES[z3],
-            "묶음": "묶음",
-        },
-    )
-
-    fig3d.update_traces(marker=dict(size=3))
-    fig3d.update_layout(height=650)
-
-    st.plotly_chart(fig3d, use_container_width=True)
-
-
-# ------------------------------------------------------------
-# 4차원 산점도
-# ------------------------------------------------------------
-st.subheader("4차원 산점도")
-st.caption("x·y·z 세 축에 더해 네 번째 속성을 점 크기로 표현합니다.")
-
-if len(selected_features) < 4:
-    st.info("4차원 산점도를 보려면 네 속성을 모두 선택해 주세요.")
-else:
-    c1, c2, c3, c4 = st.columns(4)
-
-    with c1:
-        x4 = st.selectbox(
-            "4D x축",
-            selected_features,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="x_4d",
-        )
-
-    with c2:
-        y4_options = [f for f in selected_features if f != x4]
-        y4 = st.selectbox(
-            "4D y축",
-            y4_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="y_4d",
-        )
-
-    with c3:
-        z4_options = [f for f in selected_features if f not in {x4, y4}]
-        z4 = st.selectbox(
-            "4D z축",
-            z4_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="z_4d",
-        )
-
-    with c4:
-        size4_options = [
-            f for f in selected_features if f not in {x4, y4, z4}
-        ]
-        size4 = st.selectbox(
-            "4번째 차원 · 점 크기",
-            size4_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="size_4d",
-        )
-
-    size_min = df[size4].min()
-    df["_size_4d"] = (
-        df[size4] - size_min + 0.1
-        if size_min <= 0
-        else df[size4]
-    )
-
-    fig4d = px.scatter_3d(
-        df,
-        x=x4,
-        y=y4,
-        z=z4,
-        size="_size_4d",
-        size_max=18,
-        color="묶음",
-        category_orders={"묶음": ACTIVE_CLUSTER_SYMBOLS},
-        hover_name="movieNm",
-        hover_data={
-            "묶음": True,
-            size4: ":.3f",
-            "_size_4d": False,
-        },
-        labels={
-            x4: FEATURES[x4],
-            y4: FEATURES[y4],
-            z4: FEATURES[z4],
-            size4: FEATURES[size4],
-            "묶음": "묶음",
-        },
-    )
-
-    fig4d.update_layout(height=700)
-    st.plotly_chart(fig4d, use_container_width=True)
-
-
-# ------------------------------------------------------------
-# 5차원 산점도
-# x + y + z + 점 크기 + 점 색 = 숫자 5차원
-# 묶음은 점 모양으로 별도 표현
-# ------------------------------------------------------------
-st.subheader("🔥 5차원 산점도")
-st.caption(
-    "x·y·z = 공간 위치, **점 크기 = 4번째 차원**, "
-    "**점 색의 연속적인 변화 = 5번째 차원**입니다. "
-    "영화 묶음은 점 모양으로 따로 구분합니다."
-)
-
-if len(selected_features) < 4:
-    st.info(
-        "5차원 산점도를 보려면 군집화 속성 네 개를 모두 선택해 주세요."
-    )
-else:
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        x5 = st.selectbox(
-            "5D x축",
-            selected_features,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="x_5d",
-        )
-
-    with c2:
-        y5_options = [f for f in selected_features if f != x5]
-        y5 = st.selectbox(
-            "5D y축",
-            y5_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="y_5d",
-        )
-
-    with c3:
-        z5_options = [f for f in selected_features if f not in {x5, y5}]
-        z5 = st.selectbox(
-            "5D z축",
-            z5_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="z_5d",
-        )
-
-    c4, c5 = st.columns(2)
-
-    with c4:
-        size5_options = [
-            f for f in selected_features
-            if f not in {x5, y5, z5}
-        ]
-
-        size5 = st.selectbox(
-            "4번째 차원 · 점 크기",
-            size5_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="size_5d",
-        )
-
-    with c5:
-        color5 = st.selectbox(
-            "5번째 차원 · 점 색",
-            options=list(FIFTH_FEATURES.keys()),
-            index=0,
-            format_func=lambda x: FIFTH_FEATURES[x],
-            key="color_5d",
-        )
-
-    five_df = df[df[color5].notna()].copy()
-
-    size_min_5 = five_df[size5].min()
-    five_df["_size_5d"] = (
-        five_df[size5] - size_min_5 + 0.1
-        if size_min_5 <= 0
-        else five_df[size5]
-    )
-
-    fig5d = px.scatter_3d(
-        five_df,
-        x=x5,
-        y=y5,
-        z=z5,
-        size="_size_5d",
-        size_max=20,
-        color=color5,
-        symbol="묶음",
-        category_orders={"묶음": ACTIVE_CLUSTER_SYMBOLS},
-        hover_name="movieNm",
-        hover_data={
-            "묶음": True,
-            "movieCd": True,
-            "total_audi": ":,.0f",
-            size5: ":.3f",
-            color5: ":.3f",
-            "_size_5d": False,
-        },
-        labels={
-            x5: FEATURES[x5],
-            y5: FEATURES[y5],
-            z5: FEATURES[z5],
-            size5: FEATURES[size5],
-            color5: FIFTH_FEATURES[color5],
-            "묶음": "묶음",
-            "movieCd": "영화코드",
-            "total_audi": "누적 관객",
-        },
-        color_continuous_scale="Turbo",
-    )
-
-    fig5d.update_layout(
-        height=760,
-        margin=dict(l=0, r=0, t=20, b=0),
-        scene=dict(
-            xaxis_title=FEATURES[x5],
-            yaxis_title=FEATURES[y5],
-            zaxis_title=FEATURES[z5],
-        ),
-    )
-
-    st.plotly_chart(fig5d, use_container_width=True)
-
+with st.sidebar:
+    st.markdown('<div class="side-brand">⚙️ 분석 설정</div>', unsafe_allow_html=True)
     st.markdown(
-        f"""
-**현재 5차원 표현**
-- x축: **{FEATURES[x5]}**
-- y축: **{FEATURES[y5]}**
-- z축: **{FEATURES[z5]}**
-- 점 크기: **{FEATURES[size5]}**
-- 점 색: **{FIFTH_FEATURES[color5]}**
-- 점 모양: **영화 묶음(㉮·㉯·㉰ …)**
-"""
+        '<div class="side-caption">선택하는 즉시 규칙 표와 그래프가 함께 바뀝니다.</div>',
+        unsafe_allow_html=True,
     )
-
-
-
-# ------------------------------------------------------------
-# 6차원 산점도
-# x + y + z + 점 크기 + 연속 색 + 점 모양 = 6차원
-# 묶음 정보는 hover와 범례에서 함께 확인
-# ------------------------------------------------------------
-st.subheader("🚀 레전드 6차원 산점도")
-st.caption(
-    "6차원 공간을 그대로 화면에 그릴 수는 없기 때문에, "
-    "**x·y·z 위치 + 점 크기 + 점 색 + 점 모양**으로 "
-    "한 영화의 여섯 가지 정보를 동시에 표현합니다."
-)
-
-if len(selected_features) < 4:
-    st.info(
-        "6차원 산점도를 보려면 군집화 속성 네 개를 모두 선택해 주세요."
+    min_day, max_day = meals["날짜"].min().date(), meals["날짜"].max().date()
+    selected_dates = st.date_input(
+        "분석 기간",
+        value=(min_day, max_day),
+        min_value=min_day,
+        max_value=max_day,
+        format="YYYY.MM.DD",
+        help="이 기간에 해당하는 중식 날짜만 계산합니다.",
     )
-else:
-    # 첫 세 차원
-    d61, d62, d63 = st.columns(3)
-
-    with d61:
-        x6 = st.selectbox(
-            "6D x축",
-            options=selected_features,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="x_6d",
-        )
-
-    with d62:
-        y6_options = [f for f in selected_features if f != x6]
-        y6 = st.selectbox(
-            "6D y축",
-            options=y6_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="y_6d",
-        )
-
-    with d63:
-        z6_options = [
-            f for f in selected_features
-            if f not in {x6, y6}
-        ]
-        z6 = st.selectbox(
-            "6D z축",
-            options=z6_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="z_6d",
-        )
-
-    # 4, 5, 6번째 차원
-    d64, d65, d66 = st.columns(3)
-
-    with d64:
-        size6_options = [
-            f for f in selected_features
-            if f not in {x6, y6, z6}
-        ]
-        size6 = st.selectbox(
-            "4번째 차원 · 점 크기",
-            options=size6_options,
-            index=0,
-            format_func=lambda x: FEATURES[x],
-            key="size_6d",
-        )
-
-    with d65:
-        color6 = st.selectbox(
-            "5번째 차원 · 점 색",
-            options=[
-                "log_first_show",
-                "log_first_week_audi",
-                "peak",
-            ],
-            index=0,
-            format_func=lambda x: {
-                "log_first_show": "첫 관측일 상영횟수(상용로그)",
-                "log_first_week_audi": "첫 주 관객 수(상용로그)",
-                "peak": "성수기 개봉 여부",
-            }[x],
-            key="color_6d",
-        )
-
-    with d66:
-        symbol6 = st.selectbox(
-            "6번째 차원 · 점 모양",
-            options=[
-                "peak",
-                "genre",
-                "nation",
-            ],
-            index=0,
-            format_func=lambda x: {
-                "peak": "성수기 개봉 여부",
-                "genre": "장르",
-                "nation": "국가",
-            }[x],
-            key="symbol_6d",
-        )
-
-    six_df = df[
-        df[color6].notna()
-        & df[symbol6].notna()
-    ].copy()
-
-    # 점 크기는 Plotly에서 양수여야 하므로 표시용 값을 따로 만듦
-    size_min_6 = six_df[size6].min()
-
-    if size_min_6 <= 0:
-        six_df["_size_6d"] = six_df[size6] - size_min_6 + 0.1
+    if isinstance(selected_dates, (tuple, list)) and len(selected_dates) == 2:
+        start_date, end_date = selected_dates
     else:
-        six_df["_size_6d"] = six_df[size6]
+        # 날짜 범위 선택 중 한 날짜만 눌린 임시 상태에서는 전체 기간 유지.
+        start_date, end_date = min_day, max_day
 
-    # 점 모양의 종류가 너무 많으면 시각화가 깨지므로
-    # 빈도가 높은 7개 범주 + 기타로 묶어서 표시
-    symbol_counts = six_df[symbol6].astype(str).value_counts()
-    top_symbol_values = symbol_counts.head(7).index.tolist()
+period = meals.loc[
+    meals["날짜"].dt.date.between(start_date, end_date)
+].copy()
 
-    six_df["_symbol_6d"] = (
-        six_df[symbol6]
-        .astype(str)
-        .where(
-            six_df[symbol6].astype(str).isin(top_symbol_values),
-            "기타",
-        )
+if period.empty:
+    st.warning("선택한 기간에 급식 데이터가 없어요. 왼쪽에서 기간을 바꿔 주세요.")
+    st.stop()
+
+baskets = period["메뉴목록"].tolist()
+rules, singles, pairs = find_rules(baskets)
+menu_options = ["전체 메뉴"] + sorted(singles)
+
+with st.sidebar:
+    st.divider()
+    st.markdown("**규칙 필터**")
+    chosen_menu = st.selectbox(
+        "메뉴 선택",
+        menu_options,
+        help="조건이나 결과에 해당 메뉴가 등장하는 모든 규칙을 찾습니다.",
     )
-
-    # 원래 범주는 hover에서 그대로 확인할 수 있도록 별도 보존
-    six_df["_symbol_original"] = six_df[symbol6].astype(str)
-
-    color6_label = {
-        "log_first_show": "첫 관측일 상영횟수(상용로그)",
-        "log_first_week_audi": "첫 주 관객 수(상용로그)",
-        "peak": "성수기 개봉 여부",
-    }[color6]
-
-    symbol6_label = {
-        "peak": "성수기 개봉 여부",
-        "genre": "장르",
-        "nation": "국가",
-    }[symbol6]
-
-    fig6d = px.scatter_3d(
-        six_df,
-        x=x6,
-        y=y6,
-        z=z6,
-        size="_size_6d",
-        size_max=22,
-        color=color6,
-        symbol="_symbol_6d",
-        hover_name="movieNm",
-        hover_data={
-            "묶음": True,
-            "movieCd": True,
-            "total_audi": ":,.0f",
-            size6: ":.3f",
-            color6: ":.3f",
-            "_symbol_original": True,
-            "_size_6d": False,
-            "_symbol_6d": False,
-        },
-        labels={
-            x6: FEATURES[x6],
-            y6: FEATURES[y6],
-            z6: FEATURES[z6],
-            size6: FEATURES[size6],
-            color6: color6_label,
-            "_symbol_original": symbol6_label,
-            "묶음": "영화 묶음",
-            "movieCd": "영화코드",
-            "total_audi": "누적 관객",
-        },
-        color_continuous_scale="Turbo",
+    menu_role = st.radio(
+        "메뉴가 등장하는 위치",
+        ["조건 또는 결과", "조건에만", "결과에만"],
+        horizontal=False,
+        disabled=(chosen_menu == "전체 메뉴"),
     )
-
-    fig6d.update_layout(
-        height=800,
-        margin=dict(l=0, r=0, t=30, b=0),
-        scene=dict(
-            xaxis_title=FEATURES[x6],
-            yaxis_title=FEATURES[y6],
-            zaxis_title=FEATURES[z6],
-        ),
-        legend_title_text=f"점 모양 · {symbol6_label}",
+    sort_label = st.selectbox("정렬 기준", list(SORT_OPTIONS))
+    min_cooccurrence = st.number_input(
+        "최소 동시 등장 횟수",
+        min_value=1,
+        max_value=max(1, max(pairs.values(), default=1)),
+        value=1,
+        step=1,
+        help="기본값 1은 한 번이라도 같이 나온 모든 메뉴 쌍을 보여 줍니다.",
     )
-
-    st.plotly_chart(fig6d, use_container_width=True)
-
-    st.markdown(
-        f"""
-**현재 6차원 해석**
-
-- **1차원 · x축:** {FEATURES[x6]}
-- **2차원 · y축:** {FEATURES[y6]}
-- **3차원 · z축:** {FEATURES[z6]}
-- **4차원 · 점 크기:** {FEATURES[size6]}
-- **5차원 · 점 색:** {color6_label}
-- **6차원 · 점 모양:** {symbol6_label}
-- **추가 정보:** 마우스를 올리면 영화 제목과 **㉮·㉯·㉰ 등의 묶음**도 확인 가능
-"""
+    min_confidence = st.slider(
+        "최소 신뢰도 (%)", min_value=0, max_value=100, value=0, step=5
     )
+    search_text = st.text_input(
+        "메뉴 이름 추가 검색", placeholder="예: 김치, 치킨, 국"
+    ).strip()
+    st.divider()
+    if st.button("🔄 CSV 최신 데이터 새로고침", use_container_width=True):
+        load_meals.clear()
+        st.rerun()
+    st.caption("데이터 출처: GitHub의 dorim_meals.csv · 중식만 분석 · 1시간 캐시")
 
-    if symbol6 in {"genre", "nation"} and six_df["_symbol_original"].nunique() > 8:
-        st.caption(
-            "※ 점 모양이 지나치게 많아지는 것을 막기 위해 "
-            f"{symbol6_label}은 빈도가 높은 7개 범주만 따로 표시하고 "
-            "나머지는 '기타' 모양으로 합쳤습니다. 원래 값은 마우스를 올리면 확인할 수 있습니다."
-        )
-
-
-# ------------------------------------------------------------
-# 묶음별 특징
-# ------------------------------------------------------------
-st.subheader("묶음별 특징")
-
-summary = (
-    df.groupby("묶음")
-    .agg(
-        영화_편수=("movieCd", "count"),
-        평균_스크린_수=("first_scrn", "mean"),
-        평균_누적_관객=("total_audi", "mean"),
-        평균_10위권_일수=("days_in_top10", "mean"),
-        평균_롱런_지수=("longrun_index", "mean"),
-    )
-    .reindex(ACTIVE_CLUSTER_SYMBOLS)
-    .reset_index()
-)
-
-summary.columns = [
-    "묶음",
-    "영화 편수",
-    "평균 스크린 수",
-    "평균 누적 관객",
-    "평균 10위권 일수",
-    "평균 롱런 지수",
+filtered = rules.copy()
+if chosen_menu != "전체 메뉴":
+    if menu_role == "조건에만":
+        filtered = filtered.loc[filtered["조건"].eq(chosen_menu)]
+    elif menu_role == "결과에만":
+        filtered = filtered.loc[filtered["결과"].eq(chosen_menu)]
+    else:
+        filtered = filtered.loc[
+            filtered["조건"].eq(chosen_menu) | filtered["결과"].eq(chosen_menu)
+        ]
+if search_text:
+    filtered = filtered.loc[
+        filtered["조건"].str.contains(search_text, case=False, regex=False)
+        | filtered["결과"].str.contains(search_text, case=False, regex=False)
+    ]
+filtered = filtered.loc[
+    (filtered["동시"] >= min_cooccurrence)
+    & (filtered["신뢰도"] >= min_confidence)
 ]
-
-summary["영화 편수"] = summary["영화 편수"].astype(int)
-summary["평균 스크린 수"] = summary["평균 스크린 수"].round(1)
-summary["평균 누적 관객"] = summary["평균 누적 관객"].round(0).astype(int)
-summary["평균 10위권 일수"] = summary["평균 10위권 일수"].round(1)
-summary["평균 롱런 지수"] = summary["평균 롱런 지수"].round(2)
-
-st.dataframe(
-    summary,
-    use_container_width=True,
-    hide_index=True,
-)
-
-
-# ------------------------------------------------------------
-# 묶음별 누적 관객 상위 5편
-# ------------------------------------------------------------
-st.subheader("묶음별 누적 관객 상위 5편")
-
-for start in range(0, cluster_count, 3):
-    row_symbols = ACTIVE_CLUSTER_SYMBOLS[start:start + 3]
-    cols = st.columns(len(row_symbols))
-
-    for col, cluster_name in zip(cols, row_symbols):
-        top5 = (
-            df[df["묶음"] == cluster_name]
-            .sort_values("total_audi", ascending=False)
-            .head(5)
-        )
-
-        with col:
-            st.markdown(f"### {cluster_name}")
-            for rank, (_, row) in enumerate(top5.iterrows(), start=1):
-                st.write(
-                    f"{rank}. **{row['movieNm']}** "
-                    f"— {row['total_audi']:,.0f}명"
-                )
-
-
-# ------------------------------------------------------------
-# 묶음 수 비교 - 엘보 방법
-# ------------------------------------------------------------
-st.subheader("묶음 수 비교")
-
-inertia_rows = []
-
-for k in range(1, 8):
-    elbow_model = KMeans(
-        n_clusters=k,
-        random_state=42,
-        n_init=10,
-    )
-
-    elbow_model.fit(X_scaled)
-
-    inertia_rows.append(
-        {
-            "묶음 수": k,
-            "중심에서 떨어진 거리 제곱합": elbow_model.inertia_,
-        }
-    )
-
-inertia_df = pd.DataFrame(inertia_rows)
-
-inertia_df["앞 값에서 줄어든 양"] = (
-    inertia_df["중심에서 떨어진 거리 제곱합"].shift(1)
-    - inertia_df["중심에서 떨어진 거리 제곱합"]
-)
-
-fig_elbow = go.Figure()
-
-fig_elbow.add_trace(
-    go.Scatter(
-        x=inertia_df["묶음 수"],
-        y=inertia_df["중심에서 떨어진 거리 제곱합"],
-        mode="lines+markers",
-        hovertemplate=(
-            "묶음 수: %{x}<br>"
-            "거리 제곱합: %{y:,.2f}"
-            "<extra></extra>"
-        ),
-    )
-)
-
-fig_elbow.add_vline(
-    x=cluster_count,
-    line_width=2,
-    line_dash="dash",
-    annotation_text=f"현재 선택: {cluster_count}",
-    annotation_position="top",
-)
-
-fig_elbow.update_layout(
-    xaxis_title="묶음 수",
-    yaxis_title="중심에서 떨어진 거리의 제곱합",
-    xaxis=dict(
-        tickmode="array",
-        tickvals=list(range(1, 8)),
-    ),
-    showlegend=False,
-)
-
-st.plotly_chart(fig_elbow, use_container_width=True)
-
-
-# ------------------------------------------------------------
-# 엘보 표
-# ------------------------------------------------------------
-display_inertia = inertia_df.copy()
-
-display_inertia["중심에서 떨어진 거리 제곱합"] = (
-    display_inertia["중심에서 떨어진 거리 제곱합"].round(2)
-)
-
-display_inertia["앞 값에서 줄어든 양"] = (
-    display_inertia["앞 값에서 줄어든 양"].round(2)
-)
-
-display_inertia["앞 값에서 줄어든 양"] = (
-    display_inertia["앞 값에서 줄어든 양"]
-    .apply(lambda x: "" if pd.isna(x) else f"{x:,.2f}")
-)
-
-display_inertia["중심에서 떨어진 거리 제곱합"] = (
-    display_inertia["중심에서 떨어진 거리 제곱합"]
-    .map(lambda x: f"{x:,.2f}")
-)
-
-st.dataframe(
-    display_inertia,
-    use_container_width=True,
-    hide_index=True,
-)
-
-
-# ------------------------------------------------------------
-# 실루엣 점수
-# ------------------------------------------------------------
-current_silhouette = silhouette_score(
-    X_scaled,
-    df["cluster_raw"],
-)
-
-st.write(
-    f"현재 선택한 **{cluster_count}개 묶음의 실루엣 점수는 "
-    f"{current_silhouette:.3f}**입니다. "
-    "실루엣 점수는 -1에서 1 사이이며, "
-    "1에 가까울수록 묶음이 더 뚜렷하게 나뉜다는 뜻입니다."
-)
+filtered = filtered.sort_values(
+    SORT_OPTIONS[sort_label] + ["조건", "결과"],
+    ascending=[False, False, False, True, True],
+    kind="stable",
+).reset_index(drop=True)
 
 st.caption(
-    "※ 스크린 수와 누적 관객은 상용로그 값으로 군집화하고, "
-    "10위권 일수는 그대로 사용합니다. "
-    "롱런 지수는 누적 관객 ÷ 첫 주 관객이며 최대 20입니다. "
-    "선택한 군집화 속성은 K-평균에 넣기 전에 표준화합니다."
+    f"📅 분석 범위  {period['날짜'].min():%Y.%m.%d} — "
+    f"{period['날짜'].max():%Y.%m.%d}  |  조건을 바꾸면 결과가 자동으로 갱신됩니다."
 )
+
+c1, c2, c3 = st.columns(3, gap="medium")
+for target, label, value, unit in (
+    (c1, "분석한 급식 일수", len(baskets), "일"),
+    (c2, "등장한 메뉴 종류", len(singles), "종"),
+    (c3, "함께 나온 메뉴 쌍", len(pairs), "쌍"),
+):
+    with target:
+        st.markdown(
+            '<div class="stat-card">'
+            f'<div class="stat-label">{label}</div>'
+            f'<div class="stat-value">{value:,}<span class="stat-unit">{unit}</span></div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+left, right = st.columns([3, 1], vertical_alignment="center")
+with left:
+    section("📈 향상도 TOP 10", "현재 메뉴·횟수·신뢰도 필터에 해당하는 규칙 중 향상도가 높은 10개")
+with right:
+    st.caption(f"표시 중인 규칙: **{len(filtered):,}개** / 전체 {len(rules):,}개")
+
+if filtered.empty:
+    st.info("조건에 맞는 규칙이 없어요. 메뉴나 최소 동시 횟수·신뢰도를 완화해 보세요.")
+else:
+    draw_lift_chart(filtered)
+
+section("📋 메뉴 연관 규칙", "각 메뉴 쌍을 A → B와 B → A 두 방향으로 계산했습니다. 표의 열 제목을 눌러 정렬할 수도 있어요.")
+
+if not filtered.empty:
+    st.dataframe(
+        filtered,
+        use_container_width=True,
+        hide_index=True,
+        height=min(690, max(195, 43 * len(filtered) + 40)),
+        column_config={
+            "조건": st.column_config.TextColumn("조건", width="medium"),
+            "결과": st.column_config.TextColumn("결과", width="medium"),
+            "동시": st.column_config.NumberColumn("동시", format="%d", help="두 메뉴가 함께 나온 날짜 수"),
+            "지지도": st.column_config.NumberColumn("지지도", format="%.2f%%", help="동시 등장 일수 ÷ 전체 급식 일수"),
+            "신뢰도": st.column_config.NumberColumn("신뢰도", format="%.2f%%", help="동시 등장 일수 ÷ 조건 메뉴 등장 일수"),
+            "향상도": st.column_config.NumberColumn("향상도", format="%.2f", help="신뢰도 ÷ 결과 메뉴 등장 비율"),
+        },
+    )
+else:
+    st.caption("표시할 규칙이 없습니다.")
+
+st.download_button(
+    "⬇️ 현재 규칙 CSV 다운로드",
+    data=filtered.to_csv(index=False).encode("utf-8-sig"),
+    file_name="급식_연관규칙.csv",
+    mime="text/csv",
+    disabled=filtered.empty,
+)
+
+st.markdown(
+    """
+    <div class="help-note">
+        <b>📌 지표 읽는 법</b><br>
+        <b>동시</b> = 두 메뉴가 함께 나온 날 수 &nbsp;·&nbsp;
+        <b>지지도</b> = 전체 급식 중 두 메뉴가 함께 나온 비율 &nbsp;·&nbsp;
+        <b>신뢰도</b> = 조건 메뉴가 나온 날 결과 메뉴도 나온 비율 &nbsp;·&nbsp;
+        <b>향상도</b> = 두 메뉴가 무관하다고 가정할 때보다 얼마나 자주 함께 나왔는지<br>
+        향상도 1 초과는 예상보다 함께 자주 나왔다는 뜻입니다. 단, 등장 횟수가 1~2회인 희귀 규칙은 과대평가될 수 있으니
+        <b>동시 등장 횟수</b>도 함께 확인해 보세요. 연관성이 원인과 결과를 뜻하지는 않습니다.
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.expander("🔎 날짜별로 원본 식단 확인하기"):
+    picked = st.selectbox(
+        "급식 날짜",
+        options=period["날짜"].dt.date.tolist(),
+        format_func=lambda day: day.strftime("%Y년 %m월 %d일"),
+    )
+    one_day = period.loc[period["날짜"].dt.date == picked].iloc[0]
+    st.markdown("**분석에 실제로 사용한 메뉴**")
+    st.write(" · ".join(one_day["메뉴목록"]))
+    st.caption("괄호 속 부가 정보 제거 전 원본 메뉴: " + one_day["메뉴"])
