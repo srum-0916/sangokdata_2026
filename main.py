@@ -1,7 +1,7 @@
 """🧠 두근두근 데이터 연구소 - 뇌졸중 예측 실습실: 데이터 소개.
 
 실행: streamlit run main.py
-탐색 페이지: pages/1_탐색.py (Streamlit이 자동으로 메뉴에 추가)
+탐색: pages/1_탐색.py · 분류 모델: pages/2_분류_모델.py
 """
 
 import pandas as pd
@@ -139,7 +139,7 @@ with st.sidebar:
     )
     st.markdown(
         '<div class="side-note">🍡 <b>어서 와!</b><br>'
-        '왼쪽 기본 페이지 메뉴에서 <b>탐색</b>을 누르면 '
+        '왼쪽 페이지 메뉴에서 <b>탐색</b> 또는 <b>분류 모델</b>을 누르면 '
         '그래프 놀이터로 이동할 수 있어.<br>'
         '홈에서는 데이터를 먼저 알아보자! ✨</div>',
         unsafe_allow_html=True,
@@ -157,7 +157,7 @@ st.markdown(
         <p>어려운 숫자도 귀여운 연구실에서는 조금 더 친해질 수 있어요.
         데이터를 살펴보고, 비어 있는 값을 찾고, 직접 설명을 채워 봐요!</p>
         <div class="hero-pills"><span>🍓 데이터 소개</span>
-        <span>🧁 12가지 항목</span><span>🫧 탐색 페이지 준비 완료</span></div>
+        <span>🧁 12가지 항목</span><span>🫧 탐색 · 분류 모델 페이지</span></div>
       </div>
       <div class="hero-buddy"><div class="buddy-face">🧠</div>
         <div class="buddy-label">오늘도 차근차근! ♡</div></div>
