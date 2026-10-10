@@ -137,17 +137,16 @@ PAGE_CODE = "home"
 
 
 def cute_navigation():
+    """기본 Streamlit 페이지 메뉴 사용: 미등록 페이지 링크로 앱이 중단되지 않도록 합니다."""
     st.markdown("### 🧭 연구실 이동하기")
-    for path, label, icon in [
-        ("main.py", "데이터 소개", "🏠"),
-        ("pages/1_탐색.py", "탐색 놀이터", "🍭"),
-        ("pages/2_분류_모델.py", "분류 모델 연구실", "🧸"),
-    ]:
-        if (PROJECT_ROOT / path).is_file():
-            st.page_link(path, label=label, icon=icon, use_container_width=True)
-        else:
-            st.warning(f"{path} 파일이 없어요. GitHub에서 경로를 확인해 주세요.")
-
+    st.info("🍬 사이드바 맨 위의 기본 페이지 목록에서 **main · 1_탐색 · 2_분류_모델**을 골라 주세요.")
+    needed = ["pages/1_탐색.py", "pages/2_분류_모델.py"]
+    missing = [path for path in needed if not (PROJECT_ROOT / path).is_file()]
+    if missing:
+        st.warning("🌷 아직 파일이 없어요: " + ", ".join(missing))
+        st.caption("GitHub의 pages 폴더에 정확한 이름으로 올려 주세요.")
+    else:
+        st.caption("✅ 탐색·분류 모델 파일이 모두 있어요!")
 
 def cute_data_controls():
     st.divider()
@@ -216,7 +215,7 @@ with st.sidebar:
     st.divider()
     st.markdown(
         '<div class="side-note">🍡 <b>어서 와!</b><br>'
-        '위의 이동 버튼에서 <b>탐색</b> 또는 <b>분류 모델</b>을 누르면 '
+        '사이드바 맨 위의 기본 페이지 메뉴에서 <b>탐색</b> 또는 <b>분류 모델</b>을 누르면 '
         '그래프 놀이터로 이동할 수 있어.<br>'
         '홈에서는 데이터를 먼저 알아보자! ✨</div>',
         unsafe_allow_html=True,
