@@ -87,10 +87,6 @@ hr{border-color:#f1dce9!important;margin-top:2.1rem!important;margin-bottom:2.1r
 )
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
-def load_data():
-    return pd.read_csv(DATA_URL, encoding="utf-8")
-
 
 def section(icon, title, detail=""):
     st.markdown(
@@ -199,12 +195,94 @@ def rate_bar(stats, color_pair):
     return plot_layout(fig)
 
 
+
+# 각 페이지가 동일한 URL 및 업로드 데이터를 공유합니다.
+from pathlib import Path
+from io import BytesIO
+
+DEFAULT_CSV_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/stroke.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PAGE_CODE = "explore"
+
+
+def cute_navigation():
+    st.markdown("### 🧭 연구실 이동하기")
+    for path, label, icon in [
+        ("main.py", "데이터 소개", "🏠"),
+        ("pages/1_탐색.py", "탐색 놀이터", "🍭"),
+        ("pages/2_분류_모델.py", "분류 모델 연구실", "🧸"),
+    ]:
+        if (PROJECT_ROOT / path).is_file():
+            st.page_link(path, label=label, icon=icon, use_container_width=True)
+        else:
+            st.warning(f"{path} 파일이 없어요. GitHub에서 경로를 확인해 주세요.")
+
+
+def cute_data_controls():
+    st.divider()
+    st.markdown("### 📂 데이터 불러오기")
+    st.caption("기본 CSV가 자동으로 연결돼요. 주소를 바꾸거나 CSV 파일을 직접 올릴 수도 있어요.")
+    current = st.session_state.get("stroke_source_url", DEFAULT_CSV_URL)
+    key_number = st.session_state.get("stroke_upload_reset", 0)
+    entered = st.text_input(
+        "CSV 주소 (직접 입력 가능)", value=current,
+        key=f"csv_url_input_{PAGE_CODE}_{key_number}",
+        help="CSV 파일의 직접 주소를 붙여 넣으세요. 입력 후 Enter를 누르면 적용돼요.",
+    ).strip()
+    st.session_state["stroke_source_url"] = entered or DEFAULT_CSV_URL
+    uploaded = st.file_uploader(
+        "또는 CSV 파일 업로드", type=["csv"],
+        key=f"csv_upload_{PAGE_CODE}_{key_number}",
+    )
+    if uploaded is not None:
+        st.session_state["stroke_upload_bytes"] = uploaded.getvalue()
+        st.session_state["stroke_upload_name"] = uploaded.name
+    if st.session_state.get("stroke_upload_bytes") is not None:
+        st.success("🍡 업로드한 파일을 사용하고 있어요.")
+        if st.button("업로드 취소 · 주소로 돌아가기", key=f"clear_csv_{PAGE_CODE}", use_container_width=True):
+            st.session_state.pop("stroke_upload_bytes", None)
+            st.session_state.pop("stroke_upload_name", None)
+            st.session_state["stroke_upload_reset"] = key_number + 1
+            st.rerun()
+    else:
+        st.caption("🍓 현재 데이터: 입력한 CSV 주소")
+    if st.button("기본 데이터 주소로 복원", key=f"reset_url_{PAGE_CODE}", use_container_width=True):
+        st.session_state["stroke_source_url"] = DEFAULT_CSV_URL
+        st.session_state.pop("stroke_upload_bytes", None)
+        st.session_state.pop("stroke_upload_name", None)
+        st.session_state["stroke_upload_reset"] = key_number + 1
+        st.rerun()
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _read_csv_url(url):
+    return pd.read_csv(url, encoding="utf-8")
+
+
+def load_data():
+    """우선 적용된 CSV 업로드, 아니면 지정한 UTF-8 CSV 주소를 불러옵니다."""
+    payload = st.session_state.get("stroke_upload_bytes")
+    if payload is not None:
+        return pd.read_csv(BytesIO(payload), encoding="utf-8")
+    url = st.session_state.get("stroke_source_url", DEFAULT_CSV_URL)
+    if not url.startswith(("https://", "http://")):
+        raise ValueError("CSV 주소는 https:// 또는 http:// 로 시작해야 해요.")
+    return _read_csv_url(url)
+
+
+def explain_load_failure(exc):
+    st.error("🍓 데이터를 읽지 못했어요. 왼쪽 '데이터 불러오기'에서 주소를 확인하거나 CSV를 직접 올려 주세요.")
+    st.caption(f"상세 원인: {type(exc).__name__} — {exc}")
+    st.caption("기본 주소: " + DEFAULT_CSV_URL)
 with st.sidebar:
     st.markdown(
         '<div class="candy-brand"><div class="brand-flower">🍓</div>'
         '<div><strong>두근두근 연구소</strong><small>SWEET DATA LAB</small></div></div>',
         unsafe_allow_html=True,
     )
+    cute_navigation()
+    cute_data_controls()
+    st.divider()
     st.markdown(
         '<div class="side-note">🍭 <b>탐색 놀이터에 온 걸 환영해!</b><br>'
         '히스토그램과 상자그림을 살펴보고, 비율도 비교해 봐요.<br>'
@@ -236,8 +314,7 @@ st.markdown(
 try:
     raw = load_data()
 except Exception as exc:
-    st.error("🍓 데이터를 불러오지 못했어요. 인터넷 연결이나 CSV 주소를 확인해 주세요.")
-    st.caption(f"오류 종류: {type(exc).__name__}")
+    explain_load_failure(exc)
     st.stop()
 
 required = {"age", "avg_glucose_level", "hypertension", "heart_disease", "bmi", "smoking_status", "stroke"}
