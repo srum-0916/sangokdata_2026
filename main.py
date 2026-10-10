@@ -1,4 +1,4 @@
-"""두근두근 뇌졸중 데이터 연구소 ♡
+"""💗 두근두근 뇌졸중 연구소 ♡
 
 실행: streamlit run main.py
 - 이 파일 하나에 데이터 소개 / 탐색 / 분류 모델이 모두 들어 있습니다.
@@ -24,7 +24,7 @@ REQUIRED_COLUMNS = [
     "work_type", "Residence_type", "avg_glucose_level", "bmi", "smoking_status", "stroke",
 ]
 FEATURE_NAMES = {
-    "age": "나이", "avg_glucose_level": "평균 혈당", "bmi": "BMI",
+    "age": "나이", "avg_glucose_level": "평균 혈당 💜", "bmi": "BMI",
     "hypertension": "고혈압", "heart_disease": "심장병",
 }
 FEATURES = list(FEATURE_NAMES)
@@ -35,7 +35,7 @@ YELLOW = "#FFC96E"
 INK = "#584A70"
 
 st.set_page_config(
-    page_title="두근두근 뇌졸중 연구소 ♡",
+    page_title="두근두근 러블리 뇌졸중 연구소 💗",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -167,15 +167,15 @@ def load_data():
 
 def describe_series(series, col):
     if col == "id":
-        return "정수 · 식별 번호"
+        return "번호를 나타내는 정수 🔢"
     if col in ("hypertension", "heart_disease", "stroke"):
         return "0 / 1"
     if pd.api.types.is_numeric_dtype(series):
-        return "숫자 · 연속형"
+        return "연속해서 나타나는 숫자들이에요 💞"
     values = [str(v) for v in series.dropna().unique()]
     if len(values) <= 6:
         return " / ".join(values)
-    return f"범주형 · {len(values)}종류"
+    return f"종류별로 나뉘는 값 · {len(values)}가지 🎀"
 
 
 def summary_rate(data):
@@ -185,22 +185,22 @@ def summary_rate(data):
 
 
 def intro_screen(df):
-    hero("🌸 HELLO, LITTLE RESEARCHER!", "두근두근 뇌졸중 데이터 연구소 ♡",
-         "입력 없이 자동 연결된 데이터를 먼저 알아봐요! 표를 채우고, 탐색과 AI 모델까지 재미있게 공부해요.", "🧠")
-    section("🧁", "우리 데이터 한눈에 보기", "원본 CSV의 숫자로 자동 계산해요")
+    hero("💌 HELLO, CUTIE RESEARCHER ♡", "💗 두근두근 뇌졸중 연구소 ♡",
+         "어서 와아~! 💖 귀여운 데이터들이 벌써 기다리고 있어! 표도 채우고, 그래프랑 AI 모델까지 하트 뿅뿅 탐험해 보자아~! 🥰🌷", "🧠")
+    section("🧁", "우리 데이터 친구들 만나볼까~? 💕", "숫자 친구들이 알아서 쏙쏙 계산해 줄 거야~! ✨")
     n_stroke = int(df["stroke"].eq(1).sum())
     cols = st.columns(4)
     items = [
-        ("전체 사람 수", f"{len(df):,}명", "분석에 포함된 기록", "#ffd8e8"),
-        ("열 개수", f"{df.shape[1]}개", "데이터의 속성", "#ddceff"),
-        ("뇌졸중 경험자", f"{n_stroke:,}명", "stroke = 1", "#c5f0e2"),
-        ("경험자 비율", f"{100*n_stroke/len(df):.2f}%", "전체 사람 중 비율", "#ffe7ba"),
+        ("모두 몇 명일까~? 💗", f"{len(df):,}명", "함께 살펴볼 데이터 친구들이야 🧸", "#ffd8e8"),
+        ("속성 친구는 몇 개~? 🎀", f"{df.shape[1]}개", "서로 다른 특징들이 쪼르르 💜", "#ddceff"),
+        ("뇌졸중 경험한 사람 💗", f"{n_stroke:,}명", "stroke = 1", "#c5f0e2"),
+        ("경험 비율은 얼마일까~? 💌", f"{100*n_stroke/len(df):.2f}%", "전체 사람 가운데 차지하는 비율이야 🌸", "#ffe7ba"),
     ]
     for col, values in zip(cols, items):
         with col:
             card(*values)
     st.markdown('<div class="cute-divider"></div>', unsafe_allow_html=True)
-    section("📝", "데이터 사전 만들기", "우리말 뜻은 직접 입력하는 공부 노트야. 다른 열은 자동으로 채워져 있어!")
+    section("📝", "나만의 데이터 사전 꾸미기~! ✏️💞", "우리말 뜻 칸은 교재를 보고 직접 예쁘게 채워 줘~! 💌 나머지는 준비해 뒀어 🎀")
     if "column_notes" not in st.session_state:
         st.session_state["column_notes"] = {col: "" for col in df.columns}
     initial = pd.DataFrame([
@@ -211,31 +211,31 @@ def intro_screen(df):
     edited = st.data_editor(
         initial, hide_index=True, use_container_width=True, num_rows="fixed",
         disabled=["열 이름", "값의 종류", "빈 값 개수"],
-        column_config={"우리말 뜻": st.column_config.TextColumn("우리말 뜻 ✏️", help="교재를 보고 직접 입력해요")},
+        column_config={"우리말 뜻": st.column_config.TextColumn("우리말 뜻 적기 ✏️💗", help="교재를 보면서 사랑스럽게 채워 줘~! 💖")},
         key="column_dictionary",
     )
     st.session_state["column_notes"] = dict(zip(edited["열 이름"], edited["우리말 뜻"].fillna("")))
-    st.download_button("💌 작성한 데이터 사전 저장", data=edited.to_csv(index=False).encode("utf-8-sig"),
+    st.download_button("💌 내가 꾸민 데이터 사전 간직하기~! ♡", data=edited.to_csv(index=False).encode("utf-8-sig"),
                        file_name="stroke_data_dictionary.csv", mime="text/csv")
     st.markdown('<div class="cute-divider"></div>', unsafe_allow_html=True)
-    section("🍰", "원본 데이터 살짝 보기", "처음 다섯 줄을 내용 변경 없이 보여 줘요")
+    section("🍰", "데이터 친구들 첫 5줄 엿보기~! 👀💕", "원본 그대로 다섯 줄만 살포시 보여 줄게~! 🌷")
     st.dataframe(df.head(5), hide_index=True, use_container_width=True)
-    section("📚", "데이터 출처 적기", "교재에 나온 출처 설명을 여기에 적어 봐요")
-    st.text_area("출처 메모", placeholder="교재의 데이터 출처 내용을 여기에 입력해 줘!", key="source_memo", height=100)
-    st.caption("원본 CSV: " + DATA_URL)
+    section("📚", "데이터가 온 곳도 적어 주라~! 📚💌", "교재 속 출처를 이곳에 콕콕 적어 주면 완벽해~! 💗")
+    st.text_area("💌 출처 메모 남기기", placeholder="교재 속 출처를 이쪽에 적어 줄래~? 🥰💞", key="source_memo", height=100)
+    st.caption("💗 데이터가 살고 있는 주소: " + DATA_URL)
 
 
 def hist_figure(series, label, color, bins=28):
     fig = go.Figure()
     fig.add_trace(go.Histogram(x=series.dropna(), nbinsx=bins, marker_color=color,
-                               opacity=.91, hovertemplate="값: %{x}<br>사람 수: %{y:,}명<extra></extra>"))
-    fig.update_layout(bargap=.085, xaxis_title=label, yaxis_title="사람 수 (명)")
+                               opacity=.91, hovertemplate="값은 %{x} 💖<br>여기에 %{y:,}명이 모였어~!<extra></extra>"))
+    fig.update_layout(bargap=.085, xaxis_title=label, yaxis_title="사람 수 (명) 💗")
     return cute_plot(fig)
 
 
 def box_figure(data, feature, label):
     fig = go.Figure()
-    for state, name, color in [(0, "경험 없음 (0)", MINT), (1, "뇌졸중 경험 (1)", PINK)]:
+    for state, name, color in [(0, "경험 없음 (0) 💚 💚", MINT), (1, "뇌졸중 경험 (1) 💗", PINK)]:
         values = data.loc[data["stroke"] == state, feature].dropna()
         fig.add_trace(go.Box(y=values, name=name, marker_color=color, line_color=color,
                              boxmean=True, boxpoints=False,
@@ -245,7 +245,7 @@ def box_figure(data, feature, label):
 
 
 def rate_figure(df, col, title):
-    categories = [(0, "없음 (0)"), (1, "있음 (1)")]
+    categories = [(0, "없음 (0) 💚"), (1, "있음 (1) 💗")]
     rates, sizes = [], []
     for binary, _ in categories:
         selected = df[df[col] == binary]
@@ -254,66 +254,66 @@ def rate_figure(df, col, title):
     fig = go.Figure(go.Bar(
         x=[x[1] for x in categories], y=rates,
         marker_color=[MINT, PINK], text=[f"{v:.2f}%" for v in rates], textposition="outside",
-        customdata=sizes, hovertemplate="%{x}<br>뇌졸중 비율: %{y:.2f}%<br>사람: %{customdata:,}명<extra></extra>",
+        customdata=sizes, hovertemplate="%{x}<br>뇌졸중 비율은 %{y:.2f}% 💕<br>모두 %{customdata:,}명이야~!<extra></extra>",
     ))
-    fig.update_layout(yaxis_title="뇌졸중 경험 비율 (%)", yaxis_range=[0, max(rates)*1.33+1], title=None)
+    fig.update_layout(yaxis_title="뇌졸중 경험 비율 (%) 💞", yaxis_range=[0, max(rates)*1.33+1], title=None)
     return cute_plot(fig)
 
 
 def explore_screen(df):
-    hero("🍭 EXPLORE / OUR DATA", "말랑말랑 데이터 탐색 놀이터",
-         "나이와 혈당의 모양, 뇌졸중 경험 여부의 차이, 결측값까지 그래프로 찾아봐요.", "🔎")
-    section("🍓", "나이와 혈당의 분포", "각 막대는 해당 값 구간에 속한 사람 수를 뜻해요")
-    bins = st.slider("히스토그램 구간 수", min_value=10, max_value=60, value=28, step=2, key="bin_slider")
+    hero("🍭 LOVELY DATA PLAYGROUND ♡", "💖 말랑말랑 데이터 탐색 놀이터 ♡",
+         "데이터 속에 어떤 비밀이 숨어 있을까~? 💞 나이와 혈당, 뇌졸중 경험과 빈 값까지 같이 찾아보자아~! 🔍🎀", "🔎")
+    section("🍓", "나이랑 혈당 친구들이 어디 모였을까~? 🍓", "막대가 클수록 그 구간에 사람이 많이 모인 거야~! 💕")
+    bins = st.slider("🍬 막대 구간은 몇 개로 나눠 볼까~?", min_value=10, max_value=60, value=28, step=2, key="bin_slider")
     left, right = st.columns(2)
     with left:
-        panel("🍑 나이 분포", "가로축은 나이, 세로축은 사람 수")
+        panel("🍑 나이는 어떻게 퍼져 있을까~? ♡", "가로로 나이를, 세로로 사람 수를 봐 줘~! 💗")
         st.plotly_chart(hist_figure(df["age"], "나이 (세)", PINK, bins), use_container_width=True)
     with right:
-        panel("🍋 평균 혈당 분포", "가로축은 평균 혈당, 세로축은 사람 수")
-        st.plotly_chart(hist_figure(df["avg_glucose_level"], "평균 혈당", PURPLE, bins), use_container_width=True)
+        panel("🍋 혈당은 어디에 모여 있을까~? ♡", "가로로 혈당을, 세로로 사람 수를 봐 줘~! 💗")
+        st.plotly_chart(hist_figure(df["avg_glucose_level"], "평균 혈당 💜", PURPLE, bins), use_container_width=True)
 
     st.markdown('<div class="cute-divider"></div>', unsafe_allow_html=True)
-    section("🧸", "뇌졸중 경험별 상자그림", "가운데 선은 중앙값, 작은 평균 표시도 함께 볼 수 있어요")
+    section("🧸", "뇌졸중 경험에 따라 뭐가 다를까~? 🎀", "상자 속 가운데 선은 중앙값이야~! 평균값도 찾아보자 💌")
     left, right = st.columns(2)
     with left:
-        panel("🎀 나이 비교")
+        panel("🎀 나이 차이 살펴보기~! ♡")
         st.plotly_chart(box_figure(df, "age", "나이 (세)"), use_container_width=True)
     with right:
-        panel("🫧 평균 혈당 비교")
-        st.plotly_chart(box_figure(df, "avg_glucose_level", "평균 혈당"), use_container_width=True)
+        panel("🫧 혈당 차이 살펴보기~! ♡")
+        st.plotly_chart(box_figure(df, "avg_glucose_level", "평균 혈당 💜"), use_container_width=True)
     averages = df.groupby("stroke")[["age", "avg_glucose_level"]].mean().reindex([0, 1]).round(2)
-    averages.index = ["경험 없음 (0)", "뇌졸중 경험 (1)"]
-    averages.columns = ["평균 나이", "평균 혈당"]
-    st.markdown("**🌷 두 무리의 평균값 비교**")
+    averages.index = ["경험 없음 (0) 💚 💚", "뇌졸중 경험 (1) 💗"]
+    averages.columns = ["평균 나이 💗", "평균 혈당 💜"]
+    st.markdown("**🌷 두 친구 그룹의 평균을 비교해 볼까~? 💞**")
     st.dataframe(averages, use_container_width=True)
 
     st.markdown('<div class="cute-divider"></div>', unsafe_allow_html=True)
-    section("💗", "질환 유무에 따른 뇌졸중 비율", "각 무리에서 stroke = 1인 사람이 차지하는 비율이에요")
+    section("💗", "고혈압·심장병에 따라 비율이 달라질까~? 💖", "각 그룹에서 stroke=1인 사람의 비율을 비교해 보자~! 🌷")
     left, right = st.columns(2)
     with left:
-        panel("🌼 고혈압 유무 비교")
+        panel("🌼 고혈압 여부에 따른 비율~! 💕")
         st.plotly_chart(rate_figure(df, "hypertension", "고혈압"), use_container_width=True)
     with right:
-        panel("🌻 심장병 유무 비교")
+        panel("🌻 심장병 여부에 따른 비율~! 💕")
         st.plotly_chart(rate_figure(df, "heart_disease", "심장병"), use_container_width=True)
 
     st.markdown('<div class="cute-divider"></div>', unsafe_allow_html=True)
-    section("🧩", "BMI가 비어 있는 사람 살펴보기", "빈 값이 있는 집단의 뇌졸중 비율과 전체 비율을 같은 표로 비교해요")
+    section("🧩", "BMI가 비어 있는 데이터 친구는 누구~? 🧩💗", "BMI가 비어 있는 그룹과 전체의 뇌졸중 경험 비율을 나란히 볼까~? 💞")
     missing_bmi = df[df["bmi"].isna()]
     table = pd.DataFrame([
-        {"비교 집단": "BMI가 빈 사람", "사람 수": len(missing_bmi),
-         "뇌졸중 경험자": int(missing_bmi["stroke"].eq(1).sum()), "뇌졸중 비율 (%)": round(summary_rate(missing_bmi), 2)},
-        {"비교 집단": "전체", "사람 수": len(df),
-         "뇌졸중 경험자": int(df["stroke"].eq(1).sum()), "뇌졸중 비율 (%)": round(summary_rate(df), 2)},
+        {"비교 집단": "BMI가 비어 있는 사람 🫧", "사람 수": len(missing_bmi),
+         "뇌졸중 경험한 사람 💗": int(missing_bmi["stroke"].eq(1).sum()), "뇌졸중 비율 (%)": round(summary_rate(missing_bmi), 2)},
+        {"비교 집단": "전체 친구들 💕", "사람 수": len(df),
+         "뇌졸중 경험한 사람 💗": int(df["stroke"].eq(1).sum()), "뇌졸중 비율 (%)": round(summary_rate(df), 2)},
     ])
     st.dataframe(table, hide_index=True, use_container_width=True)
     st.markdown('<div class="cute-divider"></div>', unsafe_allow_html=True)
-    section("🚬", "흡연 상태별 사람 수", "Unknown은 모름/미기록으로 표시된 값이며 빈 값(NaN)과는 달라요")
+    section("🚬", "흡연 상태별로 몇 명일까~? 🚬💌", "Unknown은 모름·미기록이라는 표시야~! 진짜 빈 값(NaN)이랑은 달라 💗")
     smoking_counts = df["smoking_status"].fillna("(빈 값)").value_counts(dropna=False)
     smoking_table = pd.DataFrame({"흡연 상태": smoking_counts.index,
                                   "사람 수": smoking_counts.values,
-                                  "전체 비율 (%)": (smoking_counts.values / len(df) * 100).round(2)})
+                                  "전체 중 비율 (%) 💞": (smoking_counts.values / len(df) * 100).round(2)})
     c1, c2 = st.columns([1, 1])
     with c1:
         st.dataframe(smoking_table, hide_index=True, use_container_width=True)
@@ -334,16 +334,16 @@ def split_train_test(df, selected):
     test_flag = (pd.Series(range(len(d)), index=d.index) % 10) < 3
     train, test = d.loc[~test_flag].copy(), d.loc[test_flag].copy()
     if len(train) == 0 or len(test) == 0:
-        raise ValueError("훈련용 또는 채점용 데이터가 비어 있어요.")
+        raise ValueError("훈련 또는 채점 데이터가 텅 비었어~! 다시 확인해 줄래? 🥺")
     if "bmi" in selected:
         # 채점용에는 손대지 않고 훈련 데이터로만 계산한 중앙값을 두 곳에 적용한다.
         mid = train["bmi"].median()
         if pd.isna(mid):
-            raise ValueError("훈련 데이터에 BMI 값이 없어서 중앙값을 구할 수 없어요.")
+            raise ValueError("훈련용 BMI가 모두 비어 있어서 중앙값을 못 구했어~! 🥺")
         train["bmi"] = train["bmi"].fillna(mid)
         test["bmi"] = test["bmi"].fillna(mid)
     if train[selected].isna().any().any() or test[selected].isna().any().any():
-        raise ValueError("선택한 속성에 처리되지 않은 빈 값이 있어요.")
+        raise ValueError("선택한 속성에 아직 빈 값이 남아 있어~! 🫧")
     return train, test
 
 
@@ -351,7 +351,7 @@ def fit_models(train, selected):
     x = train[selected]
     y = train["stroke"].astype(int)
     if y.nunique() < 2:
-        raise ValueError("훈련 데이터에 0과 1 두 종류가 모두 있어야 해요.")
+        raise ValueError("훈련 데이터에 0과 1이 모두 있어야 모델이 공부할 수 있어~! 💌")
     probability = make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000, random_state=42))
     question = DecisionTreeClassifier(max_depth=3, min_samples_leaf=5, random_state=42)
     probability.fit(x, y)
@@ -368,13 +368,13 @@ def tree_explanation(model, selected):
         if left < 0:
             winner = int(model.classes_[tree.value[node][0].argmax()])
             result = "뇌졸중(1)" if winner == 1 else "뇌졸중 아님(0)"
-            answers.append(f"{indent}{prefix}🍡 결과: {result} (훈련 {tree.n_node_samples[node]}명)")
+            answers.append(f"{indent}{prefix}🍡 두근두근 결과는~? {result} (훈련 {tree.n_node_samples[node]}명)")
             return
         name = FEATURE_NAMES[selected[int(tree.feature[node])]]
         threshold = float(tree.threshold[node])
-        answers.append(f"{indent}{prefix}❔ 질문 {depth+1}: {name} ≤ {threshold:.2f}? ({tree.n_node_samples[node]}명)")
-        visit(left, depth+1, "예 → ")
-        visit(right, depth+1, "아니요 → ")
+        answers.append(f"{indent}{prefix}💭 하트 질문 {depth+1}: {name} ≤ {threshold:.2f}? ({tree.n_node_samples[node]}명)")
+        visit(left, depth+1, "네에~ 💗 → ")
+        visit(right, depth+1, "아니야~ 💜 → ")
     visit(0, 0, "")
     return "\n".join(answers)
 
@@ -429,16 +429,16 @@ def decision_figure(train, test, xkey, ykey):
     fig.add_trace(go.Heatmap(
         x=xs, y=ys, z=z, zmin=0, zmax=1, showscale=False,
         colorscale=[[0.0,"#b8f3e1"],[0.499,"#b8f3e1"],[0.5,"#ffd0e2"],[1.0,"#ffd0e2"]],
-        opacity=.48, hoverinfo="skip", name="질문 모델의 영역",
+        opacity=.48, hoverinfo="skip", name="질문 모델이 나눈 알록달록 영역 🍡",
     ))
     cut = boundary_points(probability, xmin, xmax, ymin, ymax)
     if cut is not None:
         fig.add_trace(go.Scatter(x=[p[0] for p in cut], y=[p[1] for p in cut], mode="lines",
                                  line=dict(color=PURPLE, width=4, dash="dash"),
-                                 name="확률 0.5 경계", hoverinfo="skip"))
+                                 name="확률 50% 경계선 💜", hoverinfo="skip"))
     for state, name, color, symbol in [
-        (0,"실제: 뇌졸중 아님 (0)",MINT,"circle"),
-        (1,"실제: 뇌졸중 (1)",PINK,"diamond"),
+        (0,"실제: 뇌졸중 아님 (0) 💚",MINT,"circle"),
+        (1,"실제: 뇌졸중 (1) 💗",PINK,"diamond"),
     ]:
         selected_test = test[test["stroke"] == state]
         fig.add_trace(go.Scatter(
@@ -455,100 +455,100 @@ def decision_figure(train, test, xkey, ykey):
 
 
 def classification_screen(df):
-    hero("🧠 MODEL / LET'S PLAY!", "말랑말랑 분류 모델 연구실 ♡",
-         "입력 속성을 골라 두 가지 AI 모델을 만들고, 문제 푸는 방식과 정확도를 비교해 봐요!", "🧸")
-    section("🎮", "AI에게 알려 줄 속성 고르기", "속성을 두 개 이상 골라 주세요. 처음에는 BMI만 빼고 선택되어 있어요.")
+    hero("🧸 LOVELY AI MODEL TIME ♡", "💗 말랑말랑 분류 모델 연구실 ♡",
+         "어떤 속성을 골라야 AI 친구들이 잘 맞힐까~? 💖 확률 친구, 질문 친구, 기본 친구까지 함께 비교해 보자아~! 🎀", "🧸")
+    section("🎮", "AI 친구에게 알려 줄 힌트를 골라 줘~! 💌", "두 개 이상 골라 줘야 해~! 처음엔 BMI만 빼고 네 개에 하트를 붙여 놨어 💗")
     chosen = st.multiselect(
-        "학습에 사용할 속성", options=FEATURES, default=["age","avg_glucose_level","hypertension","heart_disease"],
+        "💗 AI 친구가 공부할 속성 고르기", options=FEATURES, default=["age","avg_glucose_level","hypertension","heart_disease"],
         format_func=lambda x: FEATURE_NAMES[x], key="model_features",
     )
     if len(chosen) < 2:
-        st.info("🍡 최소 2개의 속성을 골라야 모델을 학습할 수 있어요!")
+        st.info("🍡 앗! 속성 친구를 최소 두 명 골라 줘야 AI가 공부할 수 있어~! 🥺💗")
         return
     try:
         train, test = split_train_test(df, chosen)
         prob, decision = fit_models(train, chosen)
     except (ValueError, KeyError) as exc:
-        st.error(f"모델을 준비할 수 없어요: {exc}")
+        st.error(f"앗, AI 친구가 준비하다가 멈췄어~! 🥺 이유: {exc}")
         return
     y_true = test["stroke"].astype(int)
     majority = int(train["stroke"].astype(int).value_counts().idxmax())
     acc1 = accuracy_score(y_true, prob.predict(test[chosen])) * 100
     acc2 = accuracy_score(y_true, decision.predict(test[chosen])) * 100
     acc3 = accuracy_score(y_true, [majority] * len(test)) * 100
-    st.caption(f"📋 전체 {len(train)+len(test):,}명 · 훈련 {len(train):,}명 · 채점 {len(test):,}명 · ID 순서로 10명마다 앞 3명을 채점")
-    section("🏅", "모델 정확도 비교", "세 모델 모두 동일한 채점용 사람들로 평가해요")
+    st.caption(f"🎀 전체 {len(train)+len(test):,}명 중 {len(train):,}명으로 공부하고, {len(test):,}명으로 시험 봐~! ID 순서로 열 명 중 앞 세 명이 시험 담당 💌")
+    section("🏅", "우리 AI 친구들은 얼마나 잘 맞혔을까~? 💗", "세 친구 모두 똑같은 채점용 데이터로 공평하게 시험 봤어~! 🥰")
     cols = st.columns(3)
     for col, values in zip(cols, [
-        ("💗 확률 모델", f"{acc1:.2f}%", "표준화 + 로지스틱 회귀", "#ffd2e7"),
-        ("🍡 질문 모델", f"{acc2:.2f}%", "결정 트리 · 질문 최대 3번", "#dfd2ff"),
-        ("🧁 기준 모델", f"{acc3:.2f}%", "입력을 무시하고 훈련용의 다수로만 답함", "#c6f1e5"),
+        ("💗 확률 모델 친구", f"{acc1:.2f}%", "크기 맞추기 + 확률로 대답해~! 💕", "#ffd2e7"),
+        ("🍡 질문 모델 친구", f"{acc2:.2f}%", "질문은 한 경로에 최대 세 번이야~! 🌸", "#dfd2ff"),
+        ("🧁 기본 모델 친구", f"{acc3:.2f}%", "입력 안 보고 다수 쪽으로만 답해~! 🧁", "#c6f1e5"),
     ]):
         with col:
             card(*values)
-    st.markdown('<div class="cute-alert">💡 뇌졸중 경험자가 적기 때문에 모두 “뇌졸중 아님”으로 답해도 정확도가 높을 수 있어요. 높은 정확도가 곧 뇌졸중 환자를 잘 찾는다는 뜻은 아니랍니다!</div>', unsafe_allow_html=True)
+    st.markdown('<div class="cute-alert">💌 꼭 알아두기! 뇌졸중 경험자가 적어서 전부 “뇌졸중 아님”이라고 답해도 정확도가 높게 나올 수 있어~! 💗 정확도가 높다고 양성인 사람을 잘 찾아낸다는 뜻은 아니라는 점, 함께 기억해 줘! 🌷</div>', unsafe_allow_html=True)
     if "bmi" in chosen:
-        st.caption(f"🎀 BMI의 결측값은 훈련용 BMI 중앙값 {train['bmi'].median():.2f}로만 계산해 두 데이터에 적용했어요.")
+        st.caption(f"🎀 BMI의 빈 칸은 훈련용 친구들만으로 계산한 중앙값 {train['bmi'].median():.2f}로 채웠어~! 채점용 답은 몰래 보지 않았지롱 💗")
     st.markdown('<div class="cute-divider"></div>', unsafe_allow_html=True)
-    section("🎨", "두 속성으로 분류 지도 그리기", "선택한 두 축으로 확률·질문 모델을 다시 학습해서 그림을 만들어요")
+    section("🎨", "두 속성으로 알록달록 분류 지도 만들기~! 💞", "가로·세로 속성을 골라 주면 AI 둘이 그 두 속성만 보고 새로 공부해~! 🧸")
     c1, c2 = st.columns(2)
     with c1:
-        xkey = st.selectbox("가로축", chosen, index=chosen.index("age") if "age" in chosen else 0,
+        xkey = st.selectbox("가로축은 뭘로 할까~? 💗", chosen, index=chosen.index("age") if "age" in chosen else 0,
                             format_func=lambda x: FEATURE_NAMES[x], key="x_feature")
     other = [col for col in chosen if col != xkey]
     with c2:
-        ykey = st.selectbox("세로축", other,
+        ykey = st.selectbox("세로축은 뭘로 할까~? 💜", other,
                             index=other.index("avg_glucose_level") if "avg_glucose_level" in other else 0,
                             format_func=lambda x: FEATURE_NAMES[x], key="y_feature")
     try:
         fig, cut, tree2 = decision_figure(train, test, xkey, ykey)
         st.plotly_chart(fig, use_container_width=True)
         if cut is None:
-            st.info("🫧 이 두 축으로 학습한 확률 모델의 0.5 결정 경계가 현재 그림 범위 밖에 있어요.")
+            st.info("🫧 앗! 이 두 속성으로 만든 확률 50% 경계선은 그림 바깥에 있어~! 숨바꼭질 중인가 봐 💗")
         else:
-            st.caption("보라색 점선 = 확률 모델의 0.5 경계 / 배경색 = 두 축 질문 모델의 예측 / 점 색 = 채점용 사람의 실제 결과")
+            st.caption("💜 보라 점선은 확률 50% 경계, 🍬 옅은 배경은 질문 모델의 예상, 💗 점 색은 실제 정답이야~!")
     except (ValueError, KeyError) as exc:
-        st.warning(f"이 조합으로 그림을 그릴 수 없어요: {exc}")
+        st.warning(f"이 속성 조합으로 그림을 그리기 어려워~! 🥺 이유: {exc}")
     st.markdown('<div class="cute-divider"></div>', unsafe_allow_html=True)
-    section("🌳", "질문 모델의 질문 순서", "전체 선택 속성으로 학습한 모델의 실제 질문과 예/아니요 갈래")
+    section("🌳", "질문 모델 친구는 뭐부터 물어볼까~? 💗", "AI 친구가 실제로 선택한 질문과 네/아니요 갈래를 쭈욱 구경해 보자~! 🎀")
     st.code(tree_explanation(decision, chosen), language="text")
-    st.caption("질문은 한 경로에서 최대 세 번, 마지막 마디에는 최소 다섯 명이 남도록 설정했어요. 난수 고정: 42")
+    st.caption("💌 질문은 한 길에서 최대 세 번! 마지막 그룹에는 최소 다섯 명이 남게 했어~! 난수는 42로 고정했지롱 💗")
 
 
 # ── 실제 사이드바: 페이지 파일 링크가 아닌, 언제나 표시되는 버튼 ──
 with st.sidebar:
     st.markdown(
         '<div class="cute-brand"><div class="cute-logo">🌷</div>'
-        '<div><strong>두근두근 연구소</strong><small>SWEET DATA LAB</small></div></div>',
+        '<div><strong>두근두근 하트 연구소 💗</strong><small>SWEET LOVE DATA LAB ♡</small></div></div>',
         unsafe_allow_html=True,
     )
-    st.markdown("### 🧭 연구실 선택하기")
+    st.markdown("### 🎀 오늘은 어느 연구실에서 놀까~? 💕")
     page = st.radio(
-        "연구실 이동 메뉴", ["🏠 데이터 소개", "🍭 데이터 탐색", "🧸 분류 모델"],
+        "💌 연구실 고르기", ["🏠💗 데이터 소개하트", "🍭💜 데이터 탐색하트", "🧸💞 분류 모델하트"],
         label_visibility="collapsed", key="active_page",
     )
     st.markdown("---")
     st.markdown(
-        '<div class="cute-note">💌 <b>어서 와!</b><br>위 버튼을 누르면 페이지가 바로 바뀌어!'
-        '<br>CSV 파일을 올릴 필요 없이 자동 연결돼 있어. ✨</div>',
+        '<div class="cute-note">💌 <b>어서 와아~ 귀염둥이 연구원! 💗</b><br>위에서 원하는 연구실을 콕~ 골라 줘! 🎀'
+        '<br>CSV는 알아서 연결돼 있으니까 마음 편히 놀아 보자아~! 💕✨</div>',
         unsafe_allow_html=True,
     )
-    st.caption("📊 원본: greatsong/modudata · stroke.csv")
-    st.caption("🩷 학습용 데이터 분석 앱 · 의료 진단에 사용하지 않아요")
+    st.caption("🍓 데이터 친구들의 집: greatsong/modudata · stroke.csv")
+    st.caption("🩷 이곳은 공부하는 러블리 실습실이야~! 실제 의료 진단에는 사용하지 말아 줘 💌")
 
 try:
     df = load_data()
 except Exception as exc:
-    st.error("🍓 공개 CSV를 자동으로 읽지 못했어요. 잠시 후 새로고침해 주세요.")
-    st.code(f"주소: {DATA_URL}\n오류: {type(exc).__name__}: {exc}", language="text")
+    st.error("🥺🍓 앗, 데이터 친구들이 아직 도착하지 않았어~! 잠시 뒤 새로고침해 줄래? 💗")
+    st.code(f"데이터 주소: {DATA_URL}\n연결 오류: {type(exc).__name__}: {exc}", language="text")
     st.stop()
 
-if page == "🏠 데이터 소개":
+if page == "🏠💗 데이터 소개하트":
     intro_screen(df)
-elif page == "🍭 데이터 탐색":
+elif page == "🍭💜 데이터 탐색하트":
     explore_screen(df)
 else:
     classification_screen(df)
 
-st.markdown('<div class="soft-footer">🌷 두근두근 데이터 연구소 ♡ · 공부하는 마음으로 만들어진 작은 실험실</div>',
+st.markdown('<div class="soft-footer">🎀💗 두근두근 러블리 연구소 ♡ 오늘도 하트 뿅뿅! 배우는 즐거움이 가득한 실험실이야~ 🧸💕</div>',
             unsafe_allow_html=True)
