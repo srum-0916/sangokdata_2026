@@ -98,6 +98,15 @@ h1,h2,h3 {color:var(--ink)!important;letter-spacing:-.035em!important;}
 .cute-divider {margin:26px 0;height:7px;border-radius:7px;background:repeating-linear-gradient(90deg,#ff92bd 0 78px,#ffdf98 78px 156px,#a7ead4 156px 234px,#c4b3ff 234px 312px);}
 .soft-footer{font-size:12px;color:#ad93ac;text-align:center;padding:30px 0 10px;font-weight:800;}
 @media(max-width:760px){.cute-hero{padding:26px 24px;min-height:210px}.cute-hero h1,.cute-hero p{max-width:100%}.cute-hero .mascot{right:-25px;opacity:.17}.section-name h2{font-size:20px!important}[data-testid="stMainBlockContainer"]{padding:1.2rem 1rem 3rem;}}
+
+/* 💗 Sweet Data Lab: cards, navigation and inputs */
+[data-testid="stPageLink"] a{border:1px solid #f1d8e9!important;border-radius:15px!important;background:rgba(255,255,255,.78)!important;padding:7px 10px!important;margin:2px 0!important;transition:transform .18s ease,background .18s ease,border-color .18s ease!important;}
+[data-testid="stPageLink"] a:hover{background:#fff!important;border-color:#f09dc7!important;transform:translateX(3px)!important;}
+[data-testid="stPageLink"] a[aria-current="page"]{background:#ffe3ef!important;border-color:#eda5c9!important;font-weight:850!important;}
+[data-testid="stSelectbox"] [data-baseweb="select"]>div,[data-testid="stMultiSelect"] [data-baseweb="select"]>div{border:2px solid #f1dbed!important;box-shadow:0 3px 0 #f8eaf3!important;}
+[data-testid="stPlotlyChart"]{border-radius:20px!important;box-shadow:0 7px 18px rgba(149,109,151,.07)!important;}
+[data-testid="stDataFrame"],[data-testid="stDataEditor"]{box-shadow:0 5px 18px rgba(149,109,151,.08)!important;}
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -523,6 +532,7 @@ with st.sidebar:
     st.page_link("pages/1_탐색.py", label="🔎 탐색 놀이터", use_container_width=True)
     st.page_link("pages/2_분류_모델.py", label="🧸 분류 모델 연구실", use_container_width=True)
     st.page_link("pages/3_채점표.py", label="💌 채점표 연구실", use_container_width=True)
+    st.page_link("pages/4_전처리.py", label="🫧 전처리 실험실", use_container_width=True)
     st.divider()
     st.markdown(
         '<div class="cute-brand"><div class="cute-logo">🌷</div>'
