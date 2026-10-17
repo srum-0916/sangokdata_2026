@@ -41,10 +41,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-home_page = st.Page("main.py", title="홈", icon="🏠", default=True)
-dashboard_page = st.Page("pages/1_탐색.py", title="탐색", icon="📊")
-settings_page = st.Page("pages/2_분류_모델.py", title="모델", icon="⚙️")
-
 # 한 번만 작성한 CSS가 세 화면에 공통 적용됩니다. 따옴표가 정상적으로 닫혀 있습니다.
 st.markdown(
     """
@@ -60,7 +56,7 @@ html,body,[class*="css"],.stApp {font-family:'Nunito','Noto Sans KR',sans-serif;
 [data-testid="stHeader"] {background:transparent;}
 [data-testid="stSidebar"] {background:linear-gradient(165deg,#ffeff6,#f3eeff 62%,#edfff9);border-right:2px solid #fff;}
 [data-testid="stSidebar"] * {color:#6b597e;}
-[data-testid="stSidebarNav"] {display:none;}
+[data-testid="stSidebarNav"] {display:block;}
 [data-testid="stMainBlockContainer"],.main .block-container {max-width:1280px;padding-top:1.7rem;padding-bottom:4rem;}
 h1,h2,h3 {color:var(--ink)!important;letter-spacing:-.035em!important;}
 [data-testid="stDataFrame"],[data-testid="stDataEditor"]{border:2px solid #f4dfed;border-radius:19px;overflow:hidden;}
@@ -519,40 +515,27 @@ def classification_screen(df):
     st.caption("💌 질문은 한 길에서 최대 세 번! 마지막 그룹에는 최소 다섯 명이 남게 했어~! 난수는 42로 고정했지롱 💗")
 
 
-# ── 실제 사이드바: 페이지 파일 링크가 아닌, 언제나 표시되는 버튼 ──
+# 기본 Streamlit 멀티페이지 탐색: pages/ 폴더의 파일을 자동 인식합니다.
+# main.py에서는 홈 화면만 렌더링하고, 다른 페이지는 Streamlit이 직접 실행합니다.
 with st.sidebar:
     st.markdown(
         '<div class="cute-brand"><div class="cute-logo">🌷</div>'
         '<div><strong>두근두근 하트 연구소 💗</strong><small>SWEET LOVE DATA LAB ♡</small></div></div>',
         unsafe_allow_html=True,
     )
-    st.markdown("### 🎀 오늘은 어느 연구실에서 놀까~? 💕")
-    page = st.radio(
-        "💌 연구실 고르기", ["🏠💗 데이터 소개하트", "🍭💜 데이터 탐색하트", "🧸💞 분류 모델하트"],
-        label_visibility="collapsed", key="active_page",
-    )
-    st.markdown("---")
-    st.markdown(
-        '<div class="cute-note">💌 <b>어서 와아~ 귀염둥이 연구원! 💗</b><br>위에서 원하는 연구실을 콕~ 골라 줘! 🎀'
-        '<br>CSV는 알아서 연결돼 있으니까 마음 편히 놀아 보자아~! 💕✨</div>',
-        unsafe_allow_html=True,
-    )
-    st.caption("🍓 데이터 친구들의 집: greatsong/modudata · stroke.csv")
-    st.caption("🩷 이곳은 공부하는 러블리 실습실이야~! 실제 의료 진단에는 사용하지 말아 줘 💌")
+    st.info("🎀 위쪽 페이지 메뉴에서 **홈 · 탐색 · 분류 모델**을 골라 줘~! 💗")
+    st.caption("🍓 데이터: greatsong/modudata · stroke.csv")
+    st.caption("🩷 학습용 데이터 실습이며 의료 진단에는 사용하지 않아요.")
 
 try:
     df = load_data()
 except Exception as exc:
-    st.error("🥺🍓 앗, 데이터 친구들이 아직 도착하지 않았어~! 잠시 뒤 새로고침해 줄래? 💗")
+    st.error("🥺🍓 데이터를 불러오지 못했어. 아래 연결 오류를 확인해 줘!")
     st.code(f"데이터 주소: {DATA_URL}\n연결 오류: {type(exc).__name__}: {exc}", language="text")
     st.stop()
 
-if page == "🏠💗 데이터 소개하트":
-    intro_screen(df)
-elif page == "🍭💜 데이터 탐색하트":
-    explore_screen(df)
-else:
-    classification_screen(df)
-
-st.markdown('<div class="soft-footer">🎀💗 두근두근 러블리 연구소 ♡ 오늘도 하트 뿅뿅! 배우는 즐거움이 가득한 실험실이야~ 🧸💕</div>',
-            unsafe_allow_html=True)
+intro_screen(df)
+st.markdown(
+    '<div class="soft-footer">🎀💗 두근두근 러블리 연구소 ♡ 오늘도 하트 뿅뿅! 🧸💕</div>',
+    unsafe_allow_html=True,
+)
