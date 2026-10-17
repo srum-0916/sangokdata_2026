@@ -237,6 +237,7 @@ with st.sidebar:
     st.page_link("pages/2_분류_모델.py", label="🧸 분류 모델 연구실", use_container_width=True)
     st.page_link("pages/3_채점표.py", label="💌 채점표 연구실", use_container_width=True)
     st.page_link("pages/4_전처리.py", label="🫧 전처리 실험실", use_container_width=True)
+    st.page_link("pages/5_내가_만든_모델_소개.py", label="💝 내 모델 소개", use_container_width=True)
     st.divider()
     st.markdown(
         '<div class="candy-brand"><div class="brand-flower">💝</div>'
