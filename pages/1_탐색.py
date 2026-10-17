@@ -205,6 +205,7 @@ with st.sidebar:
     st.page_link("main.py", label="🏠 데이터 소개", use_container_width=True)
     st.page_link("pages/1_탐색.py", label="🔎 탐색 놀이터", use_container_width=True)
     st.page_link("pages/2_분류_모델.py", label="🧸 분류 모델 연구실", use_container_width=True)
+    st.page_link("pages/3_채점표.py", label="💌 채점표 연구실", use_container_width=True)
     st.divider()
     st.markdown(
         '<div class="candy-brand"><div class="brand-flower">🍓</div>'
@@ -214,7 +215,7 @@ with st.sidebar:
     st.markdown(
         '<div class="side-note">🍭 <b>탐색 놀이터에 온 걸 환영해!</b><br>'
         '히스토그램과 상자그림을 살펴보고, 비율도 비교해 봐요.<br>'
-        '홈은 왼쪽 기본 페이지 메뉴에서 돌아갈 수 있어요. ♡</div>',
+        '홈은 왼쪽 연구실 이동 메뉴에서 돌아갈 수 있어요. ♡</div>',
         unsafe_allow_html=True,
     )
     st.caption("📌 이 데이터는 교육용입니다. 그룹 간 차이가 원인이나 개인의 위험도를 뜻하지는 않아요.")
