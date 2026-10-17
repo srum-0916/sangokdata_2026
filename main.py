@@ -1,8 +1,8 @@
 """💗 두근두근 뇌졸중 연구소 ♡
 
 실행: streamlit run main.py
-- 이 파일 하나에 데이터 소개 / 탐색 / 분류 모델이 모두 들어 있습니다.
-- 사이드바 radio로 페이지를 전환하므로 pages 폴더가 필요하지 않습니다.
+- 홈 화면은 이 파일에서 실행하고 탐색 / 분류 모델 / 채점표는 pages 폴더에서 실행합니다.
+- 사이드바의 귀여운 이동 메뉴에서 총 네 페이지를 전환합니다.
 - 데이터는 아래 고정된 공개 URL에서 UTF-8로 자동 로드합니다.
 """
 
@@ -522,6 +522,7 @@ with st.sidebar:
     st.page_link("main.py", label="🏠 데이터 소개", use_container_width=True)
     st.page_link("pages/1_탐색.py", label="🔎 탐색 놀이터", use_container_width=True)
     st.page_link("pages/2_분류_모델.py", label="🧸 분류 모델 연구실", use_container_width=True)
+    st.page_link("pages/3_채점표.py", label="💌 채점표 연구실", use_container_width=True)
     st.divider()
     st.markdown(
         '<div class="cute-brand"><div class="cute-logo">🌷</div>'
