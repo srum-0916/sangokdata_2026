@@ -303,6 +303,7 @@ with st.sidebar:
     st.page_link("main.py", label="🏠 데이터 소개", use_container_width=True)
     st.page_link("pages/1_탐색.py", label="🔎 탐색 놀이터", use_container_width=True)
     st.page_link("pages/2_분류_모델.py", label="🧸 분류 모델 연구실", use_container_width=True)
+    st.page_link("pages/3_채점표.py", label="💌 채점표 연구실", use_container_width=True)
     st.divider()
     st.markdown(
         '<div class="candy-brand"><div class="brand-flower">🌷</div>'
@@ -347,12 +348,20 @@ if not needed.issubset(set(raw.columns)):
     st.stop()
 
 section("🎀", "모델 재료 고르기", "2~5개 속성을 골라 주세요. 처음에는 BMI를 제외한 4개가 선택되어 있어요.")
+def remember_selected_features():
+    st.session_state["stroke_shared_features"] = list(st.session_state["classification_features"])
+
+
 selected = st.multiselect(
     "✨ 모델에 사용할 속성", options=FEATURES,
-    default=["age", "avg_glucose_level", "hypertension", "heart_disease"],
+    default=st.session_state.get(
+        "stroke_shared_features", ["age", "avg_glucose_level", "hypertension", "heart_disease"]
+    ),
     format_func=lambda feature: LABELS[feature],
     key="classification_features",
+    on_change=remember_selected_features,
 )
+st.session_state["stroke_shared_features"] = list(selected)
 if len(selected) < 2:
     st.warning("🧁 속성을 **두 개 이상** 골라야 분류 모델을 학습할 수 있어요!")
     st.stop()
