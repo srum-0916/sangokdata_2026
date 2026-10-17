@@ -56,7 +56,7 @@ html,body,[class*="css"],.stApp {font-family:'Nunito','Noto Sans KR',sans-serif;
 [data-testid="stHeader"] {background:transparent;}
 [data-testid="stSidebar"] {background:linear-gradient(165deg,#ffeff6,#f3eeff 62%,#edfff9);border-right:2px solid #fff;}
 [data-testid="stSidebar"] * {color:#6b597e;}
-[data-testid="stSidebarNav"] {display:block;}
+[data-testid="stSidebarNav"] {display:none!important;}
 [data-testid="stMainBlockContainer"],.main .block-container {max-width:1280px;padding-top:1.7rem;padding-bottom:4rem;}
 h1,h2,h3 {color:var(--ink)!important;letter-spacing:-.035em!important;}
 [data-testid="stDataFrame"],[data-testid="stDataEditor"]{border:2px solid #f4dfed;border-radius:19px;overflow:hidden;}
@@ -518,12 +518,17 @@ def classification_screen(df):
 # 기본 Streamlit 멀티페이지 탐색: pages/ 폴더의 파일을 자동 인식합니다.
 # main.py에서는 홈 화면만 렌더링하고, 다른 페이지는 Streamlit이 직접 실행합니다.
 with st.sidebar:
+    st.markdown("### 🎨 연구실 이동하기 💗")
+    st.page_link("main.py", label="🏠 데이터 소개", use_container_width=True)
+    st.page_link("pages/1_탐색.py", label="🔎 탐색 놀이터", use_container_width=True)
+    st.page_link("pages/2_분류_모델.py", label="🧸 분류 모델 연구실", use_container_width=True)
+    st.divider()
     st.markdown(
         '<div class="cute-brand"><div class="cute-logo">🌷</div>'
         '<div><strong>두근두근 하트 연구소 💗</strong><small>SWEET LOVE DATA LAB ♡</small></div></div>',
         unsafe_allow_html=True,
     )
-    st.info("🎀 위쪽 페이지 메뉴에서 **홈 · 탐색 · 분류 모델**을 골라 줘~! 💗")
+    st.info("🎀 위의 귀여운 연구실 메뉴에서 이동해 줘~! 💗")
     st.caption("🍓 데이터: greatsong/modudata · stroke.csv")
     st.caption("🩷 학습용 데이터 실습이며 의료 진단에는 사용하지 않아요.")
 
