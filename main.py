@@ -552,11 +552,3 @@ else:
 
 st.markdown('<div class="soft-footer">🎀💗 두근두근 러블리 연구소 ♡ 오늘도 하트 뿅뿅! 배우는 즐거움이 가득한 실험실이야~ 🧸💕</div>',
             unsafe_allow_html=True)
-
-페이지 = st.navigation([
-    st.Page(홈_화면, title="실습실 홈", icon="🏠", default=True),
-    st.Page("pages/1_탐색.py", title="1. 데이터 탐색", icon="🔎"),
-    st.Page("pages/2_분류_모델.py", title="2. 분류 모델", icon="🔎"),
-])
-
-페이지.run()
