@@ -41,6 +41,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+home_page = st.Page("views/main.py", title="홈", icon="🏠", default=True)
+dashboard_page = st.Page("views/1_탐색.py", title="탐색", icon="📊")
+settings_page = st.Page("views/2_분류_모델.py", title="모델", icon="⚙️")
+
 # 한 번만 작성한 CSS가 세 화면에 공통 적용됩니다. 따옴표가 정상적으로 닫혀 있습니다.
 st.markdown(
     """
