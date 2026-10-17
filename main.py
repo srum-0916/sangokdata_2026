@@ -46,6 +46,7 @@ st.set_page_config(
     page_icon="🍭",
     layout="wide",
     initial_sidebar_state="expanded",
+)
 
 # 한 번만 작성한 CSS가 세 화면에 공통 적용됩니다. 따옴표가 정상적으로 닫혀 있습니다.
 st.markdown(
