@@ -41,7 +41,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-home_page = st.Page("views/main.py", title="홈", icon="🏠", default=True)
+home_page = st.Page("main.py", title="홈", icon="🏠", default=True)
 dashboard_page = st.Page("views/1_탐색.py", title="탐색", icon="📊")
 settings_page = st.Page("views/2_분류_모델.py", title="모델", icon="⚙️")
 
